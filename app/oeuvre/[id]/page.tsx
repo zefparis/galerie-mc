@@ -15,22 +15,25 @@ export default function OeuvrePage() {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    const id = params.id as string
-    const found = getPaintingById(id)
-    
-    if (!found) {
-      router.replace('/')
-      return
+    async function load() {
+      const id = params.id as string
+      const found = await getPaintingById(id)
+
+      if (!found) {
+        router.replace('/')
+        return
+      }
+
+      setPainting(found)
+
+      const all = await getPaintings()
+      const currentIndex = all.findIndex((p) => p.id === id)
+      if (currentIndex > 0) setPrevId(all[currentIndex - 1].id)
+      if (currentIndex < all.length - 1) setNextId(all[currentIndex + 1].id)
+
+      setLoaded(true)
     }
-
-    setPainting(found)
-
-    const all = getPaintings()
-    const currentIndex = all.findIndex((p) => p.id === id)
-    if (currentIndex > 0) setPrevId(all[currentIndex - 1].id)
-    if (currentIndex < all.length - 1) setNextId(all[currentIndex + 1].id)
-    
-    setLoaded(true)
+    load()
   }, [params.id, router])
 
   if (!loaded || !painting) {

@@ -12,9 +12,13 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    setPaintings(getPaintings())
-    setSettings(getSettings())
-    setLoaded(true)
+    async function load() {
+      const [p] = await Promise.all([getPaintings()])
+      setPaintings(p)
+      setSettings(getSettings())
+      setLoaded(true)
+    }
+    load()
   }, [])
 
   const featuredPainting = paintings.find((p) => p.featured)

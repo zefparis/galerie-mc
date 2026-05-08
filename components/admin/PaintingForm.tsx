@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { savePainting, getNextOrder } from '@/lib/storage'
+import { savePainting, updatePainting, getNextOrder } from '@/lib/storage'
 import { Painting, Technique, PriceStatus } from '@/lib/types'
 import CloudinaryUpload from './CloudinaryUpload'
 
@@ -41,7 +41,7 @@ export default function PaintingForm({ painting, onClose }: Props) {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setError('')
     setMessage('')
 
@@ -60,6 +60,8 @@ export default function PaintingForm({ painting, onClose }: Props) {
 
     setSaving(true)
 
+    const order = painting?.order || await getNextOrder()
+
     const paintingData: Painting = {
       id: painting?.id || uuidv4(),
       title: form.title.trim(),
@@ -72,11 +74,15 @@ export default function PaintingForm({ painting, onClose }: Props) {
       price: form.priceStatus === 'visible' ? form.price : undefined,
       priceStatus: form.priceStatus,
       featured: form.featured,
-      order: painting?.order || getNextOrder(),
+      order,
       createdAt: painting?.createdAt || new Date().toISOString(),
     }
 
-    savePainting(paintingData)
+    if (isEditing) {
+      await updatePainting(paintingData.id, paintingData)
+    } else {
+      await savePainting(paintingData)
+    }
     setMessage(isEditing ? 'Tableau modifié avec succès !' : 'Tableau ajouté avec succès !')
     setSaving(false)
 

@@ -17,22 +17,22 @@ export default function PaintingList({ onEdit }: Props) {
     loadPaintings()
   }, [])
 
-  const loadPaintings = () => {
-    const all = getPaintings()
+  const loadPaintings = async () => {
+    const all = await getPaintings()
     setPaintings(all)
   }
 
-  const handleDelete = (id: string) => {
-    deletePainting(id)
+  const handleDelete = async (id: string) => {
+    await deletePainting(id)
     setDeleteConfirm(null)
     setMessage('Tableau supprimé avec succès.')
-    loadPaintings()
+    await loadPaintings()
     setTimeout(() => setMessage(''), 3000)
   }
 
-  const handleReorder = (id: string, direction: 'up' | 'down') => {
-    reorderPainting(id, direction)
-    loadPaintings()
+  const handleReorder = async (id: string, direction: 'up' | 'down') => {
+    await reorderPainting(id, direction)
+    await loadPaintings()
   }
 
   const getPriceLabel = (painting: Painting) => {

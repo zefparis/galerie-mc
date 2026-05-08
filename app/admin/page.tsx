@@ -24,7 +24,7 @@ export default function AdminPage() {
       router.replace('/admin/login')
       return
     }
-    setShowDemo(isDemo())
+    isDemo().then(setShowDemo)
   }, [router])
 
   const handleEdit = (painting: Painting) => {
