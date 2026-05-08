@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { savePainting, getNextOrder, getSettings } from '@/lib/storage'
+import { savePainting, getNextOrder } from '@/lib/storage'
 import { Painting, Technique, PriceStatus } from '@/lib/types'
 import CloudinaryUpload from './CloudinaryUpload'
 
@@ -89,8 +89,6 @@ export default function PaintingForm({ painting, onClose }: Props) {
     setForm({ ...form, imageUrl: url, imagePublicId: publicId })
   }
 
-  const settings = getSettings()
-
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -120,30 +118,11 @@ export default function PaintingForm({ painting, onClose }: Props) {
       <div className="space-y-6 max-w-2xl">
         {/* Image upload */}
         <div>
-          <label className="label-field">📷 Photo du tableau</label>
-          {settings.cloudinaryCloudName && settings.cloudinaryUploadPreset ? (
-            <CloudinaryUpload
-              currentUrl={form.imageUrl}
-              onUploaded={handleImageUploaded}
-              cloudName={settings.cloudinaryCloudName}
-              uploadPreset={settings.cloudinaryUploadPreset}
-            />
-          ) : (
-            <div>
-              <input
-                type="url"
-                value={form.imageUrl}
-                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                className="input-field"
-                placeholder="URL de l'image (configurez Cloudinary dans Paramètres pour l'upload)"
-              />
-              {form.imageUrl && (
-                <div className="mt-3 w-40 h-40 bg-[var(--border)] overflow-hidden">
-                  <img src={form.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                </div>
-              )}
-            </div>
-          )}
+          <label className="label-field">📷 Photo du tableau *</label>
+          <CloudinaryUpload
+            currentUrl={form.imageUrl}
+            onUploaded={handleImageUploaded}
+          />
         </div>
 
         {/* Title */}
@@ -272,7 +251,7 @@ export default function PaintingForm({ painting, onClose }: Props) {
           </button>
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || !form.imageUrl}
             className="btn-primary text-lg px-8 disabled:opacity-50"
           >
             {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer les modifications' : 'Enregistrer le tableau'}

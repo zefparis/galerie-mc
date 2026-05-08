@@ -189,14 +189,20 @@ export default function AdminSettings() {
           </button>
           {cloudinaryResult === 'success' && (
             <p className="mt-2 font-body text-sm text-[#2D6A4F] font-medium">
-              ✓ Connexion Cloudinary réussie !
+              ✅ Connexion réussie
             </p>
           )}
           {cloudinaryResult === 'error' && (
             <p className="mt-2 font-body text-sm text-[#C0392B] font-medium">
-              ✗ Échec de la connexion. Vérifiez vos paramètres.
+              ❌ Échec — vérifiez vos identifiants
             </p>
           )}
+        </div>
+
+        <div className="p-4 bg-[var(--cream)] border border-[var(--border)] rounded">
+          <p className="font-body text-sm text-warm-gray">
+            ℹ️ <strong>Note :</strong> L&apos;image reste sur Cloudinary — vous pouvez la supprimer manuellement depuis votre dashboard Cloudinary si nécessaire.
+          </p>
         </div>
       </section>
 

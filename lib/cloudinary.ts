@@ -6,50 +6,43 @@ export async function uploadToCloudinary(
   const formData = new FormData()
   formData.append('file', file)
   formData.append('upload_preset', uploadPreset)
+  formData.append('folder', 'galerie-mc')
 
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 10000)
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    { method: 'POST', body: formData }
+  )
 
-  try {
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      }
-    )
+  if (!res.ok) throw new Error('Upload Cloudinary échoué')
 
-    clearTimeout(timeout)
-
-    if (!res.ok) {
-      throw new Error(`Erreur Cloudinary: ${res.status} ${res.statusText}`)
-    }
-
-    const data = await res.json()
-    return {
-      url: data.secure_url,
-      publicId: data.public_id,
-    }
-  } catch (error: unknown) {
-    clearTimeout(timeout)
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error("L'upload a pris trop de temps (10s). Vérifiez votre connexion.")
-    }
-    throw error
+  const data = await res.json()
+  return {
+    url: `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto/${data.public_id}`,
+    publicId: data.public_id
   }
+}
+
+export function getCloudinarySettings(): { cloudName: string; uploadPreset: string } | null {
+  try {
+    const raw = localStorage.getItem('mc-gallery-v1')
+    if (!raw) return null
+    const store = JSON.parse(raw)
+    const { cloudinaryCloudName, cloudinaryUploadPreset } = store.settings || {}
+    if (!cloudinaryCloudName || !cloudinaryUploadPreset) return null
+    return { cloudName: cloudinaryCloudName, uploadPreset: cloudinaryUploadPreset }
+  } catch { return null }
 }
 
 export function getOptimizedUrl(url: string, width?: number): string {
   if (!url || !url.includes('cloudinary')) return url
-  
+
   const parts = url.split('/upload/')
   if (parts.length !== 2) return url
-  
-  const transforms = width 
-    ? `f_auto,q_auto,w_${width}` 
+
+  const transforms = width
+    ? `f_auto,q_auto,w_${width}`
     : 'f_auto,q_auto'
-  
+
   return `${parts[0]}/upload/${transforms}/${parts[1]}`
 }
 
@@ -62,12 +55,11 @@ export async function testCloudinaryConnection(
       `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
       {
         method: 'POST',
-        body: (() => {
-          const fd = new FormData()
-          fd.append('file', 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7')
-          fd.append('upload_preset', uploadPreset)
-          return fd
-        })(),
+        body: JSON.stringify({
+          file: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
+          upload_preset: uploadPreset
+        }),
+        headers: { 'Content-Type': 'application/json' }
       }
     )
     return res.ok

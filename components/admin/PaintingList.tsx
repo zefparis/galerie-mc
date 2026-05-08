@@ -134,10 +134,13 @@ export default function PaintingList({ onEdit }: Props) {
             <h3 className="font-body text-lg font-medium text-charcoal mb-4">
               Confirmer la suppression
             </h3>
-            <p className="font-body text-base text-charcoal mb-6">
+            <p className="font-body text-base text-charcoal mb-4">
               Êtes-vous sûre de vouloir supprimer «&nbsp;
               <strong>{paintings.find((p) => p.id === deleteConfirm)?.title}</strong>
               &nbsp;» ? Cette action est irréversible.
+            </p>
+            <p className="font-body text-sm text-warm-gray mb-6">
+              Note : L&apos;image reste sur Cloudinary — vous pouvez la supprimer manuellement depuis votre dashboard Cloudinary si nécessaire.
             </p>
             <div className="flex gap-3 justify-end">
               <button
