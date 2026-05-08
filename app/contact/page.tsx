@@ -81,12 +81,12 @@ function ContactContent() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="max-w-2xl mx-auto px-6 py-16"
+      className="max-w-2xl mx-auto px-5 md:px-6 py-10 md:py-16"
     >
-      <h1 className="font-display text-4xl md:text-5xl text-charcoal mb-4">
+      <h1 className="font-display text-3xl md:text-4xl lg:text-5xl text-charcoal mb-3 md:mb-4">
         Contact
       </h1>
-      <p className="font-body text-base text-warm-gray mb-12">
+      <p className="font-body text-sm md:text-base text-warm-gray mb-8 md:mb-12">
         Une question, un intérêt pour une œuvre ? N&apos;hésitez pas à me contacter.
       </p>
 
@@ -171,7 +171,7 @@ function ContactContent() {
           <button
             onClick={handleSend}
             disabled={status === 'sending'}
-            className="btn-gold w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-gold w-full md:w-auto min-h-[56px] md:min-h-[44px] text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {status === 'sending' ? 'Envoi en cours...' : 'Envoyer le message'}
           </button>

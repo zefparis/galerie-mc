@@ -6,6 +6,23 @@ import { GallerySettings } from '@/lib/types'
 import { testCloudinaryConnection } from '@/lib/cloudinary'
 import bcrypt from 'bcryptjs'
 
+function AccordionSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <section className="border border-[var(--border)] rounded overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-4 sm:px-6 bg-white hover:bg-[var(--cream)] transition-colors min-h-[52px]"
+      >
+        <h3 className="font-body text-base sm:text-lg font-medium text-charcoal text-left">{title}</h3>
+        <span className={`text-warm-gray text-lg transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>▾</span>
+      </button>
+      {open && <div className="px-4 pb-5 sm:px-6 sm:pb-6 space-y-5 border-t border-[var(--border)] pt-5">{children}</div>}
+    </section>
+  )
+}
+
 export default function AdminSettings() {
   const [settings, setSettings] = useState<GallerySettings | null>(null)
   const [message, setMessage] = useState('')
@@ -68,24 +85,21 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="max-w-2xl space-y-10">
+    <div className="w-full max-w-2xl space-y-4 sm:space-y-6">
       {message && (
-        <div className="p-4 bg-[#2D6A4F]/10 border border-[#2D6A4F]/30">
-          <p className="font-body text-base text-[#2D6A4F] font-medium">{message}</p>
+        <div className="p-4 bg-[#2D6A4F]/10 border border-[#2D6A4F]/30 rounded">
+          <p className="font-body text-sm sm:text-base text-[#2D6A4F] font-medium">{message}</p>
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-[#C0392B]/10 border border-[#C0392B]/30">
-          <p className="font-body text-base text-[#C0392B] font-medium">{error}</p>
+        <div className="p-4 bg-[#C0392B]/10 border border-[#C0392B]/30 rounded">
+          <p className="font-body text-sm sm:text-base text-[#C0392B] font-medium">{error}</p>
         </div>
       )}
 
       {/* Profile section */}
-      <section className="space-y-6">
-        <h3 className="font-body text-lg font-medium text-charcoal border-b border-[var(--border)] pb-3">
-          Profil
-        </h3>
+      <AccordionSection title="👤 Profil & Biographie" defaultOpen={true}>
 
         <div>
           <label className="label-field">👤 Nom affiché</label>
@@ -149,13 +163,10 @@ export default function AdminSettings() {
             placeholder="06 12 34 56 78"
           />
         </div>
-      </section>
+      </AccordionSection>
 
       {/* Cloudinary section */}
-      <section className="space-y-6">
-        <h3 className="font-body text-lg font-medium text-charcoal border-b border-[var(--border)] pb-3">
-          ☁️ Configuration Cloudinary
-        </h3>
+      <AccordionSection title="☁️ Configuration Cloudinary">
 
         <div>
           <label className="label-field">Cloud Name</label>
@@ -204,13 +215,10 @@ export default function AdminSettings() {
             ℹ️ <strong>Note :</strong> L&apos;image reste sur Cloudinary — vous pouvez la supprimer manuellement depuis votre dashboard Cloudinary si nécessaire.
           </p>
         </div>
-      </section>
+      </AccordionSection>
 
       {/* Password section */}
-      <section className="space-y-6">
-        <h3 className="font-body text-lg font-medium text-charcoal border-b border-[var(--border)] pb-3">
-          🔐 Changer le mot de passe admin
-        </h3>
+      <AccordionSection title="🔐 Mot de passe admin">
 
         <div>
           <label className="label-field">Nouveau mot de passe</label>
@@ -244,17 +252,17 @@ export default function AdminSettings() {
 
         <button
           onClick={handlePasswordChange}
-          className="btn-secondary"
+          className="btn-secondary w-full sm:w-auto min-h-[52px] sm:min-h-[44px]"
         >
           Mettre à jour le mot de passe
         </button>
-      </section>
+      </AccordionSection>
 
       {/* Save all */}
-      <div className="pt-6 border-t border-[var(--border)]">
+      <div className="pt-4 sm:pt-6">
         <button
           onClick={handleSaveSettings}
-          className="btn-primary text-lg px-10 py-4"
+          className="btn-primary w-full sm:w-auto text-base sm:text-lg px-6 sm:px-10 min-h-[56px] sm:min-h-[52px]"
         >
           Enregistrer les paramètres
         </button>

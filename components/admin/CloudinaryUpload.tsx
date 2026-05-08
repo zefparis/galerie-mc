@@ -60,12 +60,12 @@ export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
 
   return (
     <div>
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={status === 'uploading'}
-          className="btn-primary disabled:opacity-50"
+          className="btn-primary w-full sm:w-auto min-h-[56px] sm:min-h-[44px] disabled:opacity-50"
         >
           {status === 'uploading' ? (
             <span className="flex items-center gap-2">
@@ -96,7 +96,7 @@ export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
       )}
 
       {preview && (
-        <div className="mt-4 w-48 h-48 bg-[var(--border)] overflow-hidden rounded">
+        <div className="mt-4 w-full sm:w-48 aspect-[4/3] sm:aspect-square bg-[var(--border)] overflow-hidden rounded">
           <img src={preview} alt="Preview" className="w-full h-full object-cover" />
         </div>
       )}

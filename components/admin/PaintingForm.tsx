@@ -115,7 +115,7 @@ export default function PaintingForm({ painting, onClose }: Props) {
         </div>
       )}
 
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6 w-full max-w-2xl">
         {/* Image upload */}
         <div>
           <label className="label-field">📷 Photo du tableau *</label>
@@ -188,27 +188,28 @@ export default function PaintingForm({ painting, onClose }: Props) {
           />
         </div>
 
-        {/* Price */}
+        {/* Price — toggle cards for mobile */}
         <div>
           <label className="label-field">💰 Prix</label>
-          <div className="space-y-3 mt-2">
+          <div className="grid grid-cols-2 gap-2 mt-2">
             {[
               { value: 'visible', label: 'Afficher le prix' },
-              { value: 'sur_demande', label: 'Prix sur demande' },
+              { value: 'sur_demande', label: 'Sur demande' },
               { value: 'vendu', label: 'Vendu' },
               { value: 'non_a_vendre', label: 'Non à vendre' },
             ].map((option) => (
-              <label key={option.value} className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="radio"
-                  name="priceStatus"
-                  value={option.value}
-                  checked={form.priceStatus === option.value}
-                  onChange={(e) => setForm({ ...form, priceStatus: e.target.value as PriceStatus })}
-                  className="w-5 h-5 accent-[#2D6A4F]"
-                />
-                <span className="font-body text-base text-charcoal">{option.label}</span>
-              </label>
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setForm({ ...form, priceStatus: option.value as PriceStatus })}
+                className={`px-3 py-3 font-body text-sm border rounded text-center min-h-[52px] transition-all ${
+                  form.priceStatus === option.value
+                    ? 'border-[#2D6A4F] bg-[#2D6A4F]/10 text-[#2D6A4F] font-medium'
+                    : 'border-[var(--border)] text-charcoal hover:border-charcoal'
+                }`}
+              >
+                {option.label}
+              </button>
             ))}
           </div>
           {form.priceStatus === 'visible' && (
@@ -218,7 +219,7 @@ export default function PaintingForm({ painting, onClose }: Props) {
                 type="number"
                 value={form.price || ''}
                 onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
-                className="input-field w-40"
+                className="input-field w-full sm:w-40"
                 placeholder="0"
                 min={0}
               />
@@ -242,19 +243,19 @@ export default function PaintingForm({ painting, onClose }: Props) {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-4 pt-6 border-t border-[var(--border)]">
-          <button
-            onClick={onClose}
-            className="btn-secondary"
-          >
-            Annuler
-          </button>
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 border-t border-[var(--border)]">
           <button
             onClick={handleSave}
             disabled={saving || !form.imageUrl}
-            className="btn-primary text-lg px-8 disabled:opacity-50"
+            className="btn-primary text-base sm:text-lg px-6 sm:px-8 min-h-[56px] sm:min-h-[44px] disabled:opacity-50 order-1 sm:order-2"
           >
             {saving ? 'Enregistrement...' : isEditing ? 'Enregistrer les modifications' : 'Enregistrer le tableau'}
+          </button>
+          <button
+            onClick={onClose}
+            className="btn-secondary min-h-[52px] sm:min-h-[44px] order-2 sm:order-1"
+          >
+            Annuler
           </button>
         </div>
       </div>

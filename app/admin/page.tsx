@@ -51,13 +51,13 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Admin header */}
-      <div className="border-b border-[var(--border)] px-6 py-4 flex items-center justify-between">
-        <h1 className="font-body text-lg font-medium text-charcoal">
+      <div className="border-b border-[var(--border)] px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+        <h1 className="font-body text-base sm:text-lg font-medium text-charcoal">
           Administration
         </h1>
         <button
           onClick={handleLogout}
-          className="font-body text-sm text-warm-gray hover:text-charcoal transition-colors"
+          className="font-body text-sm text-warm-gray hover:text-charcoal transition-colors min-h-[44px] px-2"
         >
           Déconnexion
         </button>
@@ -65,19 +65,19 @@ export default function AdminPage() {
 
       {/* Demo banner */}
       {showDemo && (
-        <div className="bg-[#FFF8E1] border-b border-[#FFE082] px-6 py-3">
-          <p className="font-body text-sm text-[#F57F17]">
+        <div className="bg-[#FFF8E1] border-b border-[#FFE082] px-4 sm:px-6 py-3">
+          <p className="font-body text-xs sm:text-sm text-[#F57F17]">
             💡 Ces données sont des exemples. Remplacez-les par vos vraies œuvres.
           </p>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="border-b border-[var(--border)] px-6">
-        <div className="flex gap-0">
+      <div className="border-b border-[var(--border)] px-4 sm:px-6">
+        <div className="flex">
           <button
             onClick={() => { setActiveTab('paintings'); setShowForm(false) }}
-            className={`px-6 py-4 font-body text-base border-b-2 transition-colors ${
+            className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 font-body text-sm sm:text-base border-b-2 transition-colors min-h-[48px] ${
               activeTab === 'paintings'
                 ? 'border-[#2D6A4F] text-charcoal font-medium'
                 : 'border-transparent text-warm-gray hover:text-charcoal'
@@ -87,7 +87,7 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => { setActiveTab('settings'); setShowForm(false) }}
-            className={`px-6 py-4 font-body text-base border-b-2 transition-colors ${
+            className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 font-body text-sm sm:text-base border-b-2 transition-colors min-h-[48px] ${
               activeTab === 'settings'
                 ? 'border-[#2D6A4F] text-charcoal font-medium'
                 : 'border-transparent text-warm-gray hover:text-charcoal'
@@ -99,12 +99,12 @@ export default function AdminPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
         {activeTab === 'paintings' && !showForm && (
           <div>
             <button
               onClick={handleAdd}
-              className="btn-primary text-lg px-8 py-4 mb-8"
+              className="btn-primary w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 min-h-[56px] sm:min-h-[52px] mb-6 sm:mb-8"
             >
               + Ajouter un nouveau tableau
             </button>

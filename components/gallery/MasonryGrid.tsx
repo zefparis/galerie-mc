@@ -32,10 +32,10 @@ export default function MasonryGrid({ paintings }: Props) {
   return (
     <div>
       {availableTechniques.length > 1 && (
-        <div className="flex flex-wrap gap-3 justify-center mb-12">
+        <div className="flex gap-2 sm:gap-3 sm:justify-center mb-8 md:mb-12 overflow-x-auto pb-2 px-1 -mx-1 scrollbar-hide">
           <button
             onClick={() => setFilter('all')}
-            className={`font-body text-xs uppercase tracking-[0.12em] px-4 py-2 border transition-all duration-300 ${
+            className={`font-body text-xs uppercase tracking-[0.1em] px-4 py-2 h-9 border transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
               filter === 'all'
                 ? 'border-gold text-gold'
                 : 'border-[var(--border)] text-warm-gray hover:border-charcoal hover:text-charcoal'
@@ -47,7 +47,7 @@ export default function MasonryGrid({ paintings }: Props) {
             <button
               key={t}
               onClick={() => setFilter(t)}
-              className={`font-body text-xs uppercase tracking-[0.12em] px-4 py-2 border transition-all duration-300 ${
+              className={`font-body text-xs uppercase tracking-[0.1em] px-4 py-2 h-9 border transition-all duration-300 whitespace-nowrap flex-shrink-0 ${
                 filter === t
                   ? 'border-gold text-gold'
                   : 'border-[var(--border)] text-warm-gray hover:border-charcoal hover:text-charcoal'
@@ -59,7 +59,13 @@ export default function MasonryGrid({ paintings }: Props) {
         </div>
       )}
 
-      <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
+      {/* 1 col mobile, 2 col tablet grid, 3 col desktop masonry */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:hidden gap-3">
+        {filteredPaintings.map((painting, index) => (
+          <PaintingCard key={painting.id} painting={painting} index={index} />
+        ))}
+      </div>
+      <div className="hidden lg:block columns-3 gap-4 space-y-4">
         {filteredPaintings.map((painting, index) => (
           <PaintingCard key={painting.id} painting={painting} index={index} />
         ))}

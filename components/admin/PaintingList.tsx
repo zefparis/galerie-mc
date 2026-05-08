@@ -57,67 +57,70 @@ export default function PaintingList({ onEdit }: Props) {
           Aucun tableau pour le moment. Cliquez sur &quot;Ajouter un nouveau tableau&quot; pour commencer.
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {paintings.map((painting, index) => (
             <div
               key={painting.id}
-              className="flex items-center gap-4 p-4 bg-[var(--cream)] border border-[var(--border)] rounded"
+              className="bg-[var(--cream)] border border-[var(--border)] rounded overflow-hidden"
             >
-              {/* Thumbnail */}
-              <div className="w-[60px] h-[60px] flex-shrink-0 bg-[var(--border)] overflow-hidden">
-                <img
-                  src={painting.imageUrl}
-                  alt={painting.title}
-                  className="w-full h-full object-cover"
-                />
+              {/* Mobile: card layout */}
+              <div className="flex items-start gap-3 p-3 sm:p-4">
+                {/* Thumbnail with reorder */}
+                <div className="relative flex-shrink-0">
+                  <div className="w-[80px] h-[60px] sm:w-[100px] sm:h-[70px] bg-[var(--border)] overflow-hidden rounded">
+                    <img
+                      src={painting.imageUrl}
+                      alt={painting.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-body text-sm sm:text-base font-medium text-charcoal line-clamp-2">
+                    {painting.title}
+                  </h3>
+                  <p className="font-body text-xs sm:text-sm text-warm-gray mt-0.5">
+                    {painting.year} · {painting.technique}
+                  </p>
+                  <span className="inline-block mt-1 font-body text-xs px-2 py-0.5 bg-white border border-[var(--border)] text-warm-gray">
+                    {getPriceLabel(painting)}
+                  </span>
+                </div>
+
+                {/* Reorder buttons */}
+                <div className="flex flex-col gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => handleReorder(painting.id, 'up')}
+                    disabled={index === 0}
+                    className="w-9 h-9 flex items-center justify-center border border-[var(--border)] bg-white text-charcoal disabled:opacity-30 hover:bg-[var(--cream)] transition-colors text-sm rounded"
+                    title="Monter"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    onClick={() => handleReorder(painting.id, 'down')}
+                    disabled={index === paintings.length - 1}
+                    className="w-9 h-9 flex items-center justify-center border border-[var(--border)] bg-white text-charcoal disabled:opacity-30 hover:bg-[var(--cream)] transition-colors text-sm rounded"
+                    title="Descendre"
+                  >
+                    ↓
+                  </button>
+                </div>
               </div>
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-body text-base font-medium text-charcoal truncate">
-                  {painting.title}
-                </h3>
-                <p className="font-body text-sm text-warm-gray">
-                  {painting.year} · {painting.technique}
-                </p>
-              </div>
-
-              {/* Price badge */}
-              <span className="hidden sm:inline-block font-body text-xs px-3 py-1 bg-white border border-[var(--border)] text-warm-gray">
-                {getPriceLabel(painting)}
-              </span>
-
-              {/* Reorder buttons */}
-              <div className="flex flex-col gap-1">
-                <button
-                  onClick={() => handleReorder(painting.id, 'up')}
-                  disabled={index === 0}
-                  className="w-8 h-8 flex items-center justify-center border border-[var(--border)] bg-white text-charcoal disabled:opacity-30 hover:bg-[var(--cream)] transition-colors text-sm"
-                  title="Monter"
-                >
-                  ↑
-                </button>
-                <button
-                  onClick={() => handleReorder(painting.id, 'down')}
-                  disabled={index === paintings.length - 1}
-                  className="w-8 h-8 flex items-center justify-center border border-[var(--border)] bg-white text-charcoal disabled:opacity-30 hover:bg-[var(--cream)] transition-colors text-sm"
-                  title="Descendre"
-                >
-                  ↓
-                </button>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex gap-2">
+              {/* Action buttons — full width on mobile, inline on desktop */}
+              <div className="flex flex-col sm:flex-row gap-2 px-3 pb-3 sm:px-4 sm:pb-4">
                 <button
                   onClick={() => onEdit(painting)}
-                  className="px-4 py-2 font-body text-sm bg-white border border-[var(--border)] text-charcoal hover:border-[#2D6A4F] hover:text-[#2D6A4F] transition-colors min-h-[44px]"
+                  className="flex-1 px-4 py-3 sm:py-2 font-body text-sm bg-white border border-[var(--border)] text-charcoal hover:border-[#2D6A4F] hover:text-[#2D6A4F] transition-colors min-h-[52px] sm:min-h-[44px] rounded"
                 >
                   ✏️ Modifier
                 </button>
                 <button
                   onClick={() => setDeleteConfirm(painting.id)}
-                  className="px-4 py-2 font-body text-sm bg-white border border-[var(--border)] text-[#C0392B] hover:border-[#C0392B] hover:bg-[#C0392B]/5 transition-colors min-h-[44px]"
+                  className="flex-1 px-4 py-3 sm:py-2 font-body text-sm bg-white border border-[var(--border)] text-[#C0392B] hover:border-[#C0392B] hover:bg-[#C0392B]/5 transition-colors min-h-[52px] sm:min-h-[44px] rounded"
                 >
                   🗑️ Supprimer
                 </button>

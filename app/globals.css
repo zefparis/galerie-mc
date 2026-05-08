@@ -23,6 +23,11 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
 body {
   color: var(--charcoal);
   background: var(--cream);
@@ -42,6 +47,25 @@ h1, h2, h3, h4 {
 ::selection {
   background: var(--gold-light);
   color: var(--charcoal);
+}
+
+/* Évite le zoom sur focus input iOS */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+/* Zone de tap confortable */
+button, a {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Safe area iPhone (notch + home indicator) */
+.navbar {
+  padding-top: env(safe-area-inset-top);
+}
+.footer {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 @layer utilities {

@@ -46,6 +46,10 @@ export function getOptimizedUrl(url: string, width?: number): string {
   return `${parts[0]}/upload/${transforms}/${parts[1]}`
 }
 
+export function getResponsiveUrl(publicId: string, cloudName: string, width: number): string {
+  return `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto,w_${width},c_limit/${publicId}`
+}
+
 export async function testCloudinaryConnection(
   cloudName: string,
   uploadPreset: string
