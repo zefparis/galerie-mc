@@ -121,7 +121,7 @@ export default function AdminSettings() {
             value={settings.bioShort}
             onChange={(e) => setSettings({ ...settings, bioShort: e.target.value })}
             className="input-field"
-            placeholder="ex: Peintre | Alès, France"
+            placeholder="ex: Artiste peintre abstraite | Montreuil-aux-Lions"
           />
         </div>
 

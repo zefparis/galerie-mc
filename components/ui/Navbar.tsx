@@ -47,7 +47,7 @@ export default function Navbar() {
               Marie-Claire Scandella
             </h1>
             <p className="font-body text-xs sm:text-sm text-warm-gray italic mt-0.5">
-              Peintre | Alès, France
+              Artiste peintre abstraite | Montreuil-aux-Lions
             </p>
           </Link>
 

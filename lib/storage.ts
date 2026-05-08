@@ -6,8 +6,8 @@ const SETTINGS_KEY = 'mc-gallery-settings-v1'
 
 const DEFAULT_SETTINGS: GallerySettings = {
   artistName: 'Marie-Claire Scandella',
-  bio: "Marie-Claire Scandella est une artiste peintre française basée à Alès, dans les Cévennes. Son travail explore la lumière méditerranéenne et les paysages du sud de la France à travers une palette riche et une touche expressive. Après des années de pratique et d'exploration de différentes techniques, elle a développé un style personnel qui allie sensibilité et maîtrise technique. Ses œuvres ont été présentées dans plusieurs expositions collectives et personnelles dans le sud de la France.",
-  bioShort: 'Peintre | Alès, France',
+  bio: "Marie-Claire Scandella est une artiste peintre française basée à Montreuil-aux-Lions. Son travail explore l'abstraction à travers une palette sensible et une touche expressive, développant un langage pictural personnel qui allie liberté formelle et maîtrise technique. Ses œuvres ont été présentées dans plusieurs expositions collectives et personnelles.",
+  bioShort: 'Artiste peintre abstraite | Montreuil-aux-Lions',
   email: 'contact@marie-claire-scandella.fr',
   phone: '',
   instagram: '',

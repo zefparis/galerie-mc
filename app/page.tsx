@@ -35,7 +35,7 @@ export default function Home() {
           {settings?.artistName || 'Marie-Claire Scandella'}
         </h2>
         <p className="font-body text-sm text-warm-gray mt-2">
-          {settings?.bioShort || 'Peintre | Alès, France'}
+          {settings?.bioShort || 'Artiste peintre abstraite | Montreuil-aux-Lions'}
         </p>
       </div>
 
