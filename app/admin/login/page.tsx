@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getSettings } from '@/lib/storage'
 import bcrypt from 'bcryptjs'
+import PasswordInput from '@/components/ui/PasswordInput'
 
 const DEFAULT_PASSWORD = 'mc-galerie-2024'
 
@@ -66,16 +67,13 @@ export default function AdminLoginPage() {
         )}
 
         <div className="space-y-4">
-          <div>
+          <div onKeyDown={(e) => e.key === 'Enter' && handleLogin()}>
             <label className="label-field">Mot de passe</label>
-            <input
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              className="input-field"
               placeholder="Entrez votre mot de passe"
-              autoFocus
+              className="input-field pr-12"
             />
           </div>
 

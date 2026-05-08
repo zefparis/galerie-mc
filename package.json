@@ -20,6 +20,7 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.35",
     "framer-motion": "^12.38.0",
+    "lucide-react": "^1.14.0",
     "next": "^14.2.35",
     "next-cloudinary": "^6.17.5",
     "pg": "^8.20.0",

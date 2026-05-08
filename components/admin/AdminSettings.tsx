@@ -5,6 +5,7 @@ import { getSettings, saveSettings } from '@/lib/storage'
 import { GallerySettings } from '@/lib/types'
 import { testCloudinaryConnection } from '@/lib/cloudinary'
 import bcrypt from 'bcryptjs'
+import PasswordInput from '@/components/ui/PasswordInput'
 
 function AccordionSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -237,23 +238,21 @@ export default function AdminSettings() {
 
         <div>
           <label className="label-field">Nouveau mot de passe</label>
-          <input
-            type="password"
+          <PasswordInput
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="input-field"
             placeholder="Minimum 6 caractères"
+            className="input-field pr-12"
           />
         </div>
 
         <div>
           <label className="label-field">Confirmer le mot de passe</label>
-          <input
-            type="password"
+          <PasswordInput
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="input-field"
             placeholder="Retapez le mot de passe"
+            className="input-field pr-12"
           />
         </div>
 
