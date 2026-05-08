@@ -3,25 +3,75 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cream: #F7F3EE;
+  --white: #FDFCFA;
+  --charcoal: #1A1916;
+  --warm-gray: #8C8880;
+  --border: #E4E0D8;
+  --gold: #B8935A;
+  --gold-light: #D4B483;
+  --overlay: rgba(26, 25, 22, 0.85);
+
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+
+  --radius: 2px;
+  --transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--charcoal);
+  background: var(--cream);
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+::selection {
+  background: var(--gold-light);
+  color: var(--charcoal);
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-[#2D6A4F] text-white font-body text-base font-medium tracking-wide transition-all duration-300 hover:bg-[#235c43] min-h-[44px];
+  }
+  
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-[#8C8880] text-white font-body text-base font-medium tracking-wide transition-all duration-300 hover:bg-[#6e6962] min-h-[44px];
+  }
+  
+  .btn-danger {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-[#C0392B] text-white font-body text-base font-medium tracking-wide transition-all duration-300 hover:bg-[#a93226] min-h-[44px];
+  }
+  
+  .btn-gold {
+    @apply inline-flex items-center justify-center px-8 py-3 border border-[var(--gold)] text-[var(--charcoal)] font-body text-sm font-medium uppercase tracking-[0.15em] transition-all duration-300 hover:bg-[var(--gold)] hover:text-white min-h-[44px];
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-[var(--border)] bg-white font-body text-base text-[var(--charcoal)] outline-none transition-all duration-300 focus:border-[var(--gold)] min-h-[44px];
+  }
+
+  .label-field {
+    @apply block font-body text-base font-medium text-[var(--charcoal)] mb-2;
   }
 }
