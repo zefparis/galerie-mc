@@ -37,6 +37,8 @@ export default function AdminSettings() {
     setSettings(getSettings())
   }, [])
 
+  const isEnvConfigured = !!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+
   if (!settings) return null
 
   const handleSaveSettings = () => {
@@ -168,47 +170,60 @@ export default function AdminSettings() {
       {/* Cloudinary section */}
       <AccordionSection title="☁️ Configuration Cloudinary">
 
-        <div>
-          <label className="label-field">Cloud Name</label>
-          <input
-            type="text"
-            value={settings.cloudinaryCloudName}
-            onChange={(e) => setSettings({ ...settings, cloudinaryCloudName: e.target.value })}
-            className="input-field"
-            placeholder="votre-cloud-name"
-          />
-        </div>
-
-        <div>
-          <label className="label-field">Upload Preset</label>
-          <input
-            type="text"
-            value={settings.cloudinaryUploadPreset}
-            onChange={(e) => setSettings({ ...settings, cloudinaryUploadPreset: e.target.value })}
-            className="input-field"
-            placeholder="votre-upload-preset"
-          />
-        </div>
-
-        <div>
-          <button
-            onClick={handleTestCloudinary}
-            disabled={cloudinaryTesting || !settings.cloudinaryCloudName || !settings.cloudinaryUploadPreset}
-            className="btn-secondary disabled:opacity-50"
-          >
-            {cloudinaryTesting ? 'Test en cours...' : 'Tester la connexion'}
-          </button>
-          {cloudinaryResult === 'success' && (
-            <p className="mt-2 font-body text-sm text-[#2D6A4F] font-medium">
-              ✅ Connexion réussie
+        {isEnvConfigured ? (
+          <div className="bg-[#2D6A4F]/10 border border-[#2D6A4F]/30 rounded p-4">
+            <p className="font-body text-sm text-[#2D6A4F] font-medium">
+              ✅ Cloudinary configuré via les variables serveur — aucune action requise
             </p>
-          )}
-          {cloudinaryResult === 'error' && (
-            <p className="mt-2 font-body text-sm text-[#C0392B] font-medium">
-              ❌ Échec — vérifiez vos identifiants
+            <p className="font-body text-xs text-[#2D6A4F]/70 mt-2">
+              Cloud Name : <code className="font-mono">{process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}</code>
             </p>
-          )}
-        </div>
+          </div>
+        ) : (
+          <>
+            <div>
+              <label className="label-field">Cloud Name</label>
+              <input
+                type="text"
+                value={settings.cloudinaryCloudName}
+                onChange={(e) => setSettings({ ...settings, cloudinaryCloudName: e.target.value })}
+                className="input-field"
+                placeholder="votre-cloud-name"
+              />
+            </div>
+
+            <div>
+              <label className="label-field">Upload Preset</label>
+              <input
+                type="text"
+                value={settings.cloudinaryUploadPreset}
+                onChange={(e) => setSettings({ ...settings, cloudinaryUploadPreset: e.target.value })}
+                className="input-field"
+                placeholder="votre-upload-preset"
+              />
+            </div>
+
+            <div>
+              <button
+                onClick={handleTestCloudinary}
+                disabled={cloudinaryTesting || !settings.cloudinaryCloudName || !settings.cloudinaryUploadPreset}
+                className="btn-secondary disabled:opacity-50"
+              >
+                {cloudinaryTesting ? 'Test en cours...' : 'Tester la connexion'}
+              </button>
+              {cloudinaryResult === 'success' && (
+                <p className="mt-2 font-body text-sm text-[#2D6A4F] font-medium">
+                  ✅ Connexion réussie
+                </p>
+              )}
+              {cloudinaryResult === 'error' && (
+                <p className="mt-2 font-body text-sm text-[#C0392B] font-medium">
+                  ❌ Échec — vérifiez vos identifiants
+                </p>
+              )}
+            </div>
+          </>
+        )}
 
         <div className="p-4 bg-[var(--cream)] border border-[var(--border)] rounded">
           <p className="font-body text-sm text-warm-gray">

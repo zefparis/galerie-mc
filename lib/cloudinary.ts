@@ -23,11 +23,20 @@ export async function uploadToCloudinary(
 }
 
 export function getCloudinarySettings(): { cloudName: string; uploadPreset: string } | null {
+  // Priorité 1 : variables d'environnement (Vercel)
+  const envCloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+  const envPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+
+  if (envCloudName && envPreset) {
+    return { cloudName: envCloudName, uploadPreset: envPreset }
+  }
+
+  // Priorité 2 : localStorage (fallback local dev)
   try {
-    const raw = localStorage.getItem('mc-gallery-v1')
+    const raw = localStorage.getItem('mc-gallery-settings-v1')
     if (!raw) return null
-    const store = JSON.parse(raw)
-    const { cloudinaryCloudName, cloudinaryUploadPreset } = store.settings || {}
+    const settings = JSON.parse(raw)
+    const { cloudinaryCloudName, cloudinaryUploadPreset } = settings || {}
     if (!cloudinaryCloudName || !cloudinaryUploadPreset) return null
     return { cloudName: cloudinaryCloudName, uploadPreset: cloudinaryUploadPreset }
   } catch { return null }
