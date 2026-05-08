@@ -43,3 +43,24 @@ export interface GalleryData {
   paintings: Painting[]
   settings: GallerySettings
 }
+
+export interface EventMedia {
+  type: 'photo' | 'video'
+  url: string
+  publicId?: string
+  caption?: string
+}
+
+export interface GalleryEvent {
+  id: string
+  title: string
+  description?: string
+  location?: string
+  eventDate?: string
+  coverUrl?: string
+  coverPublicId?: string
+  media: EventMedia[]
+  published: boolean
+  order: number
+  createdAt: string
+}

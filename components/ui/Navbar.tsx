@@ -12,6 +12,7 @@ export default function Navbar() {
 
   const links = [
     { href: '/', label: 'Galerie' },
+    { href: '/expositions', label: 'Expositions' },
     { href: '/contact', label: 'Contact' },
   ]
 
