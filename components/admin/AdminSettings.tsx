@@ -77,12 +77,12 @@ export default function AdminSettings() {
   const handleTestCloudinary = async () => {
     setCloudinaryTesting(true)
     setCloudinaryResult('')
-    
-    const ok = await testCloudinaryConnection(
-      settings.cloudinaryCloudName,
-      settings.cloudinaryUploadPreset
-    )
-    
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || settings.cloudinaryCloudName
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || settings.cloudinaryUploadPreset
+
+    const ok = await testCloudinaryConnection(cloudName, uploadPreset)
+
     setCloudinaryResult(ok ? 'success' : 'error')
     setCloudinaryTesting(false)
   }
