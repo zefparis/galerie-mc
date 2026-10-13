@@ -1,9 +1,14 @@
 // Migration additive : crée les tables si absentes et ajoute les colonnes
 // manquantes. Jamais de DROP ni de suppression de colonne.
 // Usage : npm run migrate  (charge .env puis .env.local si présents)
+// Mode --soft (automatique sur Vercel via la variable VERCEL) : une erreur
+// est affichée dans les logs mais le script sort en 0 pour ne pas bloquer
+// le déploiement.
 
 import pg from 'pg'
 const { Pool } = pg
+
+const soft = process.argv.includes('--soft') || !!process.env.VERCEL
 
 const ssl =
   process.env.DATABASE_SSL === 'false'
@@ -14,7 +19,10 @@ const ssl =
 
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL manquant — renseignez-le dans .env ou .env.local')
-  process.exit(1)
+  if (soft) {
+    console.error('Migration ignorée (mode non bloquant) : le build continue.')
+  }
+  process.exit(soft ? 0 : 1)
 }
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl })
@@ -89,7 +97,11 @@ try {
   console.log('\nMigration terminée.')
 } catch (err) {
   console.error('Échec de la migration :', err.message)
-  process.exitCode = 1
+  if (soft) {
+    console.error('Mode non bloquant : le build continue malgré cet échec.')
+  } else {
+    process.exitCode = 1
+  }
 } finally {
   await pool.end()
 }

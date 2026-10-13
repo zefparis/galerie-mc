@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "node scripts/migrate.mjs --soft && next build",
     "start": "next start",
     "lint": "next lint",
     "migrate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/migrate.mjs"
