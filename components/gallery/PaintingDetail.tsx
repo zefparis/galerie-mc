@@ -1,8 +1,13 @@
 'use client'
 
-import { Painting } from '@/lib/types'
-import { motion } from 'framer-motion'
+import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { Painting } from '@/lib/types'
+import { blurDataUrl } from '@/lib/images'
+import Reveal from '@/components/ui/Reveal'
+import Lightbox from './Lightbox'
 
 interface Props {
   painting: Painting
@@ -10,126 +15,146 @@ interface Props {
   nextId?: string
 }
 
+const STATUS_LABEL: Partial<Record<Painting['priceStatus'], string>> = {
+  sur_demande: 'Prix sur demande',
+  vendu: 'Vendu',
+  non_a_vendre: 'Non à vendre',
+}
+
 export default function PaintingDetail({ painting, prevId, nextId }: Props) {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR', {
+  const router = useRouter()
+  const [lightbox, setLightbox] = useState(false)
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'EUR',
       minimumFractionDigits: 0,
     }).format(price)
-  }
+
+  const statusLabel = STATUS_LABEL[painting.priceStatus]
+  const contactable = painting.priceStatus !== 'vendu' && painting.priceStatus !== 'non_a_vendre'
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className="min-h-screen"
-    >
-      {/* Back button */}
-      <div className="max-w-7xl mx-auto px-5 md:px-6 pt-4 md:pt-8">
+    <div className="pt-16 md:pt-20">
+      <div className="max-w-7xl mx-auto px-5 md:px-8 pt-6 md:pt-10">
         <Link
-          href="/"
-          className="inline-flex items-center min-h-[44px] font-body text-xs uppercase tracking-[0.12em] text-warm-gray hover:text-charcoal transition-colors duration-300"
+          href="/galerie"
+          className="inline-flex items-center min-h-[44px] font-body text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)] hover:text-[var(--ink)] transition-colors duration-200"
         >
-          ← Retour à la galerie
+          ← Galerie
         </Link>
       </div>
 
-      {/* Tablet/Desktop: side by side layout */}
-      <div className="max-w-7xl mx-auto md:px-6 md:py-10 md:flex md:gap-10 lg:gap-16">
-        {/* Image */}
-        <div className="md:w-[55%] md:flex-shrink-0">
-          <div className="w-full aspect-[4/3] md:aspect-auto md:sticky md:top-24 overflow-hidden bg-[var(--border)]">
-            <img
+      <div className="max-w-7xl mx-auto px-5 md:px-8 md:flex md:gap-12 lg:gap-20 pb-10">
+        {/* Image — cliquable vers la lightbox */}
+        <Reveal className="md:w-[58%] md:flex-shrink-0 mt-4 md:mt-0">
+          <button
+            onClick={() => setLightbox(true)}
+            aria-label={`Agrandir « ${painting.title} »`}
+            className="block w-full bg-[var(--surface)] border border-[var(--line)] p-3 sm:p-5 md:sticky md:top-24 cursor-zoom-in"
+          >
+            <Image
               src={painting.imageUrl}
-              alt={painting.title}
-              className="w-full h-full md:max-h-[70vh] object-cover md:object-contain md:shadow-lg"
+              alt={`${painting.title} — ${painting.technique}, ${painting.year}`}
+              width={0}
+              height={0}
+              sizes="(max-width: 768px) 100vw, 58vw"
+              priority
+              placeholder="blur"
+              blurDataURL={blurDataUrl(painting.imageUrl)}
+              className="w-full h-auto max-h-[80svh] object-contain mx-auto"
             />
-          </div>
-        </div>
+          </button>
+          <p className="font-body text-[11px] text-[var(--muted)] text-center mt-3">
+            Cliquer pour agrandir
+          </p>
+        </Reveal>
 
-        {/* Info section */}
-        <div className="flex-1 px-5 md:px-0 py-6 md:py-0">
-          <h1 className="font-display text-2xl sm:text-3xl md:text-[42px] text-charcoal mb-3 md:mb-4">
+        {/* Informations */}
+        <Reveal delay={120} className="flex-1 py-8 md:py-0">
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-[var(--ink)] leading-[1.05] text-balance">
             {painting.title}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-6 md:mb-8">
-            <span className="font-body text-sm text-warm-gray">{painting.year}</span>
-            <span className="text-[var(--border)]">·</span>
-            <span className="font-body text-sm text-warm-gray">{painting.technique}</span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-4 md:mt-6">
+            <span className="font-body text-sm text-[var(--ink-soft)]">{painting.year}</span>
+            <span className="text-[var(--line)]" aria-hidden="true">·</span>
+            <span className="font-body text-sm text-[var(--ink-soft)]">{painting.technique}</span>
             {painting.dimensions && (
               <>
-                <span className="text-[var(--border)]">·</span>
-                <span className="font-body text-sm text-warm-gray">{painting.dimensions}</span>
+                <span className="text-[var(--line)]" aria-hidden="true">·</span>
+                <span className="font-body text-sm text-[var(--ink-soft)]">{painting.dimensions}</span>
               </>
             )}
           </div>
 
+          <div className="mt-6 md:mt-8">
+            {painting.priceStatus === 'visible' && painting.price != null ? (
+              <p className="font-body text-2xl text-[var(--ink)] font-medium">
+                {formatPrice(painting.price)}
+              </p>
+            ) : statusLabel ? (
+              <span
+                className={`inline-block font-body text-[11px] font-medium uppercase tracking-[0.18em] px-4 py-2 border ${
+                  painting.priceStatus === 'vendu'
+                    ? 'border-[var(--accent)] text-[var(--accent)]'
+                    : 'border-[var(--line)] text-[var(--ink-soft)]'
+                }`}
+              >
+                {statusLabel}
+              </span>
+            ) : null}
+          </div>
+
           {painting.description && (
-            <p className="font-body text-sm md:text-base text-charcoal/80 leading-relaxed mb-8 md:mb-10">
+            <p className="font-body text-base text-[var(--ink-soft)] leading-relaxed mt-8 md:mt-10 whitespace-pre-line">
               {painting.description}
             </p>
           )}
 
-          {/* Price display */}
-          <div className="mb-8 md:mb-10">
-            {painting.priceStatus === 'visible' && painting.price && (
-              <p className="font-body text-xl md:text-2xl text-charcoal font-medium">
-                {formatPrice(painting.price)}
-              </p>
-            )}
-            {painting.priceStatus === 'sur_demande' && (
-              <p className="font-body text-sm md:text-base text-warm-gray italic">
-                Prix sur demande — Contacter l&apos;artiste
-              </p>
-            )}
-            {painting.priceStatus === 'vendu' && (
-              <span className="inline-block font-body text-sm uppercase tracking-[0.12em] px-4 py-2 border border-gold text-gold">
-                Vendu
-              </span>
-            )}
-          </div>
-
-          {/* CTA */}
-          {painting.priceStatus !== 'vendu' && painting.priceStatus !== 'non_a_vendre' && (
+          {contactable && (
             <Link
               href={`/contact?sujet=${encodeURIComponent(`Intérêt pour « ${painting.title} »`)}`}
-              className="btn-gold w-full md:w-auto text-center"
+              className="btn-accent mt-8 md:mt-10 w-full sm:w-auto"
             >
               Manifester son intérêt
             </Link>
           )}
-        </div>
+        </Reveal>
       </div>
 
-      {/* Navigation prev/next */}
-      <div className="max-w-7xl mx-auto px-5 md:px-6 pb-10 md:pb-16">
-        {/* Mobile: full-width stacked buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:justify-between mt-8 md:mt-16 pt-6 md:pt-8 border-t border-[var(--border)]">
+      {/* Navigation précédente / suivante */}
+      <div className="max-w-7xl mx-auto px-5 md:px-8 pb-16 md:pb-24">
+        <div className="flex gap-3 justify-between pt-8 border-t border-[var(--line)]">
           {prevId ? (
             <Link
               href={`/oeuvre/${prevId}`}
-              className="flex items-center justify-center min-h-[52px] sm:min-h-[44px] px-6 border border-[var(--border)] font-body text-sm text-warm-gray hover:text-charcoal hover:border-charcoal transition-colors duration-300 sm:w-auto"
+              className="inline-flex items-center justify-center min-h-[48px] px-5 sm:px-7 border border-[var(--line)] font-body text-xs font-medium uppercase tracking-[0.16em] text-[var(--ink-soft)] hover:text-[var(--ink)] hover:border-[var(--ink-soft)] transition-colors duration-200"
             >
               ← Précédente
             </Link>
-          ) : (
-            <span className="hidden sm:block" />
-          )}
+          ) : <span />}
           {nextId ? (
             <Link
               href={`/oeuvre/${nextId}`}
-              className="flex items-center justify-center min-h-[52px] sm:min-h-[44px] px-6 border border-[var(--border)] font-body text-sm text-warm-gray hover:text-charcoal hover:border-charcoal transition-colors duration-300 sm:w-auto"
+              className="inline-flex items-center justify-center min-h-[48px] px-5 sm:px-7 border border-[var(--line)] font-body text-xs font-medium uppercase tracking-[0.16em] text-[var(--ink-soft)] hover:text-[var(--ink)] hover:border-[var(--ink-soft)] transition-colors duration-200"
             >
               Suivante →
             </Link>
-          ) : (
-            <span className="hidden sm:block" />
-          )}
+          ) : <span />}
         </div>
       </div>
-    </motion.div>
+
+      {lightbox && (
+        <Lightbox
+          src={painting.imageUrl}
+          alt={`${painting.title} — ${painting.technique}, ${painting.year}`}
+          onClose={() => setLightbox(false)}
+          onPrev={prevId ? () => router.push(`/oeuvre/${prevId}`) : undefined}
+          onNext={nextId ? () => router.push(`/oeuvre/${nextId}`) : undefined}
+        />
+      )}
+    </div>
   )
 }

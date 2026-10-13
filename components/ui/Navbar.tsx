@@ -3,66 +3,89 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { getSettings } from '@/lib/storage'
+
+const links = [
+  { href: '/galerie', label: 'Galerie' },
+  { href: '/expositions', label: 'Expositions' },
+  { href: '/contact', label: 'Contact' },
+]
 
 export default function Navbar() {
   const pathname = usePathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [artistName, setArtistName] = useState('Marie-Claire Scandella')
   const touchStartX = useRef(0)
 
-  const links = [
-    { href: '/', label: 'Galerie' },
-    { href: '/expositions', label: 'Expositions' },
-    { href: '/contact', label: 'Contact' },
-  ]
-
-  const isActive = (href: string) => {
-    if (href === '/') return pathname === '/'
-    return pathname.startsWith(href)
-  }
+  // Sur la page d'accueil la nav flotte au-dessus du hero (transparente,
+  // texte clair) puis devient opaque au scroll. Ailleurs : toujours opaque.
+  const overHero = pathname === '/' && !scrolled && !drawerOpen
 
   useEffect(() => {
-    if (drawerOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+    setArtistName(getSettings().artistName)
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    document.body.style.overflow = drawerOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [drawerOpen])
+
+  useEffect(() => {
+    setDrawerOpen(false)
+  }, [pathname])
+
+  const isActive = (href: string) => pathname.startsWith(href)
+
+  // L'admin a son propre header — pas de nav publique.
+  if (pathname.startsWith('/admin')) return null
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
   }
-
   const handleTouchEnd = (e: React.TouchEvent) => {
-    const diff = e.changedTouches[0].clientX - touchStartX.current
-    if (diff > 80) setDrawerOpen(false)
+    if (e.changedTouches[0].clientX - touchStartX.current > 80) setDrawerOpen(false)
   }
 
   return (
     <>
-      <nav className="navbar w-full border-b border-[var(--border)] bg-[var(--cream)]/95 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-5 md:px-6 py-4 md:py-6 flex items-center justify-between relative">
-          <Link href="/" className="text-center flex-1 min-w-0">
-            <h1 className="font-display text-2xl xs:text-3xl md:text-4xl tracking-wide text-charcoal truncate">
-              Marie-Claire Scandella
-            </h1>
-            <p className="font-body text-xs sm:text-sm text-warm-gray italic mt-0.5">
-              Artiste peintre abstraite | Montreuil-aux-Lions
-            </p>
+      <nav
+        className={`navbar fixed top-0 left-0 right-0 z-40 transition-colors duration-300 ${
+          overHero
+            ? 'bg-transparent text-white'
+            : 'bg-[var(--bg)] text-[var(--ink)] border-b border-[var(--line)]'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-5 md:px-8 h-16 md:h-20 flex items-center justify-between">
+          <Link href="/" className="min-w-0" aria-label="Accueil — Marie-Claire Scandella">
+            <span className="font-display text-xl md:text-2xl tracking-wide truncate block">
+              {artistName}
+            </span>
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-9">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`font-body text-xs uppercase tracking-[0.15em] transition-colors duration-300 ${
+                className={`font-body text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-200 ${
                   isActive(link.href)
-                    ? 'text-gold'
-                    : 'text-warm-gray hover:text-charcoal'
+                    ? overHero
+                      ? 'text-white'
+                      : 'text-[var(--accent)]'
+                    : overHero
+                      ? 'text-white/75 hover:text-white'
+                      : 'text-[var(--ink-soft)] hover:text-[var(--ink)]'
                 }`}
+                aria-current={isActive(link.href) ? 'page' : undefined}
               >
                 {link.label}
               </Link>
@@ -74,68 +97,69 @@ export default function Navbar() {
             onClick={() => setDrawerOpen(true)}
             className="md:hidden p-2 -mr-2"
             aria-label="Ouvrir le menu"
+            aria-expanded={drawerOpen}
           >
-            <div className="w-6 flex flex-col gap-1.5">
-              <span className="block h-[2px] bg-charcoal" />
-              <span className="block h-[2px] bg-charcoal" />
-              <span className="block h-[2px] bg-charcoal" />
+            <div className="w-6 flex flex-col gap-[7px]">
+              <span className={`block h-[1.5px] transition-colors ${overHero ? 'bg-white' : 'bg-[var(--ink)]'}`} />
+              <span className={`block h-[1.5px] transition-colors ${overHero ? 'bg-white' : 'bg-[var(--ink)]'}`} />
             </div>
           </button>
         </div>
       </nav>
 
       {/* Mobile drawer */}
-      <AnimatePresence>
-        {drawerOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-black/60 z-50 md:hidden"
+      <div
+        className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${
+          drawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-hidden={!drawerOpen}
+      >
+        <div
+          className="absolute inset-0 bg-black/60"
+          onClick={() => setDrawerOpen(false)}
+        />
+        <div
+          className={`absolute top-0 right-0 h-full w-[300px] max-w-[85vw] bg-[var(--ink)] text-[var(--bg)] flex flex-col transition-transform duration-300 ease-gallery ${
+            drawerOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="flex justify-end p-4">
+            <button
               onClick={() => setDrawerOpen(false)}
-            />
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-[280px] bg-[var(--charcoal)] z-50 md:hidden flex flex-col"
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
+              className="p-3 text-white/80 hover:text-white"
+              aria-label="Fermer le menu"
             >
-              <div className="flex justify-end p-5">
-                <button
-                  onClick={() => setDrawerOpen(false)}
-                  className="text-white p-2"
-                  aria-label="Fermer le menu"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex flex-col gap-2 px-6 mt-4">
-                {links.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setDrawerOpen(false)}
-                    className={`font-body text-lg uppercase tracking-[0.1em] py-4 min-h-[52px] flex items-center border-b border-white/10 ${
-                      isActive(link.href)
-                        ? 'text-[var(--gold-light)]'
-                        : 'text-white'
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex flex-col px-8 mt-2">
+            {links.map((link, i) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setDrawerOpen(false)}
+                className={`font-display text-3xl py-5 min-h-[56px] flex items-center border-b border-white/10 transition-colors duration-200 ${
+                  isActive(link.href) ? 'text-[var(--accent-soft)]' : 'text-white hover:text-white/70'
+                }`}
+                style={{ transitionDelay: drawerOpen ? `${i * 40}ms` : '0ms' }}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+          <div className="mt-auto px-8 pb-10">
+            <p className="font-body text-xs text-white/40 uppercase tracking-[0.18em]">
+              {artistName}
+            </p>
+          </div>
+        </div>
+      </div>
     </>
   )
 }

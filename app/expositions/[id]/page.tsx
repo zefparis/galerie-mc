@@ -1,19 +1,42 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
-import { GalleryEvent, EventMedia } from '@/lib/types'
-import { motion } from 'framer-motion'
+import { notFound } from 'next/navigation'
+import { getPublishedEventById } from '@/lib/data'
+import { EventMedia } from '@/lib/types'
+import { blurDataUrl } from '@/lib/images'
+import { formatEventDate } from '@/components/gallery/EventCard'
+import Reveal from '@/components/ui/Reveal'
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return ''
-  const d = new Date(dateStr + 'T00:00:00')
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+export const dynamic = 'force-dynamic'
+
+interface Props {
+  params: { id: string }
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const event = await getPublishedEventById(params.id)
+  if (!event) return { title: 'Événement introuvable' }
+
+  const description = event.description?.slice(0, 160) ||
+    [event.location, event.eventDate && formatEventDate(event.eventDate)]
+      .filter(Boolean)
+      .join(' — ')
+
+  return {
+    title: event.title,
+    description,
+    openGraph: {
+      title: `${event.title} — Marie-Claire Scandella`,
+      description,
+      images: event.coverUrl ? [event.coverUrl] : undefined,
+      type: 'article',
+    },
+  }
 }
 
 function getYouTubeId(url: string): string | null {
-  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/)
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/)
   return match ? match[1] : null
 }
 
@@ -22,107 +45,117 @@ function MediaItem({ media }: { media: EventMedia }) {
     const ytId = getYouTubeId(media.url)
     if (!ytId) return null
     return (
-      <div>
-        <div className="aspect-[16/9] rounded overflow-hidden bg-black">
+      <figure>
+        <div className="aspect-[16/9] overflow-hidden bg-black">
           <iframe
             src={`https://www.youtube.com/embed/${ytId}`}
             title={media.caption || 'Vidéo'}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             className="w-full h-full"
+            loading="lazy"
           />
         </div>
         {media.caption && (
-          <p className="font-body text-xs text-warm-gray mt-2 italic">{media.caption}</p>
+          <figcaption className="font-body text-xs text-[var(--muted)] mt-2 italic">
+            {media.caption}
+          </figcaption>
         )}
-      </div>
+      </figure>
     )
   }
 
   return (
-    <div>
-      <div className="rounded overflow-hidden bg-[var(--border)]">
-        <img src={media.url} alt={media.caption || ''} className="w-full h-auto" />
-      </div>
+    <figure className="break-inside-avoid mb-5">
+      <Image
+        src={media.url}
+        alt={media.caption || 'Photo de l\u2019événement'}
+        width={0}
+        height={0}
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        placeholder="blur"
+        blurDataURL={blurDataUrl(media.url)}
+        className="w-full h-auto"
+        loading="lazy"
+      />
       {media.caption && (
-        <p className="font-body text-xs text-warm-gray mt-2 italic">{media.caption}</p>
+        <figcaption className="font-body text-xs text-[var(--muted)] mt-2 italic">
+          {media.caption}
+        </figcaption>
       )}
-    </div>
+    </figure>
   )
 }
 
-export default function ExpositionDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const [event, setEvent] = useState<GalleryEvent | null>(null)
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    async function load() {
-      const res = await fetch(`/api/events/${params.id}`)
-      if (!res.ok) {
-        router.replace('/expositions')
-        return
-      }
-      setEvent(await res.json())
-      setLoaded(true)
-    }
-    load()
-  }, [params.id, router])
-
-  if (!loaded || !event) return <div className="min-h-screen" />
+export default async function ExpositionDetailPage({ params }: Props) {
+  const event = await getPublishedEventById(params.id)
+  if (!event) notFound()
 
   const photos = event.media.filter((m) => m.type === 'photo')
   const videos = event.media.filter((m) => m.type === 'video')
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-10 md:pt-16 pb-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+    <div className="pt-16 md:pt-20">
+      <div className="max-w-4xl mx-auto px-5 md:px-8 pt-6 md:pt-10">
+        <Link
+          href="/expositions"
+          className="inline-flex items-center min-h-[44px] font-body text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)] hover:text-[var(--ink)] transition-colors duration-200"
         >
-          <h1 className="font-display text-2xl md:text-4xl text-charcoal">{event.title}</h1>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3">
+          ← Expositions
+        </Link>
+      </div>
+
+      <header className="max-w-4xl mx-auto px-5 md:px-8 pt-6 md:pt-10 pb-10">
+        <Reveal>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {event.eventDate && (
-              <span className="font-body text-sm text-warm-gray">
-                📅 {formatDate(event.eventDate)}
-              </span>
+              <p className="eyebrow">{formatEventDate(event.eventDate)}</p>
             )}
             {event.location && (
-              <span className="font-body text-sm text-warm-gray">
-                📍 {event.location}
-              </span>
+              <p className="font-body text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
+                {event.location}
+              </p>
             )}
           </div>
-        </motion.div>
-      </section>
+          <h1 className="font-display text-4xl md:text-6xl text-[var(--ink)] mt-3 leading-[1.05] text-balance">
+            {event.title}
+          </h1>
+        </Reveal>
+      </header>
 
-      {/* Cover */}
       {event.coverUrl && (
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 pb-8">
-          <div className="aspect-[16/9] rounded overflow-hidden bg-[var(--border)]">
-            <img src={event.coverUrl} alt={event.title} className="w-full h-full object-cover" />
+        <Reveal className="max-w-5xl mx-auto px-5 md:px-8 pb-10 md:pb-14">
+          <div className="relative aspect-[16/9] overflow-hidden bg-[var(--line)]">
+            <Image
+              src={event.coverUrl}
+              alt={event.title}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 1024px"
+              placeholder="blur"
+              blurDataURL={blurDataUrl(event.coverUrl)}
+              className="object-cover"
+            />
           </div>
-        </section>
+        </Reveal>
       )}
 
-      {/* Description */}
       {event.description && (
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 pb-10">
-          <p className="font-body text-sm md:text-base text-warm-gray leading-relaxed whitespace-pre-line">
+        <Reveal className="max-w-3xl mx-auto px-5 md:px-8 pb-12 md:pb-16">
+          <p className="font-body text-base md:text-lg text-[var(--ink-soft)] leading-relaxed whitespace-pre-line">
             {event.description}
           </p>
-        </section>
+        </Reveal>
       )}
 
-      {/* Photos gallery */}
       {photos.length > 0 && (
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-10">
-          <h2 className="font-display text-xl md:text-2xl text-charcoal mb-6">Photos</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <section className="max-w-5xl mx-auto px-5 md:px-8 pb-12 md:pb-16">
+          <Reveal>
+            <h2 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-8">
+              Photos
+            </h2>
+          </Reveal>
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-5">
             {photos.map((m, i) => (
               <MediaItem key={i} media={m} />
             ))}
@@ -130,27 +163,20 @@ export default function ExpositionDetailPage() {
         </section>
       )}
 
-      {/* Videos */}
       {videos.length > 0 && (
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 pb-10">
-          <h2 className="font-display text-xl md:text-2xl text-charcoal mb-6">Vidéos</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section className="max-w-4xl mx-auto px-5 md:px-8 pb-12 md:pb-16">
+          <Reveal>
+            <h2 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-8">
+              Vidéos
+            </h2>
+          </Reveal>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {videos.map((m, i) => (
               <MediaItem key={i} media={m} />
             ))}
           </div>
         </section>
       )}
-
-      {/* Back */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 pb-16">
-        <Link
-          href="/expositions"
-          className="inline-flex items-center gap-2 font-body text-sm text-warm-gray hover:text-charcoal transition-colors min-h-[44px]"
-        >
-          ← Toutes les expositions
-        </Link>
-      </section>
     </div>
   )
 }

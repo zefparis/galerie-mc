@@ -3,20 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --cream: #F7F3EE;
-  --white: #FDFCFA;
-  --charcoal: #1A1916;
-  --warm-gray: #8C8880;
-  --border: #E4E0D8;
-  --gold: #B8935A;
-  --gold-light: #D4B483;
-  --overlay: rgba(26, 25, 22, 0.85);
+  /* Fond blanc cassé chaleureux, encre presque noire, un seul accent. */
+  --bg: #FAF7F1;
+  --surface: #FFFDF9;
+  --ink: #1D1A16;
+  --ink-soft: #5E5850;
+  --muted: #8A8378;
+  --line: #E7E0D3;
+
+  /* Accent — terre cuite discrète. Changer ici pour tout le site. */
+  --accent: #8C5A2E;
+  --accent-hover: #75491F;
+  --accent-soft: #EFE5D6;
 
   --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
 
-  --radius: 2px;
-  --transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  /* Alias historiques — utilisés par les composants admin existants */
+  --cream: var(--bg);
+  --white: var(--surface);
+  --charcoal: var(--ink);
+  --warm-gray: var(--ink-soft);
+  --border: var(--line);
+  --gold: var(--accent);
+  --gold-light: var(--accent-soft);
+  --overlay: rgba(29, 26, 22, 0.85);
 }
 
 * {
@@ -29,24 +40,30 @@ html {
 }
 
 body {
-  color: var(--charcoal);
-  background: var(--cream);
+  color: var(--ink);
+  background: var(--bg);
   font-family: var(--font-body);
   font-weight: 300;
-  line-height: 1.7;
+  line-height: 1.75;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
-  font-weight: 300;
-  line-height: 1.2;
+  font-weight: 400;
+  line-height: 1.15;
 }
 
 ::selection {
-  background: var(--gold-light);
-  color: var(--charcoal);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* Focus visible clair pour la navigation clavier */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 /* Évite le zoom sur focus input iOS */
@@ -68,34 +85,81 @@ button, a {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* ─── Apparition douce au scroll ─────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @layer components {
+  /* Bouton principal — encre pleine, discret */
   .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-3 bg-[#2D6A4F] text-white font-body text-base font-medium tracking-wide transition-all duration-300 hover:bg-[#235c43] min-h-[44px];
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[var(--ink)] text-[var(--bg)] font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-black min-h-[48px];
   }
-  
+
+  /* Bouton accent — le seul usage de la couleur */
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[var(--accent)] text-white font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[var(--accent-hover)] min-h-[48px];
+  }
+
+  /* Bouton contour */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 border border-[var(--line)] text-[var(--ink)] font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:border-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--bg)] min-h-[48px];
+  }
+
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-3 bg-[#8C8880] text-white font-body text-base font-medium tracking-wide transition-all duration-300 hover:bg-[#6e6962] min-h-[44px];
+    @apply inline-flex items-center justify-center px-6 py-3 bg-[var(--muted)] text-white font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[var(--ink-soft)] min-h-[44px];
   }
-  
+
   .btn-danger {
-    @apply inline-flex items-center justify-center px-6 py-3 bg-[#C0392B] text-white font-body text-base font-medium tracking-wide transition-all duration-300 hover:bg-[#a93226] min-h-[44px];
-  }
-  
-  .btn-gold {
-    @apply inline-flex items-center justify-center px-8 py-3 border border-[var(--gold)] text-[var(--charcoal)] font-body text-sm font-medium uppercase tracking-[0.15em] transition-all duration-300 hover:bg-[var(--gold)] hover:text-white min-h-[44px];
+    @apply inline-flex items-center justify-center px-6 py-3 bg-[#B3402F] text-white font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[#96352a] min-h-[44px];
   }
 
   .input-field {
-    @apply w-full px-4 py-3 border border-[var(--border)] bg-white font-body text-base text-[var(--charcoal)] outline-none transition-all duration-300 focus:border-[var(--gold)] min-h-[44px];
+    @apply w-full px-4 py-3 border border-[var(--line)] bg-[var(--surface)] font-body text-base text-[var(--ink)] outline-none transition-colors duration-200 focus:border-[var(--accent)] min-h-[48px];
   }
 
   .label-field {
-    @apply block font-body text-base font-medium text-[var(--charcoal)] mb-2;
+    @apply block font-body text-sm font-medium text-[var(--ink)] mb-2;
+  }
+
+  /* Sur-titre éditorial : petit caps letterspacé */
+  .eyebrow {
+    @apply font-body text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)];
   }
 }

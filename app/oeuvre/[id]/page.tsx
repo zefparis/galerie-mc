@@ -1,44 +1,48 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { getPaintings, getPaintingById } from '@/lib/storage'
-import { Painting } from '@/lib/types'
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import { getPaintingById, getPaintings } from '@/lib/data'
 import PaintingDetail from '@/components/gallery/PaintingDetail'
 
-export default function OeuvrePage() {
-  const params = useParams()
-  const router = useRouter()
-  const [painting, setPainting] = useState<Painting | null>(null)
-  const [prevId, setPrevId] = useState<string | undefined>()
-  const [nextId, setNextId] = useState<string | undefined>()
-  const [loaded, setLoaded] = useState(false)
+export const dynamic = 'force-dynamic'
 
-  useEffect(() => {
-    async function load() {
-      const id = params.id as string
-      const found = await getPaintingById(id)
+interface Props {
+  params: { id: string }
+}
 
-      if (!found) {
-        router.replace('/')
-        return
-      }
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const painting = await getPaintingById(params.id)
+  if (!painting) return { title: 'Œuvre introuvable' }
 
-      setPainting(found)
+  const description = [
+    `${painting.technique}, ${painting.year}`,
+    painting.dimensions,
+    painting.description?.slice(0, 140),
+  ]
+    .filter(Boolean)
+    .join(' — ')
 
-      const all = await getPaintings()
-      const currentIndex = all.findIndex((p) => p.id === id)
-      if (currentIndex > 0) setPrevId(all[currentIndex - 1].id)
-      if (currentIndex < all.length - 1) setNextId(all[currentIndex + 1].id)
-
-      setLoaded(true)
-    }
-    load()
-  }, [params.id, router])
-
-  if (!loaded || !painting) {
-    return <div className="min-h-screen" />
+  return {
+    title: painting.title,
+    description,
+    openGraph: {
+      title: `${painting.title} — Marie-Claire Scandella`,
+      description,
+      images: [painting.imageUrl],
+      type: 'article',
+    },
   }
+}
+
+export default async function OeuvrePage({ params }: Props) {
+  const [painting, all] = await Promise.all([
+    getPaintingById(params.id),
+    getPaintings(),
+  ])
+  if (!painting) notFound()
+
+  const index = all.findIndex((p) => p.id === painting.id)
+  const prevId = index > 0 ? all[index - 1].id : undefined
+  const nextId = index >= 0 && index < all.length - 1 ? all[index + 1].id : undefined
 
   return <PaintingDetail painting={painting} prevId={prevId} nextId={nextId} />
 }

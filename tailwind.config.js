@@ -16,20 +16,27 @@ module.exports = {
     },
     extend: {
       colors: {
-        cream: "var(--cream)",
-        white: "var(--white)",
-        charcoal: "var(--charcoal)",
-        "warm-gray": "var(--warm-gray)",
-        border: "var(--border)",
-        gold: "var(--gold)",
-        "gold-light": "var(--gold-light)",
+        bg: "var(--bg)",
+        surface: "var(--surface)",
+        ink: "var(--ink)",
+        "ink-soft": "var(--ink-soft)",
+        muted: "var(--muted)",
+        line: "var(--line)",
+        accent: "var(--accent)",
+        "accent-hover": "var(--accent-hover)",
+        "accent-soft": "var(--accent-soft)",
+        // Alias de compatibilité avec les composants admin existants
+        cream: "var(--bg)",
+        white: "var(--surface)",
+        charcoal: "var(--ink)",
+        "warm-gray": "var(--ink-soft)",
+        border: "var(--line)",
+        gold: "var(--accent)",
+        "gold-light": "var(--accent-soft)",
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],
         body: ["var(--font-body)", "system-ui", "sans-serif"],
-      },
-      borderRadius: {
-        DEFAULT: "2px",
       },
       transitionTimingFunction: {
         gallery: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
