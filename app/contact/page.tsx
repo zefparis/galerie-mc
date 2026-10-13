@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import ContactForm from '@/components/contact/ContactForm'
+import { getGallerySettings } from '@/lib/data'
 
 export const metadata: Metadata = {
   title: 'Contact',
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
   },
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await getGallerySettings()
   return (
     <div className="pt-16 md:pt-20">
       <Suspense
@@ -22,7 +24,7 @@ export default function ContactPage() {
           </div>
         }
       >
-        <ContactForm />
+        <ContactForm artistEmail={settings.email} />
       </Suspense>
     </div>
   )

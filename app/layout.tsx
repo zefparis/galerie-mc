@@ -3,6 +3,7 @@ import localFont from "next/font/local"
 import "./globals.css"
 import Navbar from "@/components/ui/Navbar"
 import Footer from "@/components/ui/Footer"
+import { getGallerySettings } from "@/lib/data"
 
 // Fonts auto-hébergées : aucun appel réseau au build, rendu instantané.
 const cormorant = localFont({
@@ -24,7 +25,9 @@ const inter = localFont({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://galerie-marie-claire.vercel.app"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://galerie-marie-claire.vercel.app"
+  ),
   title: {
     default: "Marie-Claire Scandella — Artiste Peintre",
     template: "%s — Marie-Claire Scandella",
@@ -41,17 +44,18 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const settings = await getGallerySettings()
   return (
     <html lang="fr" className={`${cormorant.variable} ${inter.variable}`}>
       <body className="antialiased min-h-screen flex flex-col">
-        <Navbar />
+        <Navbar artistName={settings.artistName} />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <Footer settings={settings} />
       </body>
     </html>
   )

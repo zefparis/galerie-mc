@@ -1,17 +1,20 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { getPaintings, getPublishedEvents } from '@/lib/data'
-import { getSettings } from '@/lib/storage'
+import { getPaintings, getPublishedEvents, getGallerySettings } from '@/lib/data'
 import { blurDataUrl } from '@/lib/images'
 import MasonryGrid from '@/components/gallery/MasonryGrid'
 import EventCard from '@/components/gallery/EventCard'
+import ArtistPhotos from '@/components/gallery/ArtistPhotos'
 import Reveal from '@/components/ui/Reveal'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-  const [paintings, events] = await Promise.all([getPaintings(), getPublishedEvents()])
-  const settings = getSettings()
+  const [paintings, events, settings] = await Promise.all([
+    getPaintings(),
+    getPublishedEvents(),
+    getGallerySettings(),
+  ])
 
   const featured = paintings.find((p) => p.featured) || paintings[0]
   const selection = paintings.slice(0, 6)
@@ -143,19 +146,41 @@ export default async function Home() {
 
       {/* ─── Présentation ─────────────────────────────────────────────── */}
       <section className="border-t border-[var(--line)] bg-[var(--surface)]">
-        <div className="max-w-3xl mx-auto px-5 md:px-8 py-16 md:py-28 text-center">
-          <Reveal>
-            <p className="eyebrow">L&apos;artiste</p>
-            <h2 className="font-display text-4xl md:text-5xl text-[var(--ink)] mt-2">
-              {settings.artistName}
-            </h2>
-            <p className="font-body text-base md:text-lg text-[var(--ink-soft)] leading-relaxed mt-6 md:mt-8">
-              {settings.bio}
-            </p>
-            <Link href="/contact" className="btn-outline mt-8 md:mt-10">
-              Me contacter
-            </Link>
-          </Reveal>
+        <div className="max-w-5xl mx-auto px-5 md:px-8 py-16 md:py-28">
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-10 md:gap-16 items-start">
+            {/* Photos de l'artiste */}
+            {(settings.photos?.length ?? 0) > 0 && (
+              <Reveal>
+                <ArtistPhotos photos={settings.photos!} artistName={settings.artistName} />
+              </Reveal>
+            )}
+
+            {/* Texte */}
+            <Reveal delay={120}>
+              <p className="eyebrow">Présentation</p>
+              <h2 className="font-display text-4xl md:text-5xl text-[var(--ink)] mt-2">
+                {settings.artistName}
+              </h2>
+              <p className="font-body text-base md:text-lg text-[var(--ink-soft)] leading-relaxed mt-6 md:mt-8 whitespace-pre-line">
+                {settings.bio}
+              </p>
+              <Link href="/contact" className="btn-outline mt-8 md:mt-10">
+                Me contacter
+              </Link>
+            </Reveal>
+          </div>
+
+          {/* Ma démarche picturale */}
+          {settings.processText && (
+            <Reveal className="mt-14 md:mt-20">
+              <div className="border-t border-[var(--line)] pt-10 md:pt-14 max-w-3xl mx-auto text-center">
+                <p className="eyebrow mb-6">Ma démarche picturale</p>
+                <p className="font-display text-2xl md:text-3xl text-[var(--ink-soft)] leading-relaxed italic whitespace-pre-line">
+                  {settings.processText}
+                </p>
+              </div>
+            </Reveal>
+          )}
         </div>
       </section>
     </div>

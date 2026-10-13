@@ -50,3 +50,19 @@ export const reorderBodySchema = z.object({
 export const loginBodySchema = z.object({
   password: z.string().min(1).max(200),
 })
+
+const artistPhotoSchema = z.object({
+  url: z.string().min(1).max(2000),
+  publicId: z.string().max(500).optional().default(''),
+})
+
+export const settingsBodySchema = z.object({
+  artistName: z.string().trim().min(1, 'Le nom est obligatoire').max(200),
+  bio: z.string().max(20000).optional().default(''),
+  bioShort: z.string().max(500).optional().default(''),
+  email: z.string().max(300).optional().default(''),
+  phone: z.string().max(50).optional().default(''),
+  instagram: z.string().max(200).optional().default(''),
+  processText: z.string().max(20000).optional().default(''),
+  photos: z.array(artistPhotoSchema).max(3, 'Trois photos maximum').optional().default([]),
+})

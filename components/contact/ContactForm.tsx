@@ -2,13 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { getSettings } from '@/lib/storage'
-import { GallerySettings } from '@/lib/types'
 import Reveal from '@/components/ui/Reveal'
 
-export default function ContactForm() {
+export default function ContactForm({ artistEmail }: { artistEmail: string }) {
   const searchParams = useSearchParams()
-  const [settings, setSettings] = useState<GallerySettings | null>(null)
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -19,7 +16,6 @@ export default function ContactForm() {
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
-    setSettings(getSettings())
     const sujet = searchParams.get('sujet')
     if (sujet) {
       setForm((prev) => ({ ...prev, subject: sujet }))
@@ -81,12 +77,12 @@ export default function ContactForm() {
         </p>
       </Reveal>
 
-      {!emailjsConfigured && settings?.email && (
+      {!emailjsConfigured && artistEmail && (
         <div className="mb-10 p-5 bg-[var(--surface)] border border-[var(--line)]">
           <p className="font-body text-sm text-[var(--ink-soft)]">
             Contactez directement :{' '}
-            <a href={`mailto:${settings.email}`} className="text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors">
-              {settings.email}
+            <a href={`mailto:${artistEmail}`} className="text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors">
+              {artistEmail}
             </a>
           </p>
         </div>

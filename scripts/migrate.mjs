@@ -69,6 +69,13 @@ const statements = [
   `ALTER TABLE events ADD COLUMN IF NOT EXISTS "order" INTEGER DEFAULT 0`,
   `ALTER TABLE events ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now()`,
   `CREATE INDEX IF NOT EXISTS idx_events_published ON events (published)`,
+  // Réglages de l'artiste : une ligne unique (id = 1), contenu en JSONB.
+  `CREATE TABLE IF NOT EXISTS settings (
+    id INT PRIMARY KEY CHECK (id = 1),
+    data JSONB NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now()
+  )`,
+  `ALTER TABLE settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now()`,
 ]
 
 try {

@@ -1,19 +1,7 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getSettings } from '@/lib/storage'
 import { GallerySettings } from '@/lib/types'
 
-export default function Footer() {
-  const [settings, setSettings] = useState<GallerySettings | null>(null)
-
-  useEffect(() => {
-    setSettings(getSettings())
-  }, [])
-
-  if (!settings) return null
-
+export default function Footer({ settings }: { settings: GallerySettings }) {
   return (
     <footer className="footer w-full border-t border-[var(--line)] bg-[var(--bg)]">
       <div className="max-w-7xl mx-auto px-5 md:px-8 py-12 md:py-16">
@@ -54,6 +42,14 @@ export default function Footer() {
                   className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors"
                 >
                   {settings.email}
+                </a>
+              )}
+              {settings.phone && (
+                <a
+                  href={`tel:${settings.phone.replace(/\s/g, '')}`}
+                  className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors"
+                >
+                  {settings.phone}
                 </a>
               )}
               {settings.instagram && (

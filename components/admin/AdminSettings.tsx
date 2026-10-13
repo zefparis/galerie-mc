@@ -1,39 +1,163 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getSettings, saveSettings } from '@/lib/storage'
+import { useState, useEffect, useRef } from 'react'
+import { getSettings, DEFAULT_SETTINGS, isSessionExpired, redirectToLogin } from '@/lib/storage'
 import { GallerySettings } from '@/lib/types'
-import { testCloudinaryConnection } from '@/lib/cloudinary'
+import CloudinaryUpload from './CloudinaryUpload'
 import HelpTip from './HelpTip'
+
+const DRAFT_KEY = 'mc-draft-settings'
+const MIGRATED_KEY = 'mc-settings-migrated'
+const MAX_PHOTOS = 3
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<GallerySettings | null>(null)
   const [message, setMessage] = useState('')
-  const [cloudinaryTesting, setCloudinaryTesting] = useState(false)
-  const [cloudinaryResult, setCloudinaryResult] = useState<'success' | 'error' | ''>('')
+  const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [draftFound, setDraftFound] = useState(false)
+  const [deletePhotoIndex, setDeletePhotoIndex] = useState<number | null>(null)
+  const restored = useRef(false)
 
+  // Chargement : API (source de vérité), complétée par les anciennes valeurs
+  // locales si elles n'ont jamais été envoyées en base — rien n'est perdu.
   useEffect(() => {
-    setSettings(getSettings())
+    if (restored.current) return
+    restored.current = true
+
+    const load = async () => {
+      let base: GallerySettings
+      try {
+        const res = await fetch('/api/settings')
+        if (!res.ok) throw new Error()
+        base = await res.json()
+      } catch {
+        setLoadError(true)
+        base = getSettings()
+      }
+
+      // Ancien stockage navigateur : si l'artiste avait déjà saisi des textes
+      // avant le passage en base ET que la base n'a encore rien de
+      // personnalisé, on reprend ses anciennes valeurs — rien n'est perdu.
+      try {
+        if (!localStorage.getItem(MIGRATED_KEY)) {
+          const legacy = getSettings()
+          const apiStillDefaults =
+            base.artistName === DEFAULT_SETTINGS.artistName &&
+            base.bio === DEFAULT_SETTINGS.bio
+          const legacyCustomized =
+            legacy.artistName !== DEFAULT_SETTINGS.artistName ||
+            legacy.bio !== DEFAULT_SETTINGS.bio ||
+            legacy.bioShort !== DEFAULT_SETTINGS.bioShort ||
+            legacy.email !== DEFAULT_SETTINGS.email
+          if (apiStillDefaults && legacyCustomized) {
+            base = { ...base, ...legacy }
+          }
+        }
+      } catch { /* ignore */ }
+
+      // Brouillon automatique éventuel
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY)
+        if (raw) {
+          const draft = JSON.parse(raw)
+          if (draft?.artistName) {
+            base = draft
+            setDraftFound(true)
+          }
+        }
+      } catch { /* brouillon illisible — on l'ignore */ }
+
+      setSettings(base)
+    }
+    load()
   }, [])
 
-  const isEnvConfigured = !!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+  // Brouillon auto-sauvegardé à chaque modification
+  useEffect(() => {
+    if (!settings) return
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(settings))
+      } catch { /* stockage plein — non bloquant */ }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [settings])
 
-  if (!settings) return null
-
-  const handleSaveSettings = () => {
-    saveSettings(settings)
-    setMessage('Votre présentation est enregistrée ✓')
-    setTimeout(() => setMessage(''), 5000)
+  if (!settings) {
+    return (
+      <p className="font-body text-base text-[var(--muted)] py-10 text-center">
+        Chargement de vos informations...
+      </p>
+    )
   }
 
-  const handleTestCloudinary = async () => {
-    setCloudinaryTesting(true)
-    setCloudinaryResult('')
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || settings.cloudinaryCloudName
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || settings.cloudinaryUploadPreset
-    const ok = await testCloudinaryConnection(cloudName, uploadPreset)
-    setCloudinaryResult(ok ? 'success' : 'error')
-    setCloudinaryTesting(false)
+  const photos = settings.photos || []
+
+  const handleSave = async () => {
+    setError('')
+    setMessage('')
+    if (!settings.artistName.trim()) {
+      setError('Votre nom est obligatoire pour enregistrer.')
+      return
+    }
+    setSaving(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      })
+      if (!res.ok) {
+        if (res.status === 401) {
+          redirectToLogin()
+          return
+        }
+        throw new Error('save-failed')
+      }
+      localStorage.removeItem(DRAFT_KEY)
+      localStorage.setItem(MIGRATED_KEY, '1')
+      setDraftFound(false)
+      setMessage('Votre présentation est enregistrée ✓ — elle est maintenant visible sur votre site.')
+      setTimeout(() => setMessage(''), 8000)
+    } catch (err) {
+      if (isSessionExpired(err)) {
+        redirectToLogin()
+        return
+      }
+      setError('Une erreur est survenue — rien n\'a été perdu, réessayez.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const addPhoto = (url: string, publicId: string) => {
+    if (photos.length >= MAX_PHOTOS) return
+    setSettings({ ...settings, photos: [...photos, { url, publicId }] })
+  }
+
+  const replacePhoto = (index: number, url: string, publicId: string) => {
+    const arr = [...photos]
+    arr[index] = { url, publicId }
+    setSettings({ ...settings, photos: arr })
+  }
+
+  const removePhoto = (index: number) => {
+    setSettings({ ...settings, photos: photos.filter((_, i) => i !== index) })
+    setDeletePhotoIndex(null)
+  }
+
+  const discardDraft = () => {
+    localStorage.removeItem(DRAFT_KEY)
+    setDraftFound(false)
+    restored.current = false
+    setSettings(null)
+    // recharge depuis l'API
+    fetch('/api/settings')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => setSettings(s || getSettings()))
+      .catch(() => setSettings(getSettings()))
   }
 
   return (
@@ -44,9 +168,37 @@ export default function AdminSettings() {
         votre nom.
       </p>
 
+      {draftFound && (
+        <div className="mb-6 p-4 bg-[var(--accent-soft)] border border-[var(--accent)]/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="font-body text-base text-[var(--ink)]">
+            J&apos;ai retrouvé le brouillon que vous aviez commencé.
+          </p>
+          <button
+            onClick={discardDraft}
+            className="font-body text-sm text-[var(--ink-soft)] underline min-h-[44px] text-left sm:text-right"
+          >
+            Recharger la version en ligne
+          </button>
+        </div>
+      )}
+
       {message && (
         <div className="mb-6 p-4 bg-[var(--accent-soft)] border border-[var(--accent)]/30" role="status">
           <p className="font-body text-base text-[var(--ink)] font-medium">{message}</p>
+        </div>
+      )}
+      {loadError && (
+        <div className="mb-6 p-4 bg-[#FFF8E1] border border-[#FFE082]" role="alert">
+          <p className="font-body text-base text-[#8a6d00]">
+            ⚠️ Je n&apos;ai pas pu charger vos informations enregistrées. Vérifiez
+            votre connexion et rechargez la page avant de modifier — sinon vous
+            risquez d&apos;écraser ce qui est en ligne.
+          </p>
+        </div>
+      )}
+      {error && (
+        <div className="mb-6 p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
+          <p className="font-body text-base text-[#B3402F]">{error}</p>
         </div>
       )}
 
@@ -81,7 +233,7 @@ export default function AdminSettings() {
 
         <div>
           <label htmlFor="st-bio" className="label-field">
-            Votre biographie <span className="label-optional">— facultatif</span>
+            Votre présentation <span className="label-optional">— facultatif</span>
             <HelpTip text="Quelques phrases sur vous et votre peinture. C'est le texte « Qui suis-je » de votre site." />
           </label>
           <textarea
@@ -91,6 +243,88 @@ export default function AdminSettings() {
             className="input-field min-h-[160px] resize-y"
             rows={6}
           />
+        </div>
+
+        <div>
+          <label htmlFor="st-process" className="label-field">
+            Ma démarche picturale <span className="label-optional">— facultatif</span>
+            <HelpTip text="Parlez de votre façon de peindre, de ce qui vous inspire, de ce que vous cherchez sur la toile. Vous pouvez écrire plusieurs paragraphes — ils s'afficheront en belles grandes lettres sur votre site." />
+          </label>
+          <textarea
+            id="st-process"
+            value={settings.processText || ''}
+            onChange={(e) => setSettings({ ...settings, processText: e.target.value })}
+            className="input-field min-h-[200px] resize-y"
+            rows={8}
+            placeholder="ex : Je peins d'abord avec les mains, la couleur guide le geste..."
+          />
+        </div>
+
+        {/* ── Mes photos ── */}
+        <div className="border-t border-[var(--line)] pt-6">
+          <h3 className="font-body text-lg font-medium text-[var(--ink)] mb-1">
+            Mes photos <span className="label-optional">— 3 maximum</span>
+            <HelpTip text="Des photos de vous, dans votre atelier ou avec vos toiles. Elles s'affichent à côté de votre présentation sur le site." />
+          </h3>
+          <p className="font-body text-sm text-[var(--ink-soft)] mb-5">
+            {photos.length === 0
+              ? 'Ajoutez une photo de vous pour donner un visage à votre galerie.'
+              : photos.length >= MAX_PHOTOS
+                ? 'Vous avez atteint la limite de 3 photos — supprimez-en une pour en changer.'
+                : `Encore ${MAX_PHOTOS - photos.length} emplacement${MAX_PHOTOS - photos.length > 1 ? 's' : ''} disponible${MAX_PHOTOS - photos.length > 1 ? 's' : ''}.`}
+          </p>
+
+          <div className="space-y-5">
+            {photos.map((photo, i) => (
+              <div key={photo.publicId || photo.url} className="border border-[var(--line)] bg-[var(--surface)] p-3">
+                <CloudinaryUpload
+                  currentUrl={photo.url}
+                  onUploaded={(url, publicId) => replacePhoto(i, url, publicId)}
+                />
+                {deletePhotoIndex === i ? (
+                  <div className="mt-3 p-3 border border-[#B3402F]/30 bg-[#B3402F]/5">
+                    <p className="font-body text-sm text-[var(--ink)]">
+                      Retirer cette photo de votre présentation ?
+                    </p>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setDeletePhotoIndex(null)}
+                        autoFocus
+                        className="btn-secondary flex-1 text-sm"
+                      >
+                        Annuler — garder la photo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(i)}
+                        className="font-body text-sm text-[#B3402F] underline min-h-[48px] px-3"
+                      >
+                        Retirer
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setDeletePhotoIndex(i)}
+                    className="mt-3 font-body text-sm text-[#B3402F] underline min-h-[48px]"
+                  >
+                    Retirer cette photo
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {photos.length < MAX_PHOTOS && (
+              <div className="border border-dashed border-[var(--line)] bg-[var(--surface)] p-3">
+                <p className="font-body text-sm text-[var(--muted)] mb-3">
+                  Ajouter une photo ({photos.length + 1} sur {MAX_PHOTOS})
+                </p>
+                <CloudinaryUpload currentUrl="" onUploaded={addPhoto} />
+              </div>
+            )}
+          </div>
         </div>
 
         <div>
@@ -141,66 +375,16 @@ export default function AdminSettings() {
 
       <div className="mt-8 pt-6 border-t border-[var(--line)]">
         <button
-          onClick={handleSaveSettings}
-          className="btn-primary w-full text-lg"
+          onClick={handleSave}
+          disabled={saving || loadError}
+          className="btn-primary w-full text-lg disabled:opacity-50"
         >
-          ✓ Enregistrer ma présentation
+          {saving ? 'Enregistrement...' : '✓ Enregistrer ma présentation'}
         </button>
+        <p className="font-body text-sm text-[var(--muted)] text-center mt-3">
+          Ce que vous écrivez ici apparaît directement sur votre site.
+        </p>
       </div>
-
-      {/* ── Sections techniques, repliées en bas ── */}
-      <details className="mt-10 border border-[var(--line)] bg-[var(--surface)]">
-        <summary className="px-4 py-4 font-body text-sm text-[var(--ink-soft)] cursor-pointer min-h-[52px] flex items-center">
-          ⚙️ Réglages techniques (vous n&apos;aurez normalement jamais besoin de cette partie)
-        </summary>
-        <div className="px-4 pb-5 space-y-5 border-t border-[var(--line)] pt-5">
-          {isEnvConfigured ? (
-            <p className="font-body text-sm text-[#2D6A4F]">
-              ✅ L&apos;envoi de photos est bien configuré — rien à faire.
-            </p>
-          ) : (
-            <>
-              <div>
-                <label className="label-field">Cloud Name (Cloudinary)</label>
-                <input
-                  type="text"
-                  value={settings.cloudinaryCloudName}
-                  onChange={(e) => setSettings({ ...settings, cloudinaryCloudName: e.target.value })}
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="label-field">Upload Preset (Cloudinary)</label>
-                <input
-                  type="text"
-                  value={settings.cloudinaryUploadPreset}
-                  onChange={(e) => setSettings({ ...settings, cloudinaryUploadPreset: e.target.value })}
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <button
-                  onClick={handleTestCloudinary}
-                  disabled={cloudinaryTesting || !settings.cloudinaryCloudName || !settings.cloudinaryUploadPreset}
-                  className="btn-secondary disabled:opacity-50"
-                >
-                  {cloudinaryTesting ? 'Test en cours...' : 'Tester la connexion'}
-                </button>
-                {cloudinaryResult === 'success' && (
-                  <p className="mt-2 font-body text-sm text-[#2D6A4F] font-medium">✅ Connexion réussie</p>
-                )}
-                {cloudinaryResult === 'error' && (
-                  <p className="mt-2 font-body text-sm text-[#B3402F] font-medium">❌ Échec — vérifiez les identifiants</p>
-                )}
-              </div>
-            </>
-          )}
-          <p className="font-body text-sm text-[var(--muted)]">
-            ℹ️ Pour changer le mot de passe de connexion, contactez la personne
-            qui s&apos;occupe du site.
-          </p>
-        </div>
-      </details>
     </div>
   )
 }

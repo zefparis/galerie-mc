@@ -33,7 +33,7 @@ export default function AdminHome({ paintingsCount, eventsCount, onNavigate }: P
     {
       view: 'settings' as const,
       title: 'Ma présentation',
-      desc: 'Votre nom, votre biographie, vos coordonnées.',
+      desc: 'Votre nom, votre présentation, vos photos et coordonnées.',
       icon: '✎',
       primary: false,
     },

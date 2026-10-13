@@ -25,6 +25,11 @@ export interface Painting {
   createdAt: string
 }
 
+export interface ArtistPhoto {
+  url: string
+  publicId: string
+}
+
 export interface GallerySettings {
   artistName: string
   bio: string
@@ -32,9 +37,11 @@ export interface GallerySettings {
   email: string
   phone?: string
   instagram?: string
-  cloudinaryCloudName: string
-  cloudinaryUploadPreset: string
-  accentColor: string
+  processText?: string
+  photos?: ArtistPhoto[]
+  cloudinaryCloudName?: string
+  cloudinaryUploadPreset?: string
+  accentColor?: string
 }
 
 export interface GalleryData {

@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import { getSettings } from '@/lib/storage'
 
 const links = [
   { href: '/galerie', label: 'Galerie' },
@@ -11,20 +10,15 @@ const links = [
   { href: '/contact', label: 'Contact' },
 ]
 
-export default function Navbar() {
+export default function Navbar({ artistName }: { artistName: string }) {
   const pathname = usePathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [artistName, setArtistName] = useState('Marie-Claire Scandella')
   const touchStartX = useRef(0)
 
   // Sur la page d'accueil la nav flotte au-dessus du hero (transparente,
   // texte clair) puis devient opaque au scroll. Ailleurs : toujours opaque.
   const overHero = pathname === '/' && !scrolled && !drawerOpen
-
-  useEffect(() => {
-    setArtistName(getSettings().artistName)
-  }, [])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)

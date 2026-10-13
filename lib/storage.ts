@@ -4,13 +4,15 @@ const SETTINGS_KEY = 'mc-gallery-settings-v1'
 
 // ─── Settings (localStorage — config admin locale) ────────────────────────────
 
-const DEFAULT_SETTINGS: GallerySettings = {
+export const DEFAULT_SETTINGS: GallerySettings = {
   artistName: 'Marie-Claire Scandella',
   bio: "Marie-Claire Scandella est une artiste peintre française basée à Montreuil-aux-Lions. Son travail explore l'abstraction à travers une palette sensible et une touche expressive, développant un langage pictural personnel qui allie liberté formelle et maîtrise technique. Ses œuvres ont été présentées dans plusieurs expositions collectives et personnelles.",
   bioShort: 'Artiste peintre abstraite | Montreuil-aux-Lions',
   email: 'contact@marie-claire-scandella.fr',
   phone: '',
   instagram: '',
+  processText: '',
+  photos: [],
   cloudinaryCloudName: '',
   cloudinaryUploadPreset: '',
   accentColor: '#B8935A',

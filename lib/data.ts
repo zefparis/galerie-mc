@@ -3,7 +3,8 @@
 
 import pool from './db'
 import { mapPaintingRow, mapEventRow } from './mappers'
-import { Painting, GalleryEvent } from './types'
+import { Painting, GalleryEvent, GallerySettings } from './types'
+import { DEFAULT_SETTINGS } from './storage'
 
 export async function getPaintings(): Promise<Painting[]> {
   try {
@@ -36,6 +37,19 @@ export async function getPublishedEvents(): Promise<GalleryEvent[]> {
   } catch (err) {
     console.error('[data] getPublishedEvents', err)
     return []
+  }
+}
+
+// Réglages de l'artiste (ligne unique id=1, fusionnée avec les valeurs par
+// défaut pour que le site fonctionne même avant la première sauvegarde).
+export async function getGallerySettings(): Promise<GallerySettings> {
+  try {
+    const { rows } = await pool.query('SELECT data FROM settings WHERE id = 1')
+    if (!rows.length) return DEFAULT_SETTINGS
+    return { ...DEFAULT_SETTINGS, ...(rows[0].data as Partial<GallerySettings>) }
+  } catch (err) {
+    console.error('[data] getGallerySettings', err)
+    return DEFAULT_SETTINGS
   }
 }
 
