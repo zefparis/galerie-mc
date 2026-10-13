@@ -52,7 +52,7 @@ export default function PaintingDetail({ painting, prevId, nextId }: Props) {
           <button
             onClick={() => setLightbox(true)}
             aria-label={`Agrandir « ${painting.title} »`}
-            className="block w-full bg-[var(--surface)] border border-[var(--line)] p-3 sm:p-5 md:sticky md:top-24 cursor-zoom-in"
+            className="block w-full bg-[var(--mat)] border border-[var(--line)] p-3 sm:p-5 md:sticky md:top-24 cursor-zoom-in"
           >
             <Image
               src={painting.imageUrl}

@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: light;
+
   /* Fond blanc cassé chaleureux, encre presque noire, un seul accent. */
   --bg: #FAF7F1;
   --surface: #FFFDF9;
@@ -15,6 +17,29 @@
   --accent: #8C5A2E;
   --accent-hover: #75491F;
   --accent-soft: #EFE5D6;
+  --on-accent: #FFFFFF;
+
+  /* Passe-partout des œuvres encadrées (hero, fiche œuvre) */
+  --mat: #FFFFFF;
+  --shadow: rgba(29, 26, 22, 0.28);
+  --btn-primary-hover: #000000;
+
+  /* Surfaces toujours sombres (menu mobile, bulles d'aide, badges sur image) */
+  --night: #1D1A16;
+  --night-ink: #EDE8DF;
+
+  /* Messages */
+  --danger: #B3402F;
+  --danger-hover: #96352A;
+  --danger-bg: rgba(179, 64, 47, 0.08);
+  --danger-line: rgba(179, 64, 47, 0.3);
+  --on-danger: #FFFFFF;
+  --success: #2D6A4F;
+  --success-bg: rgba(45, 106, 79, 0.1);
+  --success-line: rgba(45, 106, 79, 0.3);
+  --warning-bg: #FFF8E1;
+  --warning-line: #FFE082;
+  --warning-ink: #8A6D00;
 
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Inter', system-ui, sans-serif;
@@ -28,6 +53,39 @@
   --gold: var(--accent);
   --gold-light: var(--accent-soft);
   --overlay: rgba(29, 26, 22, 0.85);
+}
+
+/* ─── Mode sombre : gris très foncé légèrement chaud, jamais de noir pur ── */
+html.dark {
+  color-scheme: dark;
+
+  --bg: #1C1915;
+  --surface: #262119;
+  --ink: #EDE7DC;
+  --ink-soft: #B9B1A4;
+  --muted: #948C7D;
+  --line: #3B352A;
+
+  --accent: #D0A26C;
+  --accent-hover: #E2B986;
+  --accent-soft: #352C20;
+  --on-accent: #241B10;
+
+  --mat: #221E17;
+  --shadow: rgba(0, 0, 0, 0.55);
+  --btn-primary-hover: #FFFDF9;
+
+  --danger: #E08A74;
+  --danger-hover: #ECA28D;
+  --danger-bg: rgba(224, 138, 116, 0.12);
+  --danger-line: rgba(224, 138, 116, 0.35);
+  --on-danger: #2A1208;
+  --success: #7FBF9A;
+  --success-bg: rgba(127, 191, 154, 0.12);
+  --success-line: rgba(127, 191, 154, 0.3);
+  --warning-bg: #2E2A1C;
+  --warning-line: #5A4E26;
+  --warning-ink: #E8CE7A;
 }
 
 * {
@@ -47,6 +105,13 @@ body {
   line-height: 1.75;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Transition douce des couleurs au changement de thème (200 ms).
+   Les transitions déjà définies (opacité, transform...) gardent la main. */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 200ms;
 }
 
 h1, h2, h3, h4 {
@@ -144,12 +209,12 @@ button, a {
 @layer components {
   /* Bouton principal — encre pleine, discret */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[var(--ink)] text-[var(--bg)] font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-black min-h-[48px];
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[var(--ink)] text-[var(--bg)] font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[var(--btn-primary-hover)] min-h-[48px];
   }
 
   /* Bouton accent — le seul usage de la couleur */
   .btn-accent {
-    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[var(--accent)] text-white font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[var(--accent-hover)] min-h-[48px];
+    @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-[var(--accent)] text-[var(--on-accent)] font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[var(--accent-hover)] min-h-[48px];
   }
 
   /* Bouton contour */
@@ -158,11 +223,11 @@ button, a {
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-3 bg-[var(--muted)] text-white font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[var(--ink-soft)] min-h-[48px];
+    @apply inline-flex items-center justify-center px-6 py-3 bg-[var(--ink-soft)] text-[var(--bg)] font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[var(--ink)] min-h-[48px];
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center px-6 py-3 bg-[#B3402F] text-white font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[#96352a] min-h-[48px];
+    @apply inline-flex items-center justify-center px-6 py-3 bg-[var(--danger)] text-[var(--on-danger)] font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[var(--danger-hover)] min-h-[48px];
   }
 
   .input-field {

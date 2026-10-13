@@ -43,7 +43,7 @@ export default function PaintingCard({ painting }: { painting: Painting }) {
           </div>
         </div>
         {painting.priceStatus === 'vendu' && (
-          <span className="absolute top-3 right-3 font-body text-[10px] font-medium uppercase tracking-[0.14em] px-2.5 py-1 bg-[var(--ink)] text-white">
+          <span className="absolute top-3 right-3 font-body text-[10px] font-medium uppercase tracking-[0.14em] px-2.5 py-1 bg-[var(--night)] text-[var(--night-ink)]">
             Vendu
           </span>
         )}

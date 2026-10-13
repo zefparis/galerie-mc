@@ -152,8 +152,8 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
       )}
 
       {error && (
-        <div className="mb-6 p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
-          <p className="font-body text-base text-[#B3402F]">{error}</p>
+        <div className="mb-6 p-4 bg-[var(--danger-bg)] border border-[var(--danger-line)]" role="alert">
+          <p className="font-body text-base text-[var(--danger)]">{error}</p>
         </div>
       )}
 
@@ -239,7 +239,7 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
           >
             <span
               className={`w-14 h-8 rounded-full transition-colors relative flex-shrink-0 ${
-                form.published ? 'bg-[#2D6A4F]' : 'bg-[var(--line)]'
+                form.published ? 'bg-[var(--success)]' : 'bg-[var(--line)]'
               }`}
             >
               <span
@@ -304,7 +304,7 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
               </button>
             </div>
             {videoError && (
-              <p className="font-body text-sm text-[#B3402F] mt-2">{videoError}</p>
+              <p className="font-body text-sm text-[var(--danger)] mt-2">{videoError}</p>
             )}
           </div>
 
@@ -349,7 +349,7 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
                         type="button"
                         onClick={() => setMedia(media.filter((_, j) => j !== i))}
                         aria-label="Retirer ce média"
-                        className="w-11 h-11 flex items-center justify-center border border-[var(--line)] text-[#B3402F] hover:border-[#B3402F]"
+                        className="w-11 h-11 flex items-center justify-center border border-[var(--line)] text-[var(--danger)] hover:border-[var(--danger)]"
                       >
                         🗑
                       </button>

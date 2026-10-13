@@ -407,8 +407,8 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
           </div>
 
           {error && (
-            <div className="mt-5 p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
-              <p className="font-body text-base text-[#B3402F]">{error}</p>
+            <div className="mt-5 p-4 bg-[var(--danger-bg)] border border-[var(--danger-line)]" role="alert">
+              <p className="font-body text-base text-[var(--danger)]">{error}</p>
             </div>
           )}
         </div>

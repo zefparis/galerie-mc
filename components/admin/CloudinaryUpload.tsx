@@ -23,8 +23,8 @@ export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
 
   if (!settings) {
     return (
-      <div className="p-4 bg-[#FFF8E1] border border-[#FFE082] rounded">
-        <p className="font-body text-base text-[#8a6d00]">
+      <div className="p-4 bg-[var(--warning-bg)] border border-[var(--warning-line)] rounded">
+        <p className="font-body text-base text-[var(--warning-ink)]">
           ⚠️ L&apos;envoi de photos n&apos;est pas configuré. Contactez la personne
           qui s&apos;occupe du site.
         </p>
@@ -155,8 +155,8 @@ export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
       )}
 
       {error && (
-        <div className="mt-4 p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
-          <p className="font-body text-base text-[#B3402F]">{error}</p>
+        <div className="mt-4 p-4 bg-[var(--danger-bg)] border border-[var(--danger-line)]" role="alert">
+          <p className="font-body text-base text-[var(--danger)]">{error}</p>
           <button
             type="button"
             onClick={() => fileRef.current?.click()}

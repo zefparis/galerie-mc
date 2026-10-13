@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
+import ThemeToggle from '@/components/ui/ThemeToggle'
 
 const links = [
   { href: '/galerie', label: 'Galerie' },
@@ -64,8 +65,10 @@ export default function Navbar({ artistName }: { artistName: string }) {
             ))}
           </div>
 
-          {/* Mobile hamburger */}
-          <button
+          <div className="flex items-center">
+            <ThemeToggle />
+            {/* Mobile hamburger */}
+            <button
             onClick={() => setDrawerOpen(true)}
             className="md:hidden p-2 -mr-2"
             aria-label="Ouvrir le menu"
@@ -76,6 +79,7 @@ export default function Navbar({ artistName }: { artistName: string }) {
               <span className="block h-[1.5px] bg-[var(--ink)]" />
             </div>
           </button>
+          </div>
         </div>
       </nav>
 
@@ -93,7 +97,7 @@ export default function Navbar({ artistName }: { artistName: string }) {
           onClick={() => setDrawerOpen(false)}
         />
         <div
-          className={`absolute top-0 right-0 h-full w-[300px] max-w-[85vw] bg-[var(--ink)] text-[var(--bg)] flex flex-col transition-transform duration-300 ease-gallery ${
+          className={`absolute top-0 right-0 h-full w-[300px] max-w-[85vw] bg-[var(--night)] text-[var(--night-ink)] flex flex-col transition-transform duration-300 ease-gallery ${
             drawerOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
           onTouchStart={handleTouchStart}

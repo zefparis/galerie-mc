@@ -117,8 +117,8 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
         </div>
       )}
       {error && (
-        <div className="mb-4 p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
-          <p className="font-body text-base text-[#B3402F]">{error}</p>
+        <div className="mb-4 p-4 bg-[var(--danger-bg)] border border-[var(--danger-line)]" role="alert">
+          <p className="font-body text-base text-[var(--danger)]">{error}</p>
         </div>
       )}
 
@@ -255,7 +255,7 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
                       <button
                         onClick={() => setDeleteTarget(painting)}
                         aria-label={`Supprimer « ${painting.title} »`}
-                        className="w-11 h-11 flex items-center justify-center border border-[var(--line)] bg-[var(--surface)] text-[#B3402F] hover:border-[#B3402F]"
+                        className="w-11 h-11 flex items-center justify-center border border-[var(--line)] bg-[var(--surface)] text-[var(--danger)] hover:border-[var(--danger)]"
                       >
                         🗑
                       </button>
@@ -287,7 +287,7 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
             <h3 id="delete-title" className="font-display text-2xl text-center text-[var(--ink)] mt-4">
               Supprimer « {deleteTarget.title} » ?
             </h3>
-            <p className="font-body text-base text-center text-[#B3402F] font-medium mt-2">
+            <p className="font-body text-base text-center text-[var(--danger)] font-medium mt-2">
               Cette action est définitive.
             </p>
             <p className="font-body text-sm text-center text-[var(--muted)] mt-2">
@@ -303,7 +303,7 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
               </button>
               <button
                 onClick={handleDelete}
-                className="font-body text-sm text-[#B3402F] underline min-h-[48px] hover:text-[#96352a]"
+                className="font-body text-sm text-[var(--danger)] underline min-h-[48px] hover:text-[var(--danger-hover)]"
               >
                 Supprimer définitivement
               </button>

@@ -188,8 +188,8 @@ export default function AdminSettings() {
         </div>
       )}
       {loadError && (
-        <div className="mb-6 p-4 bg-[#FFF8E1] border border-[#FFE082]" role="alert">
-          <p className="font-body text-base text-[#8a6d00]">
+        <div className="mb-6 p-4 bg-[var(--warning-bg)] border border-[var(--warning-line)]" role="alert">
+          <p className="font-body text-base text-[var(--warning-ink)]">
             ⚠️ Je n&apos;ai pas pu charger vos informations enregistrées. Vérifiez
             votre connexion et rechargez la page avant de modifier — sinon vous
             risquez d&apos;écraser ce qui est en ligne.
@@ -197,8 +197,8 @@ export default function AdminSettings() {
         </div>
       )}
       {error && (
-        <div className="mb-6 p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
-          <p className="font-body text-base text-[#B3402F]">{error}</p>
+        <div className="mb-6 p-4 bg-[var(--danger-bg)] border border-[var(--danger-line)]" role="alert">
+          <p className="font-body text-base text-[var(--danger)]">{error}</p>
         </div>
       )}
 
@@ -282,7 +282,7 @@ export default function AdminSettings() {
                   onUploaded={(url, publicId) => replacePhoto(i, url, publicId)}
                 />
                 {deletePhotoIndex === i ? (
-                  <div className="mt-3 p-3 border border-[#B3402F]/30 bg-[#B3402F]/5">
+                  <div className="mt-3 p-3 border border-[var(--danger-line)] bg-[var(--danger-bg)]">
                     <p className="font-body text-sm text-[var(--ink)]">
                       Retirer cette photo de votre présentation ?
                     </p>
@@ -298,7 +298,7 @@ export default function AdminSettings() {
                       <button
                         type="button"
                         onClick={() => removePhoto(i)}
-                        className="font-body text-sm text-[#B3402F] underline min-h-[48px] px-3"
+                        className="font-body text-sm text-[var(--danger)] underline min-h-[48px] px-3"
                       >
                         Retirer
                       </button>
@@ -308,7 +308,7 @@ export default function AdminSettings() {
                   <button
                     type="button"
                     onClick={() => setDeletePhotoIndex(i)}
-                    className="mt-3 font-body text-sm text-[#B3402F] underline min-h-[48px]"
+                    className="mt-3 font-body text-sm text-[var(--danger)] underline min-h-[48px]"
                   >
                     Retirer cette photo
                   </button>

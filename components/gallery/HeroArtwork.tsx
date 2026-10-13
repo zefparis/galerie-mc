@@ -42,7 +42,7 @@ export default function HeroArtwork({ paintings }: Props) {
       }}
     >
       {/* Cadre : mat blanc + filet discret + ombre douce */}
-      <div className="bg-white p-3 sm:p-4 border border-[var(--line)] shadow-[0_18px_50px_-18px_rgba(29,26,22,0.28)]">
+      <div className="bg-[var(--mat)] p-3 sm:p-4 border border-[var(--line)] shadow-[0_18px_50px_-18px_var(--shadow)]">
         <div className="relative h-[46svh] sm:h-[52svh] lg:h-[58vh]">
           {paintings.map((p, i) => (
             <div

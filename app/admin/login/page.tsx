@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import PasswordInput from '@/components/ui/PasswordInput'
+import AdminThemeToggle from '@/components/admin/AdminThemeToggle'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -46,6 +47,9 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg)]">
+      <div className="fixed top-3 right-3 z-10">
+        <AdminThemeToggle />
+      </div>
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
           <h1 className="font-display text-4xl text-[var(--ink)] mb-3">Bonjour Marie-Claire</h1>
@@ -75,8 +79,8 @@ export default function AdminLoginPage() {
           </div>
 
           {error && (
-            <div className="p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
-              <p className="font-body text-base text-[#B3402F]">
+            <div className="p-4 bg-[var(--danger-bg)] border border-[var(--danger-line)]" role="alert">
+              <p className="font-body text-base text-[var(--danger)]">
                 {error === 'Mot de passe incorrect'
                   ? "Ce n'est pas le bon mot de passe. Réessayez."
                   : error}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminHome from '@/components/admin/AdminHome'
+import AdminThemeToggle from '@/components/admin/AdminThemeToggle'
 import PaintingList from '@/components/admin/PaintingList'
 import PaintingWizard from '@/components/admin/PaintingWizard'
 import EventList from '@/components/admin/EventList'
@@ -127,7 +128,8 @@ export default function AdminClient() {
             {title}
           </h1>
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <AdminThemeToggle />
           <a
             href="/"
             target="_blank"

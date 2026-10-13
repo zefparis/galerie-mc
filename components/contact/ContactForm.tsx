@@ -157,8 +157,8 @@ export default function ContactForm({ artistEmail }: { artistEmail: string }) {
             </div>
 
             {status === 'error' && errorMessage && (
-              <div className="p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
-                <p className="font-body text-sm text-[#B3402F]">{errorMessage}</p>
+              <div className="p-4 bg-[var(--danger-bg)] border border-[var(--danger-line)]" role="alert">
+                <p className="font-body text-sm text-[var(--danger)]">{errorMessage}</p>
               </div>
             )}
 

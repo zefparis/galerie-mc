@@ -82,8 +82,8 @@ export default function EventList({ onAdd, onEdit }: Props) {
         </div>
       )}
       {error && (
-        <div className="mb-4 p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
-          <p className="font-body text-base text-[#B3402F]">{error}</p>
+        <div className="mb-4 p-4 bg-[var(--danger-bg)] border border-[var(--danger-line)]" role="alert">
+          <p className="font-body text-base text-[var(--danger)]">{error}</p>
         </div>
       )}
 
@@ -141,7 +141,7 @@ export default function EventList({ onAdd, onEdit }: Props) {
                 <span
                   className={`inline-block mt-1 font-body text-xs px-2 py-0.5 border ${
                     evt.published
-                      ? 'bg-[#2D6A4F]/10 border-[#2D6A4F]/30 text-[#2D6A4F]'
+                      ? 'bg-[var(--success-bg)] border-[var(--success-line)] text-[var(--success)]'
                       : 'bg-[var(--bg)] border-[var(--line)] text-[var(--muted)]'
                   }`}
                 >
@@ -160,7 +160,7 @@ export default function EventList({ onAdd, onEdit }: Props) {
                 <button
                   onClick={() => setDeleteTarget(evt)}
                   aria-label={`Supprimer « ${evt.title} »`}
-                  className="h-11 px-4 border border-[var(--line)] bg-[var(--surface)] text-[#B3402F] hover:border-[#B3402F]"
+                  className="h-11 px-4 border border-[var(--line)] bg-[var(--surface)] text-[var(--danger)] hover:border-[var(--danger)]"
                 >
                   🗑
                 </button>
@@ -190,7 +190,7 @@ export default function EventList({ onAdd, onEdit }: Props) {
             <h3 className="font-display text-2xl text-center text-[var(--ink)] mt-4">
               Supprimer « {deleteTarget.title} » ?
             </h3>
-            <p className="font-body text-base text-center text-[#B3402F] font-medium mt-2">
+            <p className="font-body text-base text-center text-[var(--danger)] font-medium mt-2">
               Cette action est définitive.
             </p>
             <div className="flex flex-col gap-3 mt-6">
@@ -203,7 +203,7 @@ export default function EventList({ onAdd, onEdit }: Props) {
               </button>
               <button
                 onClick={handleDelete}
-                className="font-body text-sm text-[#B3402F] underline min-h-[48px] hover:text-[#96352a]"
+                className="font-body text-sm text-[var(--danger)] underline min-h-[48px] hover:text-[var(--danger-hover)]"
               >
                 Supprimer définitivement
               </button>

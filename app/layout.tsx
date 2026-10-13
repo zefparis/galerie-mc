@@ -51,7 +51,17 @@ export default async function RootLayout({
 }>) {
   const settings = await getGallerySettings()
   return (
-    <html lang="fr" className={`${cormorant.variable} ${inter.variable}`}>
+    <html lang="fr" suppressHydrationWarning className={`${cormorant.variable} ${inter.variable}`}>
+      <head>
+        {/* Applique le thème avant le premier rendu — évite tout flash.
+            Choix mémorisé en localStorage ; par défaut : suit l'appareil
+            sur le site public, reste clair dans l'admin. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('mc-theme'),s=window.matchMedia('(prefers-color-scheme: dark)').matches,a=location.pathname.indexOf('/admin')===0,d=t==='dark'||(t!=='light'&&s&&(t==='auto'||!a));if(d)document.documentElement.classList.add('dark')}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="antialiased min-h-screen flex flex-col">
         <Navbar artistName={settings.artistName} />
         <main className="flex-1">{children}</main>
