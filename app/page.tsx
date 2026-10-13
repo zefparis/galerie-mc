@@ -1,10 +1,9 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { getPaintings, getPublishedEvents, getGallerySettings } from '@/lib/data'
-import { blurDataUrl } from '@/lib/images'
 import MasonryGrid from '@/components/gallery/MasonryGrid'
 import EventCard from '@/components/gallery/EventCard'
 import ArtistPhotos from '@/components/gallery/ArtistPhotos'
+import HeroArtwork from '@/components/gallery/HeroArtwork'
 import Reveal from '@/components/ui/Reveal'
 
 export const dynamic = 'force-dynamic'
@@ -16,8 +15,12 @@ export default async function Home() {
     getGallerySettings(),
   ])
 
-  const featured = paintings.find((p) => p.featured) || paintings[0]
+  const featuredList = paintings.filter((p) => p.featured)
+  if (featuredList.length === 0 && paintings.length > 0) featuredList.push(paintings[0])
   const selection = paintings.slice(0, 6)
+
+  // Première phrase de la présentation comme accroche du hero.
+  const accroche = (settings.bio || '').split(/(?<=[.!?])\s/)[0] || ''
 
   const today = new Date().toISOString().slice(0, 10)
   const upcoming = events
@@ -27,58 +30,38 @@ export default async function Home() {
 
   return (
     <div>
-      {/* ─── Hero plein écran ─────────────────────────────────────────── */}
-      <section className="relative min-h-[100svh] flex items-end">
-        {featured && (
-          <Image
-            src={featured.imageUrl}
-            alt={featured.title}
-            fill
-            priority
-            sizes="100vw"
-            placeholder="blur"
-            blurDataURL={blurDataUrl(featured.imageUrl)}
-            className="object-cover"
-          />
-        )}
-        <div className={`absolute inset-0 ${featured ? 'bg-gradient-to-t from-black/70 via-black/20 to-black/30' : 'bg-[var(--ink)]'}`} />
-
-        <div className="relative w-full max-w-7xl mx-auto px-5 md:px-8 pb-16 md:pb-24">
-          <Reveal delay={200}>
-            <p className="eyebrow !text-white/70">
+      {/* ─── Hero : texte + toile encadrée ────────────────────────────── */}
+      <section className="pt-16 md:pt-20">
+        <div className="max-w-7xl mx-auto px-5 md:px-8 py-14 sm:py-16 md:py-24 lg:py-32 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 lg:gap-20 items-center">
+          {/* Texte */}
+          <div className="hero-fade">
+            <p className="eyebrow">
               {settings.bioShort || 'Artiste peintre'}
             </p>
-            <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl mt-4 leading-[0.95] text-balance text-white">
+            <h1 className="font-display text-5xl sm:text-6xl md:text-7xl mt-4 md:mt-5 leading-[0.98] text-balance text-[var(--ink)]">
               {settings.artistName}
             </h1>
-            {featured && (
-              <p className="font-body text-sm md:text-base text-white/75 mt-5 max-w-md">
-                « {featured.title} » — {featured.technique}, {featured.year}
+            {accroche && (
+              <p className="font-body text-base md:text-lg text-[var(--ink-soft)] leading-relaxed mt-6 max-w-md">
+                {accroche}
               </p>
             )}
             <div className="mt-8 md:mt-10 flex flex-wrap gap-4">
-              <Link
-                href="/galerie"
-                className="inline-flex items-center justify-center px-8 py-4 font-body text-sm font-medium tracking-wide transition-colors duration-300 min-h-[52px] bg-white text-[var(--ink)] hover:bg-white/85"
-              >
+              <Link href="/galerie" className="btn-primary">
                 Découvrir la galerie
               </Link>
-              <Link
-                href="/contact"
-                className="inline-flex items-center justify-center px-8 py-4 font-body text-sm font-medium tracking-wide border border-white/50 text-white transition-colors duration-300 min-h-[52px] hover:bg-white/10"
-              >
+              <Link href="/contact" className="btn-outline">
                 Contacter l&apos;artiste
               </Link>
             </div>
-          </Reveal>
-        </div>
+          </div>
 
-        {/* Indicateur scroll */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden md:block text-white/60">
-          <svg width="20" height="28" viewBox="0 0 20 28" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-            <rect x="1" y="1" width="18" height="26" rx="9" />
-            <line x1="10" y1="8" x2="10" y2="13" strokeLinecap="round" />
-          </svg>
+          {/* Œuvre mise en avant, présentée encadrée */}
+          {featuredList.length > 0 && (
+            <div className="hero-fade" style={{ animationDelay: '0.25s' }}>
+              <HeroArtwork paintings={featuredList} />
+            </div>
+          )}
         </div>
       </section>
 

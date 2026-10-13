@@ -13,19 +13,7 @@ const links = [
 export default function Navbar({ artistName }: { artistName: string }) {
   const pathname = usePathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
   const touchStartX = useRef(0)
-
-  // Sur la page d'accueil la nav flotte au-dessus du hero (transparente,
-  // texte clair) puis devient opaque au scroll. Ailleurs : toujours opaque.
-  const overHero = pathname === '/' && !scrolled && !drawerOpen
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? 'hidden' : ''
@@ -50,13 +38,7 @@ export default function Navbar({ artistName }: { artistName: string }) {
 
   return (
     <>
-      <nav
-        className={`navbar fixed top-0 left-0 right-0 z-40 transition-colors duration-300 ${
-          overHero
-            ? 'bg-transparent text-white'
-            : 'bg-[var(--bg)] text-[var(--ink)] border-b border-[var(--line)]'
-        }`}
-      >
+      <nav className="navbar fixed top-0 left-0 right-0 z-40 bg-[var(--bg)] text-[var(--ink)] border-b border-[var(--line)]">
         <div className="max-w-7xl mx-auto px-5 md:px-8 h-16 md:h-20 flex items-center justify-between">
           <Link href="/" className="min-w-0" aria-label="Accueil — Marie-Claire Scandella">
             <span className="font-display text-xl md:text-2xl tracking-wide truncate block">
@@ -72,12 +54,8 @@ export default function Navbar({ artistName }: { artistName: string }) {
                 href={link.href}
                 className={`font-body text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-200 ${
                   isActive(link.href)
-                    ? overHero
-                      ? 'text-white'
-                      : 'text-[var(--accent)]'
-                    : overHero
-                      ? 'text-white/75 hover:text-white'
-                      : 'text-[var(--ink-soft)] hover:text-[var(--ink)]'
+                    ? 'text-[var(--accent)]'
+                    : 'text-[var(--ink-soft)] hover:text-[var(--ink)]'
                 }`}
                 aria-current={isActive(link.href) ? 'page' : undefined}
               >
@@ -94,8 +72,8 @@ export default function Navbar({ artistName }: { artistName: string }) {
             aria-expanded={drawerOpen}
           >
             <div className="w-6 flex flex-col gap-[7px]">
-              <span className={`block h-[1.5px] transition-colors ${overHero ? 'bg-white' : 'bg-[var(--ink)]'}`} />
-              <span className={`block h-[1.5px] transition-colors ${overHero ? 'bg-white' : 'bg-[var(--ink)]'}`} />
+              <span className="block h-[1.5px] bg-[var(--ink)]" />
+              <span className="block h-[1.5px] bg-[var(--ink)]" />
             </div>
           </button>
         </div>

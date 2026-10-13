@@ -85,6 +85,21 @@ button, a {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* ─── Fondu d'entrée du hero (600–800 ms, reduced-motion géré plus bas) ── */
+@keyframes heroFade {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.hero-fade {
+  animation: heroFade 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
 /* ─── Apparition douce au scroll ─────────────────────────────────────────── */
 .reveal {
   opacity: 0;
