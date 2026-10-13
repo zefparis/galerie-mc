@@ -108,7 +108,7 @@ export default function Navbar({ artistName }: { artistName: string }) {
           onClick={() => setDrawerOpen(false)}
         />
         <div
-          className={`absolute top-0 right-0 h-full w-[300px] max-w-[85vw] bg-[var(--night)] text-[var(--night-ink)] flex flex-col transition-transform duration-300 ease-gallery ${
+          className={`mobile-drawer absolute top-0 right-0 h-full w-[300px] max-w-[85vw] bg-[var(--night)] text-[var(--on-night)] flex flex-col transition-transform duration-300 ease-gallery ${
             drawerOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
           onTouchStart={handleTouchStart}
@@ -117,7 +117,7 @@ export default function Navbar({ artistName }: { artistName: string }) {
           <div className="flex justify-end p-4">
             <button
               onClick={() => setDrawerOpen(false)}
-              className="p-3 text-white/80 hover:text-white"
+              className="p-3 text-[var(--on-night-muted)] hover:text-[var(--on-night)] transition-colors"
               aria-label={t('closeMenu')}
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -132,7 +132,9 @@ export default function Navbar({ artistName }: { artistName: string }) {
                 href={href}
                 onClick={() => setDrawerOpen(false)}
                 className={`font-display text-3xl py-5 min-h-[56px] flex items-center border-b border-white/10 transition-colors duration-200 ${
-                  isActive(href) ? 'text-[var(--accent-soft)]' : 'text-white hover:text-white/70'
+                  isActive(href)
+                    ? 'text-[var(--accent-on-night)]'
+                    : 'text-[var(--on-night)] hover:text-[var(--on-night-muted)]'
                 }`}
                 style={{ transitionDelay: drawerOpen ? `${i * 40}ms` : '0ms' }}
               >
@@ -144,7 +146,7 @@ export default function Navbar({ artistName }: { artistName: string }) {
             <Suspense fallback={null}>
               <LanguageSwitcher variant="dark" />
             </Suspense>
-            <p className="font-body text-xs text-white/40 uppercase tracking-[0.18em] mt-6">
+            <p className="font-body text-xs text-[var(--on-night-faint)] uppercase tracking-[0.18em] mt-6">
               {artistName}
             </p>
           </div>

@@ -49,8 +49,8 @@ export default function LanguageSwitcher({ variant = 'light' }: { variant?: 'lig
           : `px-4 py-2.5 min-h-[44px] ${
               variant === 'dark'
                 ? locale === l
-                  ? 'text-[var(--accent-soft)]'
-                  : 'text-white/80 hover:text-white'
+                  ? 'text-[var(--accent-on-night)]'
+                  : 'text-[var(--on-night-muted)] hover:text-[var(--on-night)]'
                 : locale === l
                   ? 'text-[var(--accent)]'
                   : 'text-[var(--ink-soft)] hover:text-[var(--ink)] hover:bg-[var(--bg)]'

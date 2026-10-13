@@ -87,7 +87,7 @@ export default function HeroArtwork({ paintings }: Props) {
               >
                 <span
                   className={`block w-2 h-2 rounded-full transition-colors duration-300 ${
-                    i === active ? 'bg-[var(--accent)]' : 'bg-[var(--line)]'
+                    i === active ? 'bg-[var(--accent)]' : 'bg-[var(--muted)]'
                   }`}
                 />
               </button>

@@ -101,8 +101,12 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
       </div>
 
       {techniques.length > 0 && (
-        <div className="mt-6 -mx-1 overflow-x-auto">
-          <ul className="flex items-center gap-6 md:gap-8" aria-label={t('filters.ariaTechnique')}>
+        <div
+          className="mt-6 -mx-1 overflow-x-auto scrollbar-hide scroll-fade-x"
+          tabIndex={0}
+          aria-label={t('filters.ariaTechnique')}
+        >
+          <ul className="flex items-center gap-6 md:gap-8">
             {techniques.map((tech) => (
               <li key={tech} className="shrink-0">
                 <button

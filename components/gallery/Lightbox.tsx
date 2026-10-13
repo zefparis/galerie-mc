@@ -150,7 +150,7 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
       <button
         onClick={onClose}
         aria-label={t('close')}
-        className="absolute top-4 right-4 z-10 p-3 text-white/80 hover:text-white transition-colors duration-200"
+        className="absolute top-4 right-4 z-10 p-3 text-[var(--on-night-muted)] hover:text-[var(--on-night)] transition-colors duration-200"
       >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M18 6L6 18M6 6l12 12" />
@@ -162,7 +162,7 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
         <button
           onClick={(e) => { e.stopPropagation(); goPrev() }}
           aria-label={t('prev')}
-          className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-10 p-3 text-white/70 hover:text-white transition-colors duration-200 hidden sm:block"
+          className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-10 p-3 text-[var(--on-night-muted)] hover:text-[var(--on-night)] transition-colors duration-200 hidden sm:block"
         >
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M15 18l-6-6 6-6" />
@@ -173,7 +173,7 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
         <button
           onClick={(e) => { e.stopPropagation(); goNext() }}
           aria-label={t('next')}
-          className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-10 p-3 text-white/70 hover:text-white transition-colors duration-200 hidden sm:block"
+          className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-10 p-3 text-[var(--on-night-muted)] hover:text-[var(--on-night)] transition-colors duration-200 hidden sm:block"
         >
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M9 18l6-6-6-6" />
@@ -217,7 +217,7 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
       </div>
 
       {/* Légende */}
-      <p className="absolute bottom-4 left-0 right-0 text-center font-body text-xs text-white/60 px-6 pointer-events-none">
+      <p className="absolute bottom-4 left-0 right-0 text-center font-body text-xs text-[var(--on-night-muted)] px-6 pointer-events-none">
         {alt}
       </p>
     </div>

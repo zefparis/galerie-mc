@@ -10,7 +10,7 @@
   --surface: #FFFDF9;
   --ink: #1D1A16;
   --ink-soft: #5E5850;
-  --muted: #8A8378;
+  --muted: #6E665A;
   --line: #E7E0D3;
 
   /* Accent — terre cuite discrète. Changer ici pour tout le site. */
@@ -24,9 +24,16 @@
   --shadow: rgba(29, 26, 22, 0.28);
   --btn-primary-hover: #000000;
 
-  /* Surfaces toujours sombres (menu mobile, bulles d'aide, badges sur image) */
+  /* Surfaces toujours sombres (menu mobile, lightbox, badges sur image) :
+     texte clair dédié, identique dans les deux thèmes — jamais de token
+     « texte » qui changerait avec le thème. */
   --night: #1D1A16;
   --night-ink: #EDE8DF;
+  --on-night: #EDE8DF;
+  --on-night-muted: #B9B1A2;
+  --on-night-faint: #948C7D;
+  /* Accent vu SUR fond sombre (lien actif du tiroir) : doré clair fixe. */
+  --accent-on-night: #D9AE7C;
 
   /* Messages */
   --danger: #B3402F;
@@ -63,7 +70,7 @@ html.dark {
   --surface: #262119;
   --ink: #EDE7DC;
   --ink-soft: #B9B1A4;
-  --muted: #948C7D;
+  --muted: #A29A8A;
   --line: #3B352A;
 
   --accent: #D0A26C;
@@ -204,6 +211,39 @@ button, a {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+  /* Défilement horizontal discret : pas de barre native, léger fondu sur
+     les bords pour indiquer qu'il y a de la suite. */
+  .scroll-fade-x {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 28px,
+      #000 calc(100% - 28px),
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 28px,
+      #000 calc(100% - 28px),
+      transparent 100%
+    );
+  }
+}
+
+/* Les placeholders suivent le token « muted » relevé — jamais de gris
+   natif trop pâle. */
+.input-field::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+/* Dans le tiroir mobile (toujours sombre), le focus visible doit rester
+   clair quel que soit le thème choisi. */
+.mobile-drawer :focus-visible {
+  outline-color: var(--on-night);
 }
 
 @layer components {
@@ -248,11 +288,12 @@ button, a {
     @apply font-body text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)];
   }
 
-  /* Badge verre (Vendue / Réservée) — lisible sur n'importe quelle toile */
+  /* Badge verre (Vendue / Réservée) — lisible sur n'importe quelle toile,
+     y compris très claire : fond noir renforcé + flou. */
   .glass-badge {
     @apply inline-flex items-center font-body text-[10px] font-medium uppercase tracking-[0.18em] px-3 py-1.5 rounded-full text-white;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    background-color: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background-color: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
@@ -287,7 +328,7 @@ button, a {
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-badge {
-    background-color: rgba(0, 0, 0, 0.65);
+    background-color: rgba(0, 0, 0, 0.75);
   }
 }
 
