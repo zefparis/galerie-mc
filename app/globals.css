@@ -247,4 +247,61 @@ button, a {
   .eyebrow {
     @apply font-body text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)];
   }
+
+  /* Badge verre (Vendue / Réservée) — lisible sur n'importe quelle toile */
+  .glass-badge {
+    @apply inline-flex items-center font-body text-[10px] font-medium uppercase tracking-[0.18em] px-3 py-1.5 rounded-full text-white;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background-color: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Lien de filtre : soulignement qui se dessine */
+  .filter-link {
+    @apply relative font-body text-sm font-medium uppercase tracking-[0.14em] text-[var(--ink-soft)] px-1 py-2 min-h-[44px] transition-colors duration-300 whitespace-nowrap;
+  }
+  .filter-link::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 8px;
+    height: 1.5px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .filter-link:hover {
+    @apply text-[var(--ink)];
+  }
+  .filter-link:hover::after,
+  .filter-link.is-active::after {
+    transform: scaleX(1);
+  }
+  .filter-link.is-active {
+    @apply text-[var(--accent)];
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-badge {
+    background-color: rgba(0, 0, 0, 0.65);
+  }
+}
+
+/* Fondu des cartes au changement de filtre */
+@keyframes galleryFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.gallery-fade {
+  animation: galleryFade 0.35s ease-out both;
 }

@@ -5,7 +5,7 @@ import { uploadToCloudinaryProgress, compressImage, isTooBig, getCloudinarySetti
 
 interface Props {
   currentUrl: string
-  onUploaded: (url: string, publicId: string) => void
+  onUploaded: (url: string, publicId: string, width?: number, height?: number) => void
 }
 
 type Status = 'idle' | 'preparing' | 'uploading' | 'success' | 'error'
@@ -66,7 +66,7 @@ export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
         settings.uploadPreset,
         (ratio) => setProgress(Math.round(ratio * 100))
       )
-      onUploaded(result.url, result.publicId)
+      onUploaded(result.url, result.publicId, result.width, result.height)
       setPreview(result.url)
       setStatus('success')
     } catch {

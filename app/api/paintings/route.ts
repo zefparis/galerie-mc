@@ -22,25 +22,39 @@ export async function POST(req: NextRequest) {
 
   try {
     const b = paintingBodySchema.parse(await req.json())
-    const { rows } = await pool.query(
-      `INSERT INTO paintings (id, title, year, technique, dimensions, description, image_url, image_public_id, price, price_status, featured, "order")
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-      [
-        b.id ?? null,
-        b.title,
-        b.year ?? null,
-        b.technique ?? null,
-        b.dimensions,
-        b.description,
-        b.imageUrl,
-        b.imagePublicId,
-        b.price ?? null,
-        b.priceStatus,
-        b.featured,
-        b.order,
-      ]
-    )
-    return NextResponse.json(mapPaintingRow(rows[0]))
+    const values = [
+      b.id ?? null,
+      b.title,
+      b.year ?? null,
+      b.technique ?? null,
+      b.dimensions,
+      b.description,
+      b.imageUrl,
+      b.imagePublicId,
+      b.price ?? null,
+      b.priceStatus,
+      b.featured,
+      b.order,
+      b.imageWidth ?? null,
+      b.imageHeight ?? null,
+    ]
+    try {
+      const { rows } = await pool.query(
+        `INSERT INTO paintings (id, title, year, technique, dimensions, description, image_url, image_public_id, price, price_status, featured, "order", image_width, image_height)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+        values
+      )
+      return NextResponse.json(mapPaintingRow(rows[0]))
+    } catch (err) {
+      // Colonnes de dimensions pas encore créées : repli sans elles.
+      if ((err as { code?: string })?.code !== '42703') throw err
+      const { rows } = await pool.query(
+        `INSERT INTO paintings (id, title, year, technique, dimensions, description, image_url, image_public_id, price, price_status, featured, "order")
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+        values.slice(0, 12)
+      )
+      return NextResponse.json(mapPaintingRow(rows[0]))
+    }
   } catch (err) {
     return handleRouteError(err)
   }

@@ -76,6 +76,9 @@ const statements = [
     updated_at TIMESTAMPTZ DEFAULT now()
   )`,
   `ALTER TABLE settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now()`,
+  // Dimensions réelles de l'image (ratio affiché sans saut de mise en page)
+  `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS image_width INTEGER`,
+  `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS image_height INTEGER`,
 ]
 
 try {

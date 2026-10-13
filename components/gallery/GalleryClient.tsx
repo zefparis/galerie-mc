@@ -1,99 +1,103 @@
 'use client'
 
-import { useState } from 'react'
-import { Painting, Technique } from '@/lib/types'
-import MasonryGrid from './MasonryGrid'
+import { useCallback, useMemo } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Painting } from '@/lib/types'
+import GalleryGrid from './GalleryGrid'
+import GalleryFilters from './GalleryFilters'
 
-const TECHNIQUES: Technique[] = [
-  'Huile sur toile',
-  'Acrylique',
-  'Aquarelle',
-  'Pastel',
-  'Fusain',
-  'Technique mixte',
-  'Autre',
+const STATUS_OPTIONS = [
+  { value: 'toutes', label: 'Toutes' },
+  { value: 'disponibles', label: 'Disponibles' },
+  { value: 'vendues', label: 'Vendues' },
 ]
 
-type StatusFilter = 'all' | 'disponible' | 'vendu'
-
-const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
-  { value: 'all', label: 'Toutes' },
-  { value: 'disponible', label: 'Disponibles' },
-  { value: 'vendu', label: 'Vendues' },
-]
-
-function matchStatus(p: Painting, f: StatusFilter): boolean {
-  if (f === 'disponible') return p.priceStatus === 'visible' || p.priceStatus === 'sur_demande'
-  if (f === 'vendu') return p.priceStatus === 'vendu'
-  return true
-}
-
-const pill = (active: boolean) =>
-  `font-body text-[11px] font-medium uppercase tracking-[0.14em] px-4 py-2.5 min-h-[40px] border transition-colors duration-200 whitespace-nowrap flex-shrink-0 ${
-    active
-      ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-soft)]'
-      : 'border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink-soft)] hover:text-[var(--ink)]'
-  }`
+const isAvailable = (p: Painting) =>
+  p.priceStatus === 'visible' || p.priceStatus === 'sur_demande'
 
 export default function GalleryClient({ paintings }: { paintings: Painting[] }) {
-  const [technique, setTechnique] = useState<Technique | 'all'>('all')
-  const [status, setStatus] = useState<StatusFilter>('all')
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
-  const availableTechniques = TECHNIQUES.filter((t) =>
-    paintings.some((p) => p.technique === t)
+  const rawFilter = searchParams.get('filtre') || 'toutes'
+  const filter = STATUS_OPTIONS.some((o) => o.value === rawFilter) ? rawFilter : 'toutes'
+  const rawTech = searchParams.get('technique') || ''
+  const technique = rawTech ? decodeURIComponent(rawTech) : ''
+
+  const setParams = useCallback(
+    (next: { filtre?: string; technique?: string }) => {
+      const params = new URLSearchParams(searchParams.toString())
+      const f = next.filtre ?? filter
+      const t = next.technique ?? technique
+      if (f === 'toutes') params.delete('filtre')
+      else params.set('filtre', f)
+      if (t) params.set('technique', t)
+      else params.delete('technique')
+      const qs = params.toString()
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    },
+    [filter, technique, pathname, router, searchParams]
   )
 
-  const filtered = paintings.filter(
-    (p) => (technique === 'all' || p.technique === technique) && matchStatus(p, status)
+  const techniques = useMemo(
+    () => Array.from(new Set(paintings.map((p) => p.technique).filter(Boolean) as string[])),
+    [paintings]
+  )
+
+  const visible = useMemo(
+    () =>
+      paintings.filter((p) => {
+        if (filter === 'disponibles' && !isAvailable(p)) return false
+        if (filter === 'vendues' && p.priceStatus !== 'vendu') return false
+        if (technique && p.technique !== technique) return false
+        return true
+      }),
+    [paintings, filter, technique]
   )
 
   return (
-    <div>
-      {/* Filtres */}
-      <div className="space-y-3 mb-10 md:mb-14">
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 sm:mx-0 sm:px-0 scrollbar-hide">
-          {STATUS_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setStatus(f.value)}
-              className={pill(status === f.value)}
-              aria-pressed={status === f.value}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-        {availableTechniques.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 sm:mx-0 sm:px-0 scrollbar-hide">
-            <button
-              onClick={() => setTechnique('all')}
-              className={pill(technique === 'all')}
-              aria-pressed={technique === 'all'}
-            >
-              Toutes techniques
-            </button>
-            {availableTechniques.map((t) => (
-              <button
-                key={t}
-                onClick={() => setTechnique(t)}
-                className={pill(technique === t)}
-                aria-pressed={technique === t}
-              >
-                {t}
-              </button>
+    <>
+      <GalleryFilters
+        options={STATUS_OPTIONS}
+        current={filter}
+        onChange={(v) => setParams({ filtre: v })}
+      />
+
+      {techniques.length > 0 && (
+        <div className="mt-6 -mx-1 overflow-x-auto">
+          <ul className="flex items-center gap-6 md:gap-8" aria-label="Filtrer par technique">
+            {techniques.map((t) => (
+              <li key={t} className="shrink-0">
+                <button
+                  type="button"
+                  className={`filter-link !normal-case !tracking-[0.04em] ${
+                    technique === t ? 'is-active' : ''
+                  }`}
+                  aria-pressed={technique === t}
+                  onClick={() => setParams({ technique: technique === t ? '' : t })}
+                >
+                  {t}
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
+        </div>
+      )}
+
+      <p className="mt-8 font-body text-xs uppercase tracking-[0.18em] text-[var(--muted)]" aria-live="polite">
+        {visible.length} {visible.length > 1 ? 'œuvres' : 'œuvre'}
+      </p>
+
+      <div key={`${filter}|${technique}`} className="gallery-fade mt-8">
+        {visible.length === 0 ? (
+          <p className="py-24 text-center font-serif text-xl italic text-[var(--muted)]">
+            Aucune œuvre ne correspond à cette sélection pour le moment.
+          </p>
+        ) : (
+          <GalleryGrid paintings={visible} />
         )}
       </div>
-
-      {/* Grille */}
-      {filtered.length > 0 ? (
-        <MasonryGrid paintings={filtered} />
-      ) : (
-        <p className="text-center font-body text-[var(--muted)] py-24">
-          Aucune œuvre dans cette sélection.
-        </p>
-      )}
-    </div>
+    </>
   )
 }

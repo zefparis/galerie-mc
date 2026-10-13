@@ -20,6 +20,7 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
   const [offset, setOffset] = useState({ x: 0, y: 0 })
 
   const imgRef = useRef<HTMLImageElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef({ active: false, startX: 0, startY: 0, baseX: 0, baseY: 0 })
   const touchRef = useRef({ x: 0, y: 0, lastTap: 0 })
 
@@ -46,16 +47,41 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
     setZoomed(true)
   }, [zoomed, resetZoom])
 
-  // Clavier : Échap ferme, flèches naviguent
+  // Clavier : Échap ferme, flèches naviguent, Tab reste piégé dans la visionneuse
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
       else if (e.key === 'ArrowLeft') goPrev()
       else if (e.key === 'ArrowRight') goNext()
+      else if (e.key === 'Tab' && rootRef.current) {
+        const focusables = rootRef.current.querySelectorAll<HTMLElement>(
+          'button, a[href], [tabindex]:not([tabindex="-1"])'
+        )
+        if (focusables.length === 0) return
+        const first = focusables[0]
+        const last = focusables[focusables.length - 1]
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        }
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose, goPrev, goNext])
+
+  // Focus initial dans la visionneuse + restitution à l'élément déclencheur
+  useEffect(() => {
+    const trigger = document.activeElement as HTMLElement | null
+    const focusables = rootRef.current?.querySelectorAll<HTMLElement>(
+      'button, a[href], [tabindex]:not([tabindex="-1"])'
+    )
+    focusables?.[0]?.focus()
+    return () => trigger?.focus()
+  }, [])
 
   // Verrouille le scroll de la page
   useEffect(() => {
@@ -111,6 +137,7 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
 
   return (
     <div
+      ref={rootRef}
       className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center select-none"
       role="dialog"
       aria-modal="true"

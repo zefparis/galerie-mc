@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { getPaintings } from '@/lib/data'
 import GalleryClient from '@/components/gallery/GalleryClient'
 import Reveal from '@/components/ui/Reveal'
@@ -27,15 +28,15 @@ export default async function GaleriePage() {
             Galerie
           </h1>
           <p className="font-body text-sm md:text-base text-[var(--ink-soft)] mt-4 max-w-lg">
-            {paintings.length > 0
-              ? `${paintings.length} œuvre${paintings.length > 1 ? 's' : ''} — chaque toile est une pièce unique.`
-              : 'Chaque toile est une pièce unique.'}
+            Chaque toile est une pièce unique.
           </p>
         </Reveal>
       </header>
 
       <section className="max-w-7xl mx-auto px-5 md:px-8 pb-20 md:pb-32">
-        <GalleryClient paintings={paintings} />
+        <Suspense>
+          <GalleryClient paintings={paintings} />
+        </Suspense>
       </section>
     </div>
   )

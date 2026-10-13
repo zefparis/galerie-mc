@@ -12,6 +12,8 @@ export function mapPaintingRow(r: any) {
     description: r.description || '',
     imageUrl: r.image_url,
     imagePublicId: r.image_public_id || '',
+    imageWidth: r.image_width ? Number(r.image_width) : undefined,
+    imageHeight: r.image_height ? Number(r.image_height) : undefined,
     price: r.price ? Number(r.price) : undefined,
     priceStatus: r.price_status,
     featured: r.featured,

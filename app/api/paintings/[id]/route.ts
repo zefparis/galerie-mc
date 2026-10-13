@@ -14,25 +14,40 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (!parsedId.success) return badRequest('Identifiant invalide')
 
     const b = paintingBodySchema.parse(await req.json())
-    const { rows } = await pool.query(
-      `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
-       image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10, "order"=$11
-       WHERE id=$12 RETURNING *`,
-      [
-        b.title,
-        b.year ?? null,
-        b.technique ?? null,
-        b.dimensions,
-        b.description,
-        b.imageUrl,
-        b.imagePublicId,
-        b.price ?? null,
-        b.priceStatus,
-        b.featured,
-        b.order,
-        parsedId.data,
-      ]
-    )
+    const values = [
+      b.title,
+      b.year ?? null,
+      b.technique ?? null,
+      b.dimensions,
+      b.description,
+      b.imageUrl,
+      b.imagePublicId,
+      b.price ?? null,
+      b.priceStatus,
+      b.featured,
+      b.order,
+      b.imageWidth ?? null,
+      b.imageHeight ?? null,
+      parsedId.data,
+    ]
+    let rows
+    try {
+      ;({ rows } = await pool.query(
+        `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
+         image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10, "order"=$11,
+         image_width=$12, image_height=$13
+         WHERE id=$14 RETURNING *`,
+        values
+      ))
+    } catch (err) {
+      if ((err as { code?: string })?.code !== '42703') throw err
+      ;({ rows } = await pool.query(
+        `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
+         image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10, "order"=$11
+         WHERE id=$12 RETURNING *`,
+        [...values.slice(0, 11), parsedId.data]
+      ))
+    }
     if (rows.length === 0) return notFound('Tableau introuvable')
     return NextResponse.json(mapPaintingRow(rows[0]))
   } catch (err) {

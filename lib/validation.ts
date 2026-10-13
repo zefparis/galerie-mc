@@ -13,6 +13,8 @@ export const paintingBodySchema = z.object({
   description: z.string().max(20000).optional().default(''),
   imageUrl: z.string().min(1, "L'image est obligatoire").max(2000),
   imagePublicId: z.string().max(500).optional().default(''),
+  imageWidth: z.number().int().positive().nullable().optional(),
+  imageHeight: z.number().int().positive().nullable().optional(),
   price: z.number().nonnegative().nullable().optional(),
   priceStatus: priceStatusSchema.optional().default('sur_demande'),
   featured: z.boolean().optional().default(false),

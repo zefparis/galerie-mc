@@ -49,6 +49,8 @@ interface Draft {
     description: string
     imageUrl: string
     imagePublicId: string
+    imageWidth?: number
+    imageHeight?: number
     price: number
     priceStatus: PriceStatus
     featured: boolean
@@ -68,6 +70,8 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
     description: painting?.description || '',
     imageUrl: painting?.imageUrl || '',
     imagePublicId: painting?.imagePublicId || '',
+    imageWidth: painting?.imageWidth,
+    imageHeight: painting?.imageHeight,
     price: painting?.price || 0,
     priceStatus: painting?.priceStatus || ('sur_demande' as PriceStatus),
     featured: painting?.featured || false,
@@ -86,7 +90,7 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
       if (!raw) return
       const draft = JSON.parse(raw) as Draft
       if (draft?.form && (draft.form.title || draft.form.imageUrl)) {
-        setForm(draft.form)
+        setForm((f) => ({ ...f, ...draft.form }))
         setStep(draft.step || 1)
         setDraftFound(true)
       }
@@ -117,6 +121,8 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
       description: '',
       imageUrl: '',
       imagePublicId: '',
+      imageWidth: undefined,
+      imageHeight: undefined,
       price: 0,
       priceStatus: 'sur_demande',
       featured: false,
@@ -140,6 +146,8 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
         description: form.description.trim(),
         imageUrl: form.imageUrl,
         imagePublicId: form.imagePublicId,
+        imageWidth: form.imageWidth,
+        imageHeight: form.imageHeight,
         price: form.priceStatus === 'visible' ? form.price : undefined,
         priceStatus: form.priceStatus,
         featured: form.featured,
@@ -218,7 +226,7 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
           </p>
           <CloudinaryUpload
             currentUrl={form.imageUrl}
-            onUploaded={(url, publicId) => setForm({ ...form, imageUrl: url, imagePublicId: publicId })}
+            onUploaded={(url, publicId, width, height) => setForm({ ...form, imageUrl: url, imagePublicId: publicId, imageWidth: width, imageHeight: height })}
           />
         </div>
       )}

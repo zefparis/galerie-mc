@@ -18,6 +18,8 @@ export interface Painting {
   description: string
   imageUrl: string
   imagePublicId: string
+  imageWidth?: number
+  imageHeight?: number
   price?: number
   priceStatus: PriceStatus
   featured: boolean

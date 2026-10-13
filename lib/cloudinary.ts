@@ -1,8 +1,15 @@
+export interface CloudinaryResult {
+  url: string
+  publicId: string
+  width?: number
+  height?: number
+}
+
 export async function uploadToCloudinary(
   file: File | Blob,
   cloudName: string,
   uploadPreset: string
-): Promise<{ url: string; publicId: string }> {
+): Promise<CloudinaryResult> {
   return uploadToCloudinaryProgress(file, cloudName, uploadPreset, () => {})
 }
 
@@ -12,7 +19,7 @@ export function uploadToCloudinaryProgress(
   cloudName: string,
   uploadPreset: string,
   onProgress: (ratio: number) => void
-): Promise<{ url: string; publicId: string }> {
+): Promise<CloudinaryResult> {
   return new Promise((resolve, reject) => {
     const formData = new FormData()
     formData.append('file', file)
@@ -31,6 +38,8 @@ export function uploadToCloudinaryProgress(
         resolve({
           url: `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto/${data.public_id}`,
           publicId: data.public_id,
+          width: data.width,
+          height: data.height,
         })
       } else {
         reject(new Error('upload-failed'))
