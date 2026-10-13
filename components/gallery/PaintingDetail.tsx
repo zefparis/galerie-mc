@@ -13,6 +13,7 @@ interface Props {
   painting: Painting
   prevId?: string
   nextId?: string
+  category?: string
 }
 
 const STATUS_LABEL: Partial<Record<Painting['priceStatus'], string>> = {
@@ -21,9 +22,10 @@ const STATUS_LABEL: Partial<Record<Painting['priceStatus'], string>> = {
   non_a_vendre: 'Non à vendre',
 }
 
-export default function PaintingDetail({ painting, prevId, nextId }: Props) {
+export default function PaintingDetail({ painting, prevId, nextId, category }: Props) {
   const router = useRouter()
   const [lightbox, setLightbox] = useState(false)
+  const qs = category ? `?categorie=${category}` : ''
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('fr-FR', {
@@ -39,7 +41,7 @@ export default function PaintingDetail({ painting, prevId, nextId }: Props) {
     <div className="pt-16 md:pt-20">
       <div className="max-w-7xl mx-auto px-5 md:px-8 pt-6 md:pt-10">
         <Link
-          href="/galerie"
+          href={`/galerie${qs}`}
           className="inline-flex items-center min-h-[44px] font-body text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)] hover:text-[var(--ink)] transition-colors duration-200"
         >
           ← Galerie
@@ -129,7 +131,7 @@ export default function PaintingDetail({ painting, prevId, nextId }: Props) {
         <div className="flex gap-3 justify-between pt-8 border-t border-[var(--line)]">
           {prevId ? (
             <Link
-              href={`/oeuvre/${prevId}`}
+              href={`/oeuvre/${prevId}${qs}`}
               className="inline-flex items-center justify-center min-h-[48px] px-5 sm:px-7 border border-[var(--line)] font-body text-xs font-medium uppercase tracking-[0.16em] text-[var(--ink-soft)] hover:text-[var(--ink)] hover:border-[var(--ink-soft)] transition-colors duration-200"
             >
               ← Précédente
@@ -137,7 +139,7 @@ export default function PaintingDetail({ painting, prevId, nextId }: Props) {
           ) : <span />}
           {nextId ? (
             <Link
-              href={`/oeuvre/${nextId}`}
+              href={`/oeuvre/${nextId}${qs}`}
               className="inline-flex items-center justify-center min-h-[48px] px-5 sm:px-7 border border-[var(--line)] font-body text-xs font-medium uppercase tracking-[0.16em] text-[var(--ink-soft)] hover:text-[var(--ink)] hover:border-[var(--ink-soft)] transition-colors duration-200"
             >
               Suivante →
@@ -151,8 +153,8 @@ export default function PaintingDetail({ painting, prevId, nextId }: Props) {
           src={painting.imageUrl}
           alt={`${painting.title} — ${painting.technique}, ${painting.year}`}
           onClose={() => setLightbox(false)}
-          onPrev={prevId ? () => router.push(`/oeuvre/${prevId}`) : undefined}
-          onNext={nextId ? () => router.push(`/oeuvre/${nextId}`) : undefined}
+          onPrev={prevId ? () => router.push(`/oeuvre/${prevId}${qs}`) : undefined}
+          onNext={nextId ? () => router.push(`/oeuvre/${nextId}${qs}`) : undefined}
         />
       )}
     </div>

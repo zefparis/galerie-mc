@@ -28,6 +28,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       b.order,
       b.imageWidth ?? null,
       b.imageHeight ?? null,
+      b.category,
       parsedId.data,
     ]
     let rows
@@ -35,8 +36,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       ;({ rows } = await pool.query(
         `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
          image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10, "order"=$11,
-         image_width=$12, image_height=$13
-         WHERE id=$14 RETURNING *`,
+         image_width=$12, image_height=$13, category=$14
+         WHERE id=$15 RETURNING *`,
         values
       ))
     } catch (err) {

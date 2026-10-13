@@ -37,16 +37,17 @@ export async function POST(req: NextRequest) {
       b.order,
       b.imageWidth ?? null,
       b.imageHeight ?? null,
+      b.category,
     ]
     try {
       const { rows } = await pool.query(
-        `INSERT INTO paintings (id, title, year, technique, dimensions, description, image_url, image_public_id, price, price_status, featured, "order", image_width, image_height)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
+        `INSERT INTO paintings (id, title, year, technique, dimensions, description, image_url, image_public_id, price, price_status, featured, "order", image_width, image_height, category)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
         values
       )
       return NextResponse.json(mapPaintingRow(rows[0]))
     } catch (err) {
-      // Colonnes de dimensions pas encore créées : repli sans elles.
+      // Colonnes récentes pas encore créées : repli sans elles.
       if ((err as { code?: string })?.code !== '42703') throw err
       const { rows } = await pool.query(
         `INSERT INTO paintings (id, title, year, technique, dimensions, description, image_url, image_public_id, price, price_status, featured, "order")

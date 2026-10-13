@@ -87,6 +87,9 @@ const statements = [
   // Dimensions réelles de l'image (ratio affiché sans saut de mise en page)
   `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS image_width INTEGER`,
   `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS image_height INTEGER`,
+  // Deux galeries : peintures / collages. Toutes les œuvres existantes
+  // restent en 'peintures' grâce au DEFAULT.
+  `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'peintures'`,
 ]
 
 try {

@@ -3,19 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { savePainting, updatePainting, getNextOrder, isSessionExpired, redirectToLogin } from '@/lib/storage'
-import { Painting, Technique, PriceStatus } from '@/lib/types'
+import { Painting, Technique, PriceStatus, PaintingCategory } from '@/lib/types'
+import { CATEGORIES, CATEGORY_LABEL, TECHNIQUES_BY_CATEGORY } from '@/lib/catalog'
 import CloudinaryUpload from './CloudinaryUpload'
 import HelpTip from './HelpTip'
-
-const TECHNIQUES: Technique[] = [
-  'Huile sur toile',
-  'Acrylique',
-  'Aquarelle',
-  'Pastel',
-  'Fusain',
-  'Technique mixte',
-  'Autre',
-]
 
 const PRICE_OPTIONS: { value: PriceStatus; label: string }[] = [
   { value: 'visible', label: 'Afficher le prix' },
@@ -47,6 +38,7 @@ interface Draft {
     technique: Technique
     dimensions: string
     description: string
+    category: PaintingCategory
     imageUrl: string
     imagePublicId: string
     imageWidth?: number
@@ -68,6 +60,7 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
     technique: painting?.technique || ('Huile sur toile' as Technique),
     dimensions: painting?.dimensions || '',
     description: painting?.description || '',
+    category: painting?.category || ('peintures' as PaintingCategory),
     imageUrl: painting?.imageUrl || '',
     imagePublicId: painting?.imagePublicId || '',
     imageWidth: painting?.imageWidth,
@@ -119,6 +112,7 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
       technique: 'Huile sur toile',
       dimensions: '',
       description: '',
+      category: 'peintures' as PaintingCategory,
       imageUrl: '',
       imagePublicId: '',
       imageWidth: undefined,
@@ -144,6 +138,7 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
         technique: form.technique,
         dimensions: form.dimensions.trim(),
         description: form.description.trim(),
+        category: form.category,
         imageUrl: form.imageUrl,
         imagePublicId: form.imagePublicId,
         imageWidth: form.imageWidth,
@@ -238,6 +233,32 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
             Dites-en un peu plus
           </h2>
 
+          {/* Galerie de rangement */}
+          <div>
+            <p className="label-field">
+              Où voulez-vous la ranger ?
+              <HelpTip text="« Peintures contemporaines » pour vos toiles, « Collages sur papier » pour vos collages. Les visiteurs pourront choisir la galerie à voir." />
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Galerie de rangement">
+              {CATEGORIES.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={form.category === c.value}
+                  onClick={() => setForm({ ...form, category: c.value })}
+                  className={`px-4 py-4 min-h-[56px] border rounded font-body text-base text-center transition-colors duration-200 ${
+                    form.category === c.value
+                      ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--ink)] font-medium'
+                      : 'border-[var(--line)] bg-[var(--surface)] text-[var(--ink-soft)] hover:border-[var(--ink-soft)]'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div>
             <label htmlFor="wiz-title" className="label-field">
               Titre de la toile *
@@ -278,7 +299,10 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
                 onChange={(e) => setForm({ ...form, technique: e.target.value as Technique })}
                 className="input-field"
               >
-                {TECHNIQUES.map((t) => (
+                {(TECHNIQUES_BY_CATEGORY[form.category].includes(form.technique)
+                  ? TECHNIQUES_BY_CATEGORY[form.category]
+                  : [form.technique, ...TECHNIQUES_BY_CATEGORY[form.category]]
+                ).map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
@@ -412,6 +436,9 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
                 ⭐ Affichée en grand sur l&apos;accueil
               </p>
             )}
+            <p className="font-body text-xs text-[var(--muted)] mt-3 uppercase tracking-[0.14em]">
+              📁 Rangée dans : {CATEGORY_LABEL[form.category]}
+            </p>
           </div>
 
           {error && (

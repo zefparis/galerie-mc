@@ -76,16 +76,42 @@ export default async function Home() {
                   Sélection
                 </h2>
               </div>
-              <Link
-                href="/galerie"
-                className="hidden sm:inline-flex font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
-              >
-                Toute la galerie →
-              </Link>
+              <div className="hidden sm:flex items-end gap-6">
+                <Link
+                  href="/galerie?categorie=peintures"
+                  className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
+                >
+                  Peintures →
+                </Link>
+                <Link
+                  href="/galerie?categorie=collages"
+                  className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
+                >
+                  Collages →
+                </Link>
+                <Link
+                  href="/galerie"
+                  className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
+                >
+                  Toute la galerie →
+                </Link>
+              </div>
             </div>
           </Reveal>
           <MasonryGrid paintings={selection} />
-          <Reveal className="sm:hidden mt-6 text-center">
+          <Reveal className="sm:hidden mt-6 flex flex-col items-center gap-4">
+            <Link
+              href="/galerie?categorie=peintures"
+              className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)]"
+            >
+              Peintures contemporaines →
+            </Link>
+            <Link
+              href="/galerie?categorie=collages"
+              className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)]"
+            >
+              Collages sur papier →
+            </Link>
             <Link
               href="/galerie"
               className="inline-flex font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--accent)]"

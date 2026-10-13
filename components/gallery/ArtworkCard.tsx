@@ -12,7 +12,17 @@ const STATUS_TEXT: Record<string, string> = {
   non_a_vendre: 'Non à vendre',
 }
 
-export default function ArtworkCard({ painting: p }: { painting: Painting }) {
+export default function ArtworkCard({
+  painting: p,
+  category,
+}: {
+  painting: Painting
+  category?: string
+}) {
+  const href =
+    category && category !== 'toutes'
+      ? `/oeuvre/${p.id}?categorie=${category}`
+      : `/oeuvre/${p.id}`
   // Ratio connu en base → zéro saut de mise en page ; sinon mesuré au chargement.
   const [size, setSize] = useState<[number, number] | null>(
     p.imageWidth && p.imageHeight ? [p.imageWidth, p.imageHeight] : null
@@ -47,7 +57,7 @@ export default function ArtworkCard({ painting: p }: { painting: Painting }) {
 
   return (
     <Link
-      href={`/oeuvre/${p.id}`}
+      href={href}
       className="group block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
       aria-label={`Voir l'œuvre « ${p.title} »${meta ? ` — ${meta}` : ''}`}
     >

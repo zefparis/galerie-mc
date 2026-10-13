@@ -5,7 +5,12 @@ export type Technique =
   | 'Pastel'
   | 'Fusain'
   | 'Technique mixte'
+  | 'Collage'
+  | 'Technique mixte sur papier'
+  | 'Encre sur papier'
   | 'Autre'
+
+export type PaintingCategory = 'peintures' | 'collages'
 
 export type PriceStatus = 'visible' | 'sur_demande' | 'vendu' | 'non_a_vendre'
 
@@ -22,6 +27,7 @@ export interface Painting {
   imageHeight?: number
   price?: number
   priceStatus: PriceStatus
+  category: PaintingCategory
   featured: boolean
   order: number
   createdAt: string

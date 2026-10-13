@@ -14,7 +14,13 @@ function columnCount(width: number) {
 
 // Répartit les œuvres dans N colonnes EN GARDANT l'ordre admin,
 // lu de gauche à droite ligne par ligne (rotation par colonne).
-export default function GalleryGrid({ paintings }: { paintings: Painting[] }) {
+export default function GalleryGrid({
+  paintings,
+  category,
+}: {
+  paintings: Painting[]
+  category?: string
+}) {
   const [cols, setCols] = useState(0)
 
   useEffect(() => {
@@ -37,7 +43,7 @@ export default function GalleryGrid({ paintings }: { paintings: Painting[] }) {
         <div key={ci} className="flex min-w-0 flex-col gap-7 md:gap-9">
           {col.map((p, ri) => (
             <Reveal key={p.id} delay={Math.min((ri * n + ci) * 55, 400)}>
-              <ArtworkCard painting={p} />
+              <ArtworkCard painting={p} category={category} />
             </Reveal>
           ))}
         </div>

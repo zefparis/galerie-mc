@@ -1,17 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getPaintings, deletePainting, reorderPainting, isSessionExpired, redirectToLogin } from '@/lib/storage'
-import { Painting, Technique } from '@/lib/types'
+import { getPaintings, deletePainting, reorderPainting, updatePainting, isSessionExpired, redirectToLogin } from '@/lib/storage'
+import { Painting, PaintingCategory } from '@/lib/types'
+import { CATEGORIES, CATEGORY_SHORT } from '@/lib/catalog'
 
 interface Props {
   onAdd: () => void
   onEdit: (painting: Painting) => void
 }
 
-const TECHNIQUES: Technique[] = [
-  'Huile sur toile', 'Acrylique', 'Aquarelle', 'Pastel', 'Fusain', 'Technique mixte', 'Autre',
-]
+type CategoryFilter = 'all' | PaintingCategory
 
 const STATUS_LABEL: Record<Painting['priceStatus'], string> = {
   visible: 'Prix affiché',
@@ -23,7 +22,11 @@ const STATUS_LABEL: Record<Painting['priceStatus'], string> = {
 export default function PaintingList({ onAdd, onEdit }: Props) {
   const [paintings, setPaintings] = useState<Painting[]>([])
   const [search, setSearch] = useState('')
-  const [technique, setTechnique] = useState<Technique | 'all'>('all')
+  const [technique, setTechnique] = useState<string | 'all'>('all')
+  const [category, setCategory] = useState<CategoryFilter>('all')
+  const [selectMode, setSelectMode] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [moveTarget, setMoveTarget] = useState<PaintingCategory | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Painting | null>(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -66,11 +69,12 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
     }
   }
 
-  // Déplace un élément de `from` vers `to` — utilise l'API de permutation
-  // autant de fois que nécessaire, puis recharge.
+  // Déplace un élément de `from` vers `to` — indices dans la liste affichée
+  // (même catégorie, même tri que le site public). L'API permute au sein de
+  // la catégorie, autant de fois que nécessaire, puis on recharge.
   const moveTo = async (from: number, to: number) => {
     if (from === to || busy) return
-    const item = paintings[from]
+    const item = sortable[from]
     if (!item) return
     setBusy(true)
     setError('')
@@ -88,12 +92,51 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
     }
   }
 
-  const availableTechniques = TECHNIQUES.filter((t) =>
-    paintings.some((p) => p.technique === t)
-  )
+  const toggleSelected = (id: string) => {
+    const next = new Set(selected)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelected(next)
+  }
+
+  const exitSelectMode = () => {
+    setSelectMode(false)
+    setSelected(new Set())
+    setMoveTarget(null)
+  }
+
+  // Déplace les toiles cochées vers l'autre galerie (updatePainting envoie
+  // la fiche complète — seule la catégorie change, rien d'autre n'est touché).
+  const moveSelected = async () => {
+    if (!moveTarget || selected.size === 0 || busy) return
+    const count = selected.size
+    const label = CATEGORIES.find((c) => c.value === moveTarget)?.label || ''
+    setBusy(true)
+    setError('')
+    try {
+      for (const p of paintings) {
+        if (selected.has(p.id) && p.category !== moveTarget) {
+          await updatePainting(p.id, { ...p, category: moveTarget })
+        }
+      }
+      exitSelectMode()
+      setMessage(`${count} toile${count > 1 ? 's' : ''} déplacée${count > 1 ? 's' : ''} vers « ${label} » ✓`)
+      await loadPaintings()
+      setTimeout(() => setMessage(''), 5000)
+    } catch (err) {
+      notifyError(err, 'Le déplacement a échoué — rien n\'a été perdu, réessayez.')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const q = search.trim().toLowerCase()
-  const filtered = paintings.filter((p) => {
+
+  // Toiles de la catégorie affichée, dans l'ordre du site — c'est cette liste
+  // que le réordonnancement (↑↓ / glisser-déposer) manipule.
+  const sortable = paintings.filter((p) => category === 'all' || p.category === category)
+
+  const filtered = sortable.filter((p) => {
     const matchQ =
       !q ||
       p.title.toLowerCase().includes(q) ||
@@ -101,6 +144,8 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
       p.technique.toLowerCase().includes(q)
     return matchQ && (technique === 'all' || p.technique === technique)
   })
+
+  const availableTechniques = Array.from(new Set(sortable.map((p) => p.technique).filter(Boolean) as string[]))
 
   return (
     <div>
@@ -122,7 +167,7 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
         </div>
       )}
 
-      {/* Recherche + filtre */}
+      {/* Recherche + filtres */}
       {paintings.length > 0 && (
         <div className="space-y-3 mb-6">
           <input
@@ -133,6 +178,35 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
             placeholder="🔍 Rechercher une toile..."
             aria-label="Rechercher une toile"
           />
+          {/* Galerie */}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide" role="group" aria-label="Filtrer par galerie">
+            <button
+              onClick={() => setCategory('all')}
+              className={`flex-shrink-0 px-4 py-2.5 min-h-[44px] border font-body text-sm transition-colors ${
+                category === 'all'
+                  ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-soft)]'
+                  : 'border-[var(--line)] text-[var(--ink-soft)]'
+              }`}
+            >
+              Toutes ({paintings.length})
+            </button>
+            {CATEGORIES.map((c) => {
+              const n = paintings.filter((p) => p.category === c.value).length
+              return (
+                <button
+                  key={c.value}
+                  onClick={() => setCategory(c.value)}
+                  className={`flex-shrink-0 px-4 py-2.5 min-h-[44px] border font-body text-sm whitespace-nowrap transition-colors ${
+                    category === c.value
+                      ? 'border-[var(--accent)] text-[var(--accent)] bg-[var(--accent-soft)]'
+                      : 'border-[var(--line)] text-[var(--ink-soft)]'
+                  }`}
+                >
+                  {c.label} ({n})
+                </button>
+              )
+            })}
+          </div>
           {availableTechniques.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
               <button
@@ -178,16 +252,78 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
         </p>
       ) : (
         <>
-          <p className="font-body text-sm text-[var(--muted)] mb-4">
-            💡 Astuce : réordonnez avec les flèches ↑ ↓ (ou par glisser-déposer sur ordinateur).
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <p className="font-body text-sm text-[var(--muted)]">
+              💡 Astuce : réordonnez avec les flèches ↑ ↓ (ou par glisser-déposer sur ordinateur).
+            </p>
+            <button
+              onClick={selectMode ? exitSelectMode : () => setSelectMode(true)}
+              className="font-body text-sm min-h-[44px] px-4 border border-[var(--line)] text-[var(--ink)] hover:border-[var(--accent)] transition-colors"
+            >
+              {selectMode ? 'Terminer la sélection' : 'Choisir plusieurs toiles'}
+            </button>
+          </div>
+
+          {/* Barre d'action du mode sélection */}
+          {selectMode && (
+            <div className="mb-4 p-4 border border-[var(--accent)] bg-[var(--accent-soft)] space-y-3">
+              <p className="font-body text-base text-[var(--ink)]">
+                {selected.size === 0
+                  ? 'Touchez les toiles à déplacer pour les cocher.'
+                  : `${selected.size} toile${selected.size > 1 ? 's' : ''} cochée${selected.size > 1 ? 's' : ''}`}
+              </p>
+              {selected.size > 0 && !moveTarget && (
+                <div className="flex flex-col sm:flex-row gap-2">
+                  {CATEGORIES.filter(
+                    (c) => category === 'all' || c.value !== category
+                  ).map((c) => (
+                    <button
+                      key={c.value}
+                      onClick={() => setMoveTarget(c.value)}
+                      disabled={busy}
+                      className="btn-primary flex-1 text-base disabled:opacity-50"
+                    >
+                      Déplacer vers {c.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {moveTarget && (
+                <div className="p-4 border border-[var(--accent)] bg-[var(--surface)]">
+                  <p className="font-body text-base text-[var(--ink)]">
+                    Déplacer {selected.size} toile{selected.size > 1 ? 's' : ''} vers{' '}
+                    <strong>« {CATEGORIES.find((c) => c.value === moveTarget)?.label} »</strong> ?
+                  </p>
+                  <p className="font-body text-sm text-[var(--ink-soft)] mt-1">
+                    Elles quitteront leur galerie actuelle — tout le reste reste identique.
+                  </p>
+                  <div className="flex flex-col gap-2 mt-4">
+                    <button
+                      onClick={() => setMoveTarget(null)}
+                      autoFocus
+                      className="btn-secondary w-full text-base"
+                    >
+                      Annuler — garder où elles sont
+                    </button>
+                    <button
+                      onClick={moveSelected}
+                      disabled={busy}
+                      className="btn-accent w-full text-base disabled:opacity-50"
+                    >
+                      {busy ? 'Déplacement en cours...' : '✓ Oui, déplacer'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <div className="space-y-3">
             {filtered.map((painting) => {
-              const index = paintings.findIndex((p) => p.id === painting.id)
+              const index = sortable.findIndex((p) => p.id === painting.id)
               return (
                 <div
                   key={painting.id}
-                  draggable={!search && technique === 'all'}
+                  draggable={!search && technique === 'all' && !selectMode}
                   onDragStart={() => setDragIndex(index)}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(index) }}
                   onDragLeave={() => setDragOver(null)}
@@ -203,7 +339,25 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
                   } ${dragIndex === index ? 'opacity-40' : ''}`}
                 >
                   {/* Vignette */}
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-[var(--line)] overflow-hidden">
+                  {/* Case à cocher en mode sélection */}
+                  {selectMode && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSelected(painting.id)}
+                      aria-label={`${selected.has(painting.id) ? 'Décocher' : 'Cocher'} « ${painting.title} »`}
+                      aria-pressed={selected.has(painting.id)}
+                      className={`w-12 h-12 flex-shrink-0 flex items-center justify-center border-2 transition-colors ${
+                        selected.has(painting.id)
+                          ? 'border-[var(--accent)] bg-[var(--accent)] text-[var(--on-accent)]'
+                          : 'border-[var(--line)] bg-[var(--surface)] text-transparent'
+                      }`}
+                    >
+                      <span className="text-xl" aria-hidden="true">✓</span>
+                    </button>
+                  )}
+
+                  {/* Vignette */}
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-[var(--line)] overflow-hidden relative">
                     <img
                       src={painting.imageUrl}
                       alt={painting.title}
@@ -223,9 +377,13 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
                       {STATUS_LABEL[painting.priceStatus]}
                       {painting.featured ? ' · ⭐ accueil' : ''}
                     </span>
+                    <span className="inline-block mt-1 ml-1.5 font-body text-xs px-2 py-0.5 bg-[var(--bg)] border border-[var(--line)] text-[var(--ink-soft)]">
+                      {CATEGORY_SHORT[painting.category || 'peintures']}
+                    </span>
                   </div>
 
                   {/* Actions */}
+                  {!selectMode && (
                   <div className="flex flex-col gap-1.5 flex-shrink-0">
                     <div className="flex gap-1.5">
                       <button
@@ -238,7 +396,7 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
                       </button>
                       <button
                         onClick={() => moveTo(index, index + 1)}
-                        disabled={index === paintings.length - 1 || busy}
+                        disabled={index === sortable.length - 1 || busy}
                         aria-label={`Descendre « ${painting.title} »`}
                         className="w-11 h-11 flex items-center justify-center border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] disabled:opacity-25 hover:border-[var(--accent)] text-lg"
                       >
@@ -261,6 +419,7 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
                       </button>
                     </div>
                   </div>
+                  )}
                 </div>
               )
             })}

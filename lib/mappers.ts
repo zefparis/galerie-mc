@@ -14,6 +14,7 @@ export function mapPaintingRow(r: any) {
     imagePublicId: r.image_public_id || '',
     imageWidth: r.image_width ? Number(r.image_width) : undefined,
     imageHeight: r.image_height ? Number(r.image_height) : undefined,
+    category: (r.category === 'collages' ? 'collages' : 'peintures') as 'collages' | 'peintures',
     price: r.price ? Number(r.price) : undefined,
     priceStatus: r.price_status,
     featured: r.featured,

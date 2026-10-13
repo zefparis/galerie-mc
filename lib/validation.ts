@@ -17,6 +17,7 @@ export const paintingBodySchema = z.object({
   imageHeight: z.number().int().positive().nullable().optional(),
   price: z.number().nonnegative().nullable().optional(),
   priceStatus: priceStatusSchema.optional().default('sur_demande'),
+  category: z.enum(['peintures', 'collages']).optional().default('peintures'),
   featured: z.boolean().optional().default(false),
   order: z.number().int().optional().default(0),
 })
