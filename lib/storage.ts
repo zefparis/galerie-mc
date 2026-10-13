@@ -57,6 +57,16 @@ async function throwIfNotOk(res: Response): Promise<void> {
   throw new Error(data.error || `Erreur serveur (${res.status})`)
 }
 
+// Renvoie true si l'erreur indique une session admin expirée.
+export function isSessionExpired(err: unknown): boolean {
+  return err instanceof Error && err.message.startsWith('Session expirée')
+}
+
+// Redirige vers la page de connexion avec un message clair.
+export function redirectToLogin(): void {
+  window.location.href = '/admin/login?expired=1'
+}
+
 export async function savePainting(painting: Painting): Promise<Painting> {
   const res = await fetch('/api/paintings', {
     method: 'POST',

@@ -10,7 +10,10 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const [expired, setExpired] = useState(false)
+
   useEffect(() => {
+    if (window.location.search.includes('expired=1')) setExpired(true)
     fetch('/api/auth/me')
       .then((res) => res.json())
       .then((data) => {
@@ -42,12 +45,23 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-white">
+    <div className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg)]">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <h1 className="font-display text-3xl text-charcoal mb-2">Administration</h1>
-          <p className="font-body text-sm text-warm-gray">Galerie Marie-Claire Scandella</p>
+          <h1 className="font-display text-4xl text-[var(--ink)] mb-3">Bonjour Marie-Claire</h1>
+          <p className="font-body text-base text-[var(--ink-soft)]">
+            Entrez votre mot de passe pour gérer votre galerie.
+          </p>
         </div>
+
+        {expired && (
+          <div className="mb-5 p-4 bg-[var(--accent-soft)] border border-[var(--accent)]/30" role="status">
+            <p className="font-body text-base text-[var(--ink)]">
+              Pour votre sécurité, la connexion se ferme au bout de quelques jours.
+              Reconnectez-vous — rien n&apos;a été perdu.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-4">
           <div onKeyDown={(e) => e.key === 'Enter' && handleLogin()}>
@@ -55,14 +69,18 @@ export default function AdminLoginPage() {
             <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Entrez votre mot de passe"
+              placeholder="Votre mot de passe"
               className="input-field pr-12"
             />
           </div>
 
           {error && (
-            <div className="p-3 bg-[#C0392B]/10 border border-[#C0392B]/30">
-              <p className="font-body text-sm text-[#C0392B]">{error}</p>
+            <div className="p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
+              <p className="font-body text-base text-[#B3402F]">
+                {error === 'Mot de passe incorrect'
+                  ? "Ce n'est pas le bon mot de passe. Réessayez."
+                  : error}
+              </p>
             </div>
           )}
 
@@ -71,8 +89,12 @@ export default function AdminLoginPage() {
             disabled={loading || !password}
             className="btn-primary w-full text-lg disabled:opacity-50"
           >
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading ? 'Connexion...' : 'Me connecter'}
           </button>
+
+          <p className="font-body text-sm text-[var(--muted)] text-center pt-2">
+            Mot de passe oublié ? Contactez la personne qui s&apos;occupe du site.
+          </p>
         </div>
       </div>
     </div>

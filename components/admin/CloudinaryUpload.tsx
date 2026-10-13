@@ -1,17 +1,20 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { uploadToCloudinary, getCloudinarySettings } from '@/lib/cloudinary'
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+import { uploadToCloudinaryProgress, compressImage, isTooBig, getCloudinarySettings } from '@/lib/cloudinary'
 
 interface Props {
   currentUrl: string
   onUploaded: (url: string, publicId: string) => void
 }
 
+type Status = 'idle' | 'preparing' | 'uploading' | 'success' | 'error'
+
+// Grande zone tactile : choix de photo, réduction automatique des grosses
+// photos de téléphone, barre de progression réelle.
 export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
+  const [status, setStatus] = useState<Status>('idle')
+  const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
   const [preview, setPreview] = useState(currentUrl)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -21,8 +24,9 @@ export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
   if (!settings) {
     return (
       <div className="p-4 bg-[#FFF8E1] border border-[#FFE082] rounded">
-        <p className="font-body text-sm text-[#F57F17]">
-          ⚠️ Cloudinary non configuré — allez dans <strong>Paramètres</strong> pour renseigner votre Cloud Name et Upload Preset.
+        <p className="font-body text-base text-[#8a6d00]">
+          ⚠️ L&apos;envoi de photos n&apos;est pas configuré. Contactez la personne
+          qui s&apos;occupe du site.
         </p>
       </div>
     )
@@ -30,74 +34,136 @@ export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    e.target.value = '' // permet de re-choisir le même fichier
     if (!file) return
 
-    if (file.size > MAX_FILE_SIZE) {
-      setError('Le fichier dépasse 10 MB. Veuillez choisir une image plus légère.')
+    if (!file.type.startsWith('image/')) {
+      setError("Ce fichier n'est pas une photo. Choisissez une image.")
       setStatus('error')
       return
     }
 
-    // Preview immédiate via URL.createObjectURL
     const objectUrl = URL.createObjectURL(file)
     setPreview(objectUrl)
-
-    // Upload
-    setStatus('uploading')
     setError('')
+    setStatus('preparing')
 
     try {
-      const result = await uploadToCloudinary(file, settings.cloudName, settings.uploadPreset)
+      // Réduction automatique des grosses photos de téléphone
+      const blob = await compressImage(file)
+      if (isTooBig(blob)) {
+        setStatus('error')
+        setError('La photo est vraiment trop lourde. Essayez de la recadrer dans votre galerie photo, puis renvoyez-la.')
+        setPreview('')
+        return
+      }
+
+      setStatus('uploading')
+      setProgress(0)
+      const result = await uploadToCloudinaryProgress(
+        blob,
+        settings.cloudName,
+        settings.uploadPreset,
+        (ratio) => setProgress(Math.round(ratio * 100))
+      )
       onUploaded(result.url, result.publicId)
       setPreview(result.url)
       setStatus('success')
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Erreur lors de l'upload"
-      setError(message)
+    } catch {
       setStatus('error')
+      setError("L'envoi de la photo a échoué. Vérifiez votre connexion internet et réessayez — rien n'a été perdu.")
     }
   }
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+        aria-hidden="true"
+      />
+
+      {!preview ? (
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          disabled={status === 'uploading'}
-          className="btn-primary w-full sm:w-auto min-h-[56px] sm:min-h-[44px] disabled:opacity-50"
+          disabled={status === 'uploading' || status === 'preparing'}
+          className="w-full min-h-[160px] sm:min-h-[200px] border-2 border-dashed border-[var(--line)] bg-[var(--surface)] flex flex-col items-center justify-center gap-3 p-6 transition-colors duration-200 hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]/30 disabled:opacity-60"
         >
-          {status === 'uploading' ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Envoi en cours...
-            </span>
-          ) : 'Choisir une photo'}
+          {status === 'preparing' ? (
+            <>
+              <span className="text-3xl" aria-hidden="true">⏳</span>
+              <span className="font-body text-lg text-[var(--ink)]">Préparation de la photo...</span>
+            </>
+          ) : status === 'uploading' ? (
+            <>
+              <span className="text-3xl" aria-hidden="true">📤</span>
+              <span className="font-body text-lg text-[var(--ink)]">Envoi en cours... {progress}%</span>
+              <span className="w-full max-w-xs h-2 bg-[var(--line)] overflow-hidden">
+                <span
+                  className="block h-full bg-[var(--accent)] transition-all duration-200"
+                  style={{ width: `${progress}%` }}
+                />
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-4xl" aria-hidden="true">📷</span>
+              <span className="font-body text-lg font-medium text-[var(--ink)]">
+                Touchez ici pour choisir une photo
+              </span>
+              <span className="font-body text-sm text-[var(--muted)]">
+                Depuis votre téléphone ou votre ordinateur
+              </span>
+            </>
+          )}
         </button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        {status === 'success' && (
-          <span className="font-body text-sm text-[#2D6A4F] font-medium">✓ Image envoyée</span>
-        )}
-      </div>
-
-      {error && (
-        <div className="mt-3 p-3 bg-[#C0392B]/10 border border-[#C0392B]/30">
-          <p className="font-body text-sm text-[#C0392B]">{error}</p>
+      ) : (
+        <div>
+          <div className="w-full sm:max-w-md bg-[var(--line)] overflow-hidden">
+            <img src={preview} alt="Aperçu de la photo choisie" className="w-full h-auto max-h-80 object-contain bg-[var(--surface)]" />
+          </div>
+          {status === 'uploading' && (
+            <div className="mt-3">
+              <p className="font-body text-base text-[var(--ink-soft)]">Envoi en cours... {progress}%</p>
+              <div className="w-full max-w-md h-2 bg-[var(--line)] overflow-hidden mt-1">
+                <div
+                  className="h-full bg-[var(--accent)] transition-all duration-200"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+          {status === 'success' && (
+            <p className="mt-3 font-body text-base font-medium text-[var(--accent)]">
+              ✓ Photo envoyée
+            </p>
+          )}
+          {status !== 'uploading' && status !== 'preparing' && (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="btn-outline mt-4 text-sm"
+            >
+              Changer la photo
+            </button>
+          )}
         </div>
       )}
 
-      {preview && (
-        <div className="mt-4 w-full sm:w-48 aspect-[4/3] sm:aspect-square bg-[var(--border)] overflow-hidden rounded">
-          <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+      {error && (
+        <div className="mt-4 p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
+          <p className="font-body text-base text-[#B3402F]">{error}</p>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="btn-secondary mt-3 text-sm"
+          >
+            Réessayer avec une autre photo
+          </button>
         </div>
       )}
     </div>

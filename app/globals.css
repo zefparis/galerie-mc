@@ -143,19 +143,24 @@ button, a {
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-3 bg-[var(--muted)] text-white font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[var(--ink-soft)] min-h-[44px];
+    @apply inline-flex items-center justify-center px-6 py-3 bg-[var(--muted)] text-white font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[var(--ink-soft)] min-h-[48px];
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center px-6 py-3 bg-[#B3402F] text-white font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[#96352a] min-h-[44px];
+    @apply inline-flex items-center justify-center px-6 py-3 bg-[#B3402F] text-white font-body text-sm font-medium tracking-wide transition-colors duration-300 hover:bg-[#96352a] min-h-[48px];
   }
 
   .input-field {
-    @apply w-full px-4 py-3 border border-[var(--line)] bg-[var(--surface)] font-body text-base text-[var(--ink)] outline-none transition-colors duration-200 focus:border-[var(--accent)] min-h-[48px];
+    @apply w-full px-4 py-3 border border-[var(--line)] bg-[var(--surface)] font-body text-lg text-[var(--ink)] outline-none transition-colors duration-200 focus:border-[var(--accent)] min-h-[52px];
   }
 
   .label-field {
-    @apply block font-body text-sm font-medium text-[var(--ink)] mb-2;
+    @apply block font-body text-base font-medium text-[var(--ink)] mb-2;
+  }
+
+  /* Mention « facultatif » à côté des libellés */
+  .label-optional {
+    @apply font-body text-xs font-normal text-[var(--muted)] ml-2;
   }
 
   /* Sur-titre éditorial : petit caps letterspacé */

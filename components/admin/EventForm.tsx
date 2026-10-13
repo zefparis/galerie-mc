@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { GalleryEvent, EventMedia } from '@/lib/types'
+import { isSessionExpired, redirectToLogin } from '@/lib/storage'
 import CloudinaryUpload from './CloudinaryUpload'
+import HelpTip from './HelpTip'
 
 function getYouTubeId(url: string): string | null {
   const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/)
@@ -11,11 +13,13 @@ function getYouTubeId(url: string): string | null {
 
 interface Props {
   event: GalleryEvent | null
-  onClose: () => void
+  onDone: (message: string) => void
+  onCancel: () => void
 }
 
-export default function EventForm({ event, onClose }: Props) {
+export default function EventForm({ event, onDone, onCancel }: Props) {
   const isEditing = !!event
+  const draftKey = `mc-draft-event-${event?.id || 'new'}`
 
   const [form, setForm] = useState({
     title: event?.title || '',
@@ -30,29 +34,57 @@ export default function EventForm({ event, onClose }: Props) {
   const [media, setMedia] = useState<EventMedia[]>(event?.media || [])
   const [videoUrl, setVideoUrl] = useState('')
   const [videoError, setVideoError] = useState('')
-  const [message, setMessage] = useState('')
+  const [draftFound, setDraftFound] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const restored = useRef(false)
+
+  // Récupération du brouillon automatique
+  useEffect(() => {
+    if (restored.current) return
+    restored.current = true
+    try {
+      const raw = localStorage.getItem(draftKey)
+      if (!raw) return
+      const draft = JSON.parse(raw)
+      if (draft?.form?.title || draft?.form?.coverUrl) {
+        setForm(draft.form)
+        if (Array.isArray(draft.media)) setMedia(draft.media)
+        setDraftFound(true)
+      }
+    } catch { /* brouillon illisible — on l'ignore */ }
+  }, [draftKey])
+
+  // Sauvegarde automatique du brouillon
+  useEffect(() => {
+    if (isEditing) return
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify({ form, media }))
+      } catch { /* stockage plein — non bloquant */ }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [form, media, draftKey, isEditing])
+
+  const discardDraft = () => {
+    localStorage.removeItem(draftKey)
+    setDraftFound(false)
+    setForm({
+      title: '', description: '', location: '', eventDate: '',
+      coverUrl: '', coverPublicId: '', published: false,
+    })
+    setMedia([])
+  }
 
   const handleSave = async () => {
     setError('')
-    setMessage('')
-
     if (!form.title.trim()) {
-      setError('Le titre est obligatoire.')
+      setError('Donnez un titre à votre événement pour pouvoir l\'enregistrer.')
       return
     }
-
     setSaving(true)
-
     try {
-      const body = {
-        ...form,
-        title: form.title.trim(),
-        media,
-        order: event?.order || 0,
-      }
-
+      const body = { ...form, title: form.title.trim(), media, order: event?.order || 0 }
       const res = isEditing
         ? await fetch(`/api/events/${event.id}`, {
             method: 'PUT',
@@ -66,19 +98,20 @@ export default function EventForm({ event, onClose }: Props) {
           })
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(
-          res.status === 401
-            ? 'Session expirée — reconnectez-vous.'
-            : data.error || `Erreur serveur (${res.status})`
-        )
+        if (res.status === 401) {
+          redirectToLogin()
+          return
+        }
+        throw new Error('save-failed')
       }
-
-      setMessage(isEditing ? 'Événement modifié !' : 'Événement ajouté !')
-      setTimeout(() => onClose(), 1000)
+      localStorage.removeItem(draftKey)
+      onDone(isEditing ? 'Modifications enregistrées ✓' : 'Votre événement est enregistré ✓')
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur lors de l'enregistrement.")
-    } finally {
+      if (isSessionExpired(err)) {
+        redirectToLogin()
+        return
+      }
+      setError('Une erreur est survenue — rien n\'a été perdu, réessayez.')
       setSaving(false)
     }
   }
@@ -87,19 +120,11 @@ export default function EventForm({ event, onClose }: Props) {
     setVideoError('')
     const ytId = getYouTubeId(videoUrl.trim())
     if (!ytId) {
-      setVideoError('URL YouTube invalide')
+      setVideoError('Ce lien n\'est pas un lien YouTube valide. Copiez l\'adresse complète de la vidéo.')
       return
     }
     setMedia([...media, { type: 'video', url: videoUrl.trim(), caption: '' }])
     setVideoUrl('')
-  }
-
-  const handleAddPhoto = (url: string, publicId: string) => {
-    setMedia([...media, { type: 'photo', url, publicId, caption: '' }])
-  }
-
-  const handleRemoveMedia = (index: number) => {
-    setMedia(media.filter((_, i) => i !== index))
   }
 
   const handleMoveMedia = (index: number, direction: 'up' | 'down') => {
@@ -110,230 +135,255 @@ export default function EventForm({ event, onClose }: Props) {
     setMedia(arr)
   }
 
-  const handleCaptionChange = (index: number, caption: string) => {
-    const arr = [...media]
-    arr[index] = { ...arr[index], caption }
-    setMedia(arr)
-  }
-
   return (
     <div className="w-full max-w-2xl">
-      <div className="flex items-center justify-between mb-6 sm:mb-8">
-        <h2 className="font-body text-lg sm:text-xl font-medium text-charcoal">
-          {isEditing ? `Modifier « ${event.title} »` : 'Ajouter un événement'}
-        </h2>
-        <button onClick={onClose} className="font-body text-sm text-warm-gray hover:text-charcoal min-h-[44px] px-2">
-          ✕ Fermer
-        </button>
-      </div>
-
-      {message && (
-        <div className="mb-4 p-4 bg-[#2D6A4F]/10 border border-[#2D6A4F]/30 rounded">
-          <p className="font-body text-sm text-[#2D6A4F] font-medium">{message}</p>
+      {draftFound && (
+        <div className="mb-6 p-4 bg-[var(--accent-soft)] border border-[var(--accent)]/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="font-body text-base text-[var(--ink)]">
+            J&apos;ai retrouvé le brouillon que vous aviez commencé.
+          </p>
+          <button
+            onClick={discardDraft}
+            className="font-body text-sm text-[var(--ink-soft)] underline min-h-[44px] text-left sm:text-right"
+          >
+            Recommencer à zéro
+          </button>
         </div>
       )}
+
       {error && (
-        <div className="mb-4 p-4 bg-[#C0392B]/10 border border-[#C0392B]/30 rounded">
-          <p className="font-body text-sm text-[#C0392B] font-medium">{error}</p>
+        <div className="mb-6 p-4 bg-[#B3402F]/10 border border-[#B3402F]/30" role="alert">
+          <p className="font-body text-base text-[#B3402F]">{error}</p>
         </div>
       )}
 
-      <div className="space-y-5">
-        {/* Cover */}
+      <div className="space-y-6">
+        {/* Photo de couverture */}
         <div>
-          <label className="label-field">📷 Photo de couverture</label>
+          <p className="label-field">
+            Photo de couverture
+            <HelpTip text="La grande image qui présente votre événement sur le site." />
+          </p>
           <CloudinaryUpload
             currentUrl={form.coverUrl}
             onUploaded={(url, publicId) => setForm({ ...form, coverUrl: url, coverPublicId: publicId })}
           />
         </div>
 
-        {/* Title */}
+        {/* Titre */}
         <div>
-          <label className="label-field">📝 Titre *</label>
+          <label htmlFor="ev-title" className="label-field">Titre de l&apos;événement *</label>
           <input
+            id="ev-title"
             type="text"
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
             className="input-field"
-            placeholder="Nom de l'exposition"
+            placeholder="ex : Exposition à la mairie de Montreuil"
           />
         </div>
 
-        {/* Location */}
-        <div>
-          <label className="label-field">📍 Lieu</label>
-          <input
-            type="text"
-            value={form.location}
-            onChange={(e) => setForm({ ...form, location: e.target.value })}
-            className="input-field"
-            placeholder="ex: Galerie du Midi, Nîmes"
-          />
-        </div>
-
-        {/* Date */}
-        <div>
-          <label className="label-field">📅 Date de l&apos;événement</label>
-          <input
-            type="date"
-            value={form.eventDate}
-            onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
-            className="input-field"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {/* Lieu */}
+          <div>
+            <label htmlFor="ev-location" className="label-field">
+              Lieu <span className="label-optional">— facultatif</span>
+            </label>
+            <input
+              id="ev-location"
+              type="text"
+              value={form.location}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
+              className="input-field"
+              placeholder="ex : Salle des fêtes, Montreuil-aux-Lions"
+            />
+          </div>
+          {/* Date */}
+          <div>
+            <label htmlFor="ev-date" className="label-field">
+              Date <span className="label-optional">— facultatif</span>
+            </label>
+            <input
+              id="ev-date"
+              type="date"
+              value={form.eventDate}
+              onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
+              className="input-field"
+            />
+          </div>
         </div>
 
         {/* Description */}
         <div>
-          <label className="label-field">💬 Description</label>
+          <label htmlFor="ev-desc" className="label-field">
+            Description <span className="label-optional">— facultatif</span>
+            <HelpTip text="Toutes les informations utiles : horaires, entrée libre ou non, nombre d'œuvres présentées..." />
+          </label>
           <textarea
+            id="ev-desc"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             className="input-field min-h-[120px] resize-y"
             rows={4}
+            placeholder="Présentez votre événement aux visiteurs..."
           />
         </div>
 
-        {/* Published toggle */}
-        <div className="flex items-center gap-3">
+        {/* Visible / brouillon */}
+        <div className="p-4 border border-[var(--line)] bg-[var(--surface)]">
           <button
             type="button"
             onClick={() => setForm({ ...form, published: !form.published })}
-            className={`w-12 h-7 rounded-full transition-colors relative ${
-              form.published ? 'bg-[#2D6A4F]' : 'bg-gray-300'
-            }`}
+            aria-pressed={form.published}
+            className="flex items-center gap-3 w-full text-left min-h-[52px]"
           >
             <span
-              className={`block w-5 h-5 rounded-full bg-white shadow absolute top-1 transition-transform ${
-                form.published ? 'translate-x-6' : 'translate-x-1'
+              className={`w-14 h-8 rounded-full transition-colors relative flex-shrink-0 ${
+                form.published ? 'bg-[#2D6A4F]' : 'bg-[var(--line)]'
               }`}
-            />
+            >
+              <span
+                className={`block w-6 h-6 rounded-full bg-white shadow absolute top-1 transition-transform ${
+                  form.published ? 'translate-x-7' : 'translate-x-1'
+                }`}
+              />
+            </span>
+            <span>
+              <span className="block font-body text-base font-medium text-[var(--ink)]">
+                {form.published ? '👁 Visible sur le site' : '📝 Brouillon'}
+              </span>
+              <span className="block font-body text-sm text-[var(--ink-soft)] mt-0.5">
+                {form.published
+                  ? 'Les visiteurs peuvent voir cet événement.'
+                  : 'Personne ne le voit — touchez pour le rendre visible.'}
+              </span>
+            </span>
           </button>
-          <span className="font-body text-sm text-charcoal">
-            {form.published ? '👁 Publié (visible sur le site)' : '📝 Brouillon (non visible)'}
-          </span>
         </div>
 
-        {/* ── Media section ── */}
-        <div className="border-t border-[var(--border)] pt-5">
-          <h3 className="font-body text-base font-medium text-charcoal mb-4">
-            Médias de l&apos;événement
+        {/* ── Médias ── */}
+        <div className="border-t border-[var(--line)] pt-6">
+          <h3 className="font-body text-lg font-medium text-[var(--ink)] mb-1">
+            Photos et vidéos de l&apos;événement <span className="label-optional">— facultatif</span>
           </h3>
+          <p className="font-body text-sm text-[var(--ink-soft)] mb-5">
+            Ajoutez des photos de vos œuvres exposées, ou une vidéo YouTube du vernissage.
+          </p>
 
-          {/* Add photo */}
-          <div className="mb-4">
-            <label className="label-field text-sm">+ Ajouter une photo</label>
+          {/* Ajouter une photo */}
+          <div className="mb-5">
+            <p className="label-field">Ajouter une photo</p>
             <CloudinaryUpload
               currentUrl=""
-              onUploaded={handleAddPhoto}
+              onUploaded={(url, publicId) => setMedia([...media, { type: 'photo', url, publicId, caption: '' }])}
             />
           </div>
 
-          {/* Add video */}
-          <div className="mb-4">
-            <label className="label-field text-sm">+ Ajouter une vidéo YouTube</label>
+          {/* Ajouter une vidéo */}
+          <div className="mb-5">
+            <label htmlFor="ev-video" className="label-field">
+              Ajouter une vidéo YouTube
+              <HelpTip text="Copiez l'adresse de la vidéo sur YouTube (elle commence par youtube.com ou youtu.be) et collez-la ici." />
+            </label>
             <div className="flex flex-col sm:flex-row gap-2">
               <input
-                type="text"
+                id="ev-video"
+                type="url"
                 value={videoUrl}
                 onChange={(e) => { setVideoUrl(e.target.value); setVideoError('') }}
                 className="input-field flex-1"
-                placeholder="https://www.youtube.com/watch?v=..."
+                placeholder="Collez le lien YouTube ici"
               />
               <button
                 type="button"
                 onClick={handleAddVideo}
                 disabled={!videoUrl.trim()}
-                className="btn-secondary min-h-[44px] disabled:opacity-50"
+                className="btn-secondary disabled:opacity-50"
               >
                 Ajouter
               </button>
             </div>
             {videoError && (
-              <p className="font-body text-xs text-[#C0392B] mt-1">{videoError}</p>
+              <p className="font-body text-sm text-[#B3402F] mt-2">{videoError}</p>
             )}
           </div>
 
-          {/* Media list */}
+          {/* Liste des médias */}
           {media.length > 0 && (
             <div className="space-y-3">
               {media.map((m, i) => (
-                <div key={i} className="border border-[var(--border)] rounded p-3 flex flex-col sm:flex-row gap-3">
-                  {/* Thumbnail */}
-                  <div className="w-full sm:w-24 h-16 bg-[var(--border)] rounded overflow-hidden flex-shrink-0">
-                    {m.type === 'photo' ? (
-                      <img src={m.url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-black/80 text-white text-lg">
-                        ▶
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Caption + actions */}
-                  <div className="flex-1 min-w-0 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                        m.type === 'photo' ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'
-                      }`}>
-                        {m.type === 'photo' ? '📷 Photo' : '🎬 Vidéo'}
-                      </span>
+                <div key={i} className="border border-[var(--line)] bg-[var(--surface)] p-3 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 bg-[var(--line)] overflow-hidden flex-shrink-0">
+                      {m.type === 'photo' ? (
+                        <img src={m.url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-black/80 text-white text-lg">
+                          ▶
+                        </div>
+                      )}
                     </div>
-                    <input
-                      type="text"
-                      value={m.caption || ''}
-                      onChange={(e) => handleCaptionChange(i, e.target.value)}
-                      className="input-field text-sm"
-                      placeholder="Légende (optionnel)"
-                    />
+                    <span className="font-body text-sm font-medium text-[var(--ink)] flex-1">
+                      {m.type === 'photo' ? '📷 Photo' : '🎬 Vidéo YouTube'}
+                    </span>
+                    <div className="flex gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleMoveMedia(i, 'up')}
+                        disabled={i === 0}
+                        aria-label="Monter ce média"
+                        className="w-11 h-11 flex items-center justify-center border border-[var(--line)] text-[var(--ink)] disabled:opacity-25"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMoveMedia(i, 'down')}
+                        disabled={i === media.length - 1}
+                        aria-label="Descendre ce média"
+                        className="w-11 h-11 flex items-center justify-center border border-[var(--line)] text-[var(--ink)] disabled:opacity-25"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMedia(media.filter((_, j) => j !== i))}
+                        aria-label="Retirer ce média"
+                        className="w-11 h-11 flex items-center justify-center border border-[var(--line)] text-[#B3402F] hover:border-[#B3402F]"
+                      >
+                        🗑
+                      </button>
+                    </div>
                   </div>
-
-                  {/* Order + delete */}
-                  <div className="flex sm:flex-col gap-1 flex-shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => handleMoveMedia(i, 'up')}
-                      disabled={i === 0}
-                      className="btn-secondary text-xs min-h-[36px] min-w-[36px] disabled:opacity-30"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleMoveMedia(i, 'down')}
-                      disabled={i === media.length - 1}
-                      className="btn-secondary text-xs min-h-[36px] min-w-[36px] disabled:opacity-30"
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMedia(i)}
-                      className="btn-danger text-xs min-h-[36px] min-w-[36px]"
-                    >
-                      🗑️
-                    </button>
-                  </div>
+                  <input
+                    type="text"
+                    value={m.caption || ''}
+                    onChange={(e) => {
+                      const arr = [...media]
+                      arr[i] = { ...arr[i], caption: e.target.value }
+                      setMedia(arr)
+                    }}
+                    className="input-field text-base"
+                    placeholder="Légende — facultatif"
+                    aria-label="Légende du média"
+                  />
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[var(--border)]">
-          <button
-            onClick={onClose}
-            className="btn-secondary w-full sm:w-auto min-h-[52px]"
-          >
+        {/* Boutons */}
+        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-[var(--line)]">
+          <button onClick={onCancel} className="btn-outline flex-1 text-base">
             Annuler
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !form.title.trim()}
-            className="btn-primary w-full sm:w-auto min-h-[52px] disabled:opacity-50"
+            className="btn-primary flex-1 text-base disabled:opacity-40"
           >
-            {saving ? 'Enregistrement...' : 'Enregistrer l\'événement'}
+            {saving ? 'Enregistrement...' : '✓ Enregistrer l\'événement'}
           </button>
         </div>
       </div>

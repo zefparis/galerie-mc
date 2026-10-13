@@ -4,28 +4,11 @@ import { useState, useEffect } from 'react'
 import { getSettings, saveSettings } from '@/lib/storage'
 import { GallerySettings } from '@/lib/types'
 import { testCloudinaryConnection } from '@/lib/cloudinary'
-
-function AccordionSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
-  const [open, setOpen] = useState(defaultOpen)
-  return (
-    <section className="border border-[var(--border)] rounded overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-4 sm:px-6 bg-white hover:bg-[var(--cream)] transition-colors min-h-[52px]"
-      >
-        <h3 className="font-body text-base sm:text-lg font-medium text-charcoal text-left">{title}</h3>
-        <span className={`text-warm-gray text-lg transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>▾</span>
-      </button>
-      {open && <div className="px-4 pb-5 sm:px-6 sm:pb-6 space-y-5 border-t border-[var(--border)] pt-5">{children}</div>}
-    </section>
-  )
-}
+import HelpTip from './HelpTip'
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<GallerySettings | null>(null)
   const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
   const [cloudinaryTesting, setCloudinaryTesting] = useState(false)
   const [cloudinaryResult, setCloudinaryResult] = useState<'success' | 'error' | ''>('')
 
@@ -38,46 +21,42 @@ export default function AdminSettings() {
   if (!settings) return null
 
   const handleSaveSettings = () => {
-    setError('')
-    setMessage('')
     saveSettings(settings)
-    setMessage('Paramètres enregistrés avec succès !')
-    setTimeout(() => setMessage(''), 4000)
+    setMessage('Votre présentation est enregistrée ✓')
+    setTimeout(() => setMessage(''), 5000)
   }
 
   const handleTestCloudinary = async () => {
     setCloudinaryTesting(true)
     setCloudinaryResult('')
-
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || settings.cloudinaryCloudName
     const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || settings.cloudinaryUploadPreset
-
     const ok = await testCloudinaryConnection(cloudName, uploadPreset)
-
     setCloudinaryResult(ok ? 'success' : 'error')
     setCloudinaryTesting(false)
   }
 
   return (
-    <div className="w-full max-w-2xl space-y-4 sm:space-y-6">
+    <div className="w-full max-w-2xl">
+      <p className="font-body text-base text-[var(--ink-soft)] mb-8">
+        Ce que les visiteurs lisent à votre sujet sur la page d&apos;accueil et le
+        pied de page. Remplissez ce que vous voulez — tout est facultatif sauf
+        votre nom.
+      </p>
+
       {message && (
-        <div className="p-4 bg-[#2D6A4F]/10 border border-[#2D6A4F]/30 rounded">
-          <p className="font-body text-sm sm:text-base text-[#2D6A4F] font-medium">{message}</p>
+        <div className="mb-6 p-4 bg-[var(--accent-soft)] border border-[var(--accent)]/30" role="status">
+          <p className="font-body text-base text-[var(--ink)] font-medium">{message}</p>
         </div>
       )}
 
-      {error && (
-        <div className="p-4 bg-[#C0392B]/10 border border-[#C0392B]/30 rounded">
-          <p className="font-body text-sm sm:text-base text-[#C0392B] font-medium">{error}</p>
-        </div>
-      )}
-
-      {/* Profile section */}
-      <AccordionSection title="👤 Profil & Biographie" defaultOpen={true}>
-
+      <div className="space-y-6">
         <div>
-          <label className="label-field">👤 Nom affiché</label>
+          <label htmlFor="st-name" className="label-field">
+            Votre nom, tel qu&apos;il s&apos;affiche *
+          </label>
           <input
+            id="st-name"
             type="text"
             value={settings.artistName}
             onChange={(e) => setSettings({ ...settings, artistName: e.target.value })}
@@ -86,145 +65,142 @@ export default function AdminSettings() {
         </div>
 
         <div>
-          <label className="label-field">📝 Courte accroche (sous le nom)</label>
+          <label htmlFor="st-bio-short" className="label-field">
+            Petite phrase d&apos;accroche <span className="label-optional">— facultatif</span>
+            <HelpTip text="Une ligne affichée juste sous votre nom sur la page d'accueil, par exemple « Artiste peintre à Montreuil-aux-Lions »." />
+          </label>
           <input
+            id="st-bio-short"
             type="text"
             value={settings.bioShort}
             onChange={(e) => setSettings({ ...settings, bioShort: e.target.value })}
             className="input-field"
-            placeholder="ex: Artiste peintre abstraite | Montreuil-aux-Lions"
+            placeholder="ex : Artiste peintre à Montreuil-aux-Lions"
           />
         </div>
 
         <div>
-          <label className="label-field">📖 Biographie</label>
+          <label htmlFor="st-bio" className="label-field">
+            Votre biographie <span className="label-optional">— facultatif</span>
+            <HelpTip text="Quelques phrases sur vous et votre peinture. C'est le texte « Qui suis-je » de votre site." />
+          </label>
           <textarea
+            id="st-bio"
             value={settings.bio}
             onChange={(e) => setSettings({ ...settings, bio: e.target.value })}
-            className="input-field min-h-[150px] resize-y"
+            className="input-field min-h-[160px] resize-y"
             rows={6}
           />
         </div>
 
         <div>
-          <label className="label-field">📧 Email de contact</label>
+          <label htmlFor="st-email" className="label-field">
+            Votre adresse email <span className="label-optional">— facultatif</span>
+            <HelpTip text="Affichée sur la page Contact — c'est aussi l'adresse qui reçoit les messages des visiteurs." />
+          </label>
           <input
+            id="st-email"
             type="email"
             value={settings.email}
             onChange={(e) => setSettings({ ...settings, email: e.target.value })}
             className="input-field"
+            inputMode="email"
           />
         </div>
 
-        <div>
-          <label className="label-field">📱 Instagram (optionnel)</label>
-          <input
-            type="text"
-            value={settings.instagram || ''}
-            onChange={(e) => setSettings({ ...settings, instagram: e.target.value })}
-            className="input-field"
-            placeholder="@votre_compte"
-          />
-        </div>
-
-        <div>
-          <label className="label-field">📞 Téléphone (optionnel)</label>
-          <input
-            type="tel"
-            value={settings.phone || ''}
-            onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
-            className="input-field"
-            placeholder="06 12 34 56 78"
-          />
-        </div>
-      </AccordionSection>
-
-      {/* Cloudinary section */}
-      <AccordionSection title="☁️ Configuration Cloudinary">
-
-        {isEnvConfigured ? (
-          <div className="bg-[#2D6A4F]/10 border border-[#2D6A4F]/30 rounded p-4">
-            <p className="font-body text-sm text-[#2D6A4F] font-medium">
-              ✅ Cloudinary configuré via les variables serveur — aucune action requise
-            </p>
-            <p className="font-body text-xs text-[#2D6A4F]/70 mt-2">
-              Cloud Name : <code className="font-mono">{process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}</code>
-            </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label htmlFor="st-insta" className="label-field">
+              Instagram <span className="label-optional">— facultatif</span>
+            </label>
+            <input
+              id="st-insta"
+              type="text"
+              value={settings.instagram || ''}
+              onChange={(e) => setSettings({ ...settings, instagram: e.target.value })}
+              className="input-field"
+              placeholder="@votre_compte"
+            />
           </div>
-        ) : (
-          <>
-            <div>
-              <label className="label-field">Cloud Name</label>
-              <input
-                type="text"
-                value={settings.cloudinaryCloudName}
-                onChange={(e) => setSettings({ ...settings, cloudinaryCloudName: e.target.value })}
-                className="input-field"
-                placeholder="votre-cloud-name"
-              />
-            </div>
-
-            <div>
-              <label className="label-field">Upload Preset</label>
-              <input
-                type="text"
-                value={settings.cloudinaryUploadPreset}
-                onChange={(e) => setSettings({ ...settings, cloudinaryUploadPreset: e.target.value })}
-                className="input-field"
-                placeholder="votre-upload-preset"
-              />
-            </div>
-
-            <div>
-              <button
-                onClick={handleTestCloudinary}
-                disabled={cloudinaryTesting || !settings.cloudinaryCloudName || !settings.cloudinaryUploadPreset}
-                className="btn-secondary disabled:opacity-50"
-              >
-                {cloudinaryTesting ? 'Test en cours...' : 'Tester la connexion'}
-              </button>
-              {cloudinaryResult === 'success' && (
-                <p className="mt-2 font-body text-sm text-[#2D6A4F] font-medium">
-                  ✅ Connexion réussie
-                </p>
-              )}
-              {cloudinaryResult === 'error' && (
-                <p className="mt-2 font-body text-sm text-[#C0392B] font-medium">
-                  ❌ Échec — vérifiez vos identifiants
-                </p>
-              )}
-            </div>
-          </>
-        )}
-
-        <div className="p-4 bg-[var(--cream)] border border-[var(--border)] rounded">
-          <p className="font-body text-sm text-warm-gray">
-            ℹ️ <strong>Note :</strong> L&apos;image reste sur Cloudinary — vous pouvez la supprimer manuellement depuis votre dashboard Cloudinary si nécessaire.
-          </p>
+          <div>
+            <label htmlFor="st-phone" className="label-field">
+              Téléphone <span className="label-optional">— facultatif</span>
+            </label>
+            <input
+              id="st-phone"
+              type="tel"
+              value={settings.phone || ''}
+              onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+              className="input-field"
+              placeholder="06 12 34 56 78"
+              inputMode="tel"
+            />
+          </div>
         </div>
-      </AccordionSection>
+      </div>
 
-      {/* Password section */}
-      <AccordionSection title="🔐 Mot de passe admin">
-        <div className="p-4 bg-[var(--cream)] border border-[var(--border)] rounded">
-          <p className="font-body text-sm text-warm-gray">
-            ℹ️ Le mot de passe est désormais défini côté serveur via la variable
-            d&apos;environnement <code className="font-mono">ADMIN_PASSWORD_HASH</code>.
-            Pour le changer, générez un nouveau hash et mettez à jour la variable sur
-            votre hébergeur.
-          </p>
-        </div>
-      </AccordionSection>
-
-      {/* Save all */}
-      <div className="pt-4 sm:pt-6">
+      <div className="mt-8 pt-6 border-t border-[var(--line)]">
         <button
           onClick={handleSaveSettings}
-          className="btn-primary w-full sm:w-auto text-base sm:text-lg px-6 sm:px-10 min-h-[56px] sm:min-h-[52px]"
+          className="btn-primary w-full text-lg"
         >
-          Enregistrer les paramètres
+          ✓ Enregistrer ma présentation
         </button>
       </div>
+
+      {/* ── Sections techniques, repliées en bas ── */}
+      <details className="mt-10 border border-[var(--line)] bg-[var(--surface)]">
+        <summary className="px-4 py-4 font-body text-sm text-[var(--ink-soft)] cursor-pointer min-h-[52px] flex items-center">
+          ⚙️ Réglages techniques (vous n&apos;aurez normalement jamais besoin de cette partie)
+        </summary>
+        <div className="px-4 pb-5 space-y-5 border-t border-[var(--line)] pt-5">
+          {isEnvConfigured ? (
+            <p className="font-body text-sm text-[#2D6A4F]">
+              ✅ L&apos;envoi de photos est bien configuré — rien à faire.
+            </p>
+          ) : (
+            <>
+              <div>
+                <label className="label-field">Cloud Name (Cloudinary)</label>
+                <input
+                  type="text"
+                  value={settings.cloudinaryCloudName}
+                  onChange={(e) => setSettings({ ...settings, cloudinaryCloudName: e.target.value })}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="label-field">Upload Preset (Cloudinary)</label>
+                <input
+                  type="text"
+                  value={settings.cloudinaryUploadPreset}
+                  onChange={(e) => setSettings({ ...settings, cloudinaryUploadPreset: e.target.value })}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <button
+                  onClick={handleTestCloudinary}
+                  disabled={cloudinaryTesting || !settings.cloudinaryCloudName || !settings.cloudinaryUploadPreset}
+                  className="btn-secondary disabled:opacity-50"
+                >
+                  {cloudinaryTesting ? 'Test en cours...' : 'Tester la connexion'}
+                </button>
+                {cloudinaryResult === 'success' && (
+                  <p className="mt-2 font-body text-sm text-[#2D6A4F] font-medium">✅ Connexion réussie</p>
+                )}
+                {cloudinaryResult === 'error' && (
+                  <p className="mt-2 font-body text-sm text-[#B3402F] font-medium">❌ Échec — vérifiez les identifiants</p>
+                )}
+              </div>
+            </>
+          )}
+          <p className="font-body text-sm text-[var(--muted)]">
+            ℹ️ Pour changer le mot de passe de connexion, contactez la personne
+            qui s&apos;occupe du site.
+          </p>
+        </div>
+      </details>
     </div>
   )
 }

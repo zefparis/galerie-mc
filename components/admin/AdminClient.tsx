@@ -2,61 +2,99 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import AdminHome from '@/components/admin/AdminHome'
 import PaintingList from '@/components/admin/PaintingList'
-import PaintingForm from '@/components/admin/PaintingForm'
+import PaintingWizard from '@/components/admin/PaintingWizard'
 import EventList from '@/components/admin/EventList'
 import EventForm from '@/components/admin/EventForm'
 import AdminSettings from '@/components/admin/AdminSettings'
-import { isDemo } from '@/lib/storage'
+import { getPaintings } from '@/lib/storage'
 import { Painting, GalleryEvent } from '@/lib/types'
 
-type Tab = 'paintings' | 'events' | 'settings'
+type View = 'home' | 'painting-new' | 'paintings' | 'events' | 'settings'
+
+const VIEW_TITLES: Record<View, string> = {
+  home: 'Bonjour 👋',
+  'painting-new': 'Ajouter une toile',
+  paintings: 'Mes toiles',
+  events: 'Mes événements',
+  settings: 'Ma présentation',
+}
 
 export default function AdminClient() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<Tab>('paintings')
+  const [view, setView] = useState<View>('home')
   const [editingPainting, setEditingPainting] = useState<Painting | null>(null)
   const [editingEvent, setEditingEvent] = useState<GalleryEvent | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const [showDemo, setShowDemo] = useState(false)
+  const [wizardOpen, setWizardOpen] = useState(false)
+  const [eventFormOpen, setEventFormOpen] = useState(false)
+  const [flash, setFlash] = useState('')
+  const [paintingsCount, setPaintingsCount] = useState(0)
+  const [eventsCount, setEventsCount] = useState(0)
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    isDemo().then(setShowDemo)
-  }, [])
+    getPaintings().then((p) => setPaintingsCount(p.length)).catch(() => {})
+    fetch('/api/events?all=true')
+      .then((r) => (r.ok ? r.json() : []))
+      .then((e: GalleryEvent[]) => setEventsCount(e.length))
+      .catch(() => {})
+  }, [refreshKey])
 
-  const handleEditPainting = (painting: Painting) => {
-    setEditingPainting(painting)
-    setShowForm(true)
-  }
-
-  const handleAddPainting = () => {
-    setEditingPainting(null)
-    setShowForm(true)
-  }
-
-  const handleEditEvent = (event: GalleryEvent) => {
-    setEditingEvent(event)
-    setShowForm(true)
-  }
-
-  const handleAddEvent = () => {
-    setEditingEvent(null)
-    setShowForm(true)
-  }
-
-  const handleFormClose = () => {
-    setShowForm(false)
+  const goHome = (message?: string) => {
+    setView('home')
+    setWizardOpen(false)
+    setEventFormOpen(false)
     setEditingPainting(null)
     setEditingEvent(null)
     setRefreshKey((k) => k + 1)
+    if (message) {
+      setFlash(message)
+      setTimeout(() => setFlash(''), 6000)
+    }
   }
 
-  const switchTab = (tab: Tab) => {
-    setActiveTab(tab)
-    setShowForm(false)
+  const backToList = (message?: string) => {
+    setWizardOpen(false)
+    setEventFormOpen(false)
     setEditingPainting(null)
     setEditingEvent(null)
+    setRefreshKey((k) => k + 1)
+    if (message) {
+      setFlash(message)
+      setTimeout(() => setFlash(''), 6000)
+    }
+  }
+
+  const openNewPainting = () => {
+    setEditingPainting(null)
+    setWizardOpen(true)
+    setView('paintings')
+  }
+
+  const openEditPainting = (p: Painting) => {
+    setEditingPainting(p)
+    setWizardOpen(true)
+  }
+
+  const openNewEvent = () => {
+    setEditingEvent(null)
+    setEventFormOpen(true)
+  }
+
+  const openEditEvent = (e: GalleryEvent) => {
+    setEditingEvent(e)
+    setEventFormOpen(true)
+  }
+
+  const handleNavigate = (v: 'painting-new' | 'paintings' | 'events' | 'settings') => {
+    if (v === 'painting-new') {
+      setEditingPainting(null)
+      setWizardOpen(true)
+      setView('paintings')
+    } else {
+      setView(v)
+    }
   }
 
   const handleLogout = async () => {
@@ -65,90 +103,94 @@ export default function AdminClient() {
     router.refresh()
   }
 
-  const tabClass = (tab: Tab) =>
-    `flex-1 sm:flex-none px-3 sm:px-6 py-3 sm:py-4 font-body text-xs sm:text-base border-b-2 transition-colors min-h-[48px] ${
-      activeTab === tab
-        ? 'border-[#2D6A4F] text-charcoal font-medium'
-        : 'border-transparent text-warm-gray hover:text-charcoal'
-    }`
+  const inForm = wizardOpen || eventFormOpen
+  const title = wizardOpen
+    ? editingPainting ? `Modifier « ${editingPainting.title} »` : 'Ajouter une toile'
+    : eventFormOpen
+      ? editingEvent ? `Modifier « ${editingEvent.title} »` : 'Ajouter un événement'
+      : VIEW_TITLES[view]
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Admin header */}
-      <div className="border-b border-[var(--border)] px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
-        <h1 className="font-body text-base sm:text-lg font-medium text-charcoal">
-          Administration
-        </h1>
-        <button
-          onClick={handleLogout}
-          className="font-body text-sm text-warm-gray hover:text-charcoal transition-colors min-h-[44px] px-2"
-        >
-          Déconnexion
-        </button>
-      </div>
-
-      {/* Demo banner */}
-      {showDemo && (
-        <div className="bg-[#FFF8E1] border-b border-[#FFE082] px-4 sm:px-6 py-3">
-          <p className="font-body text-xs sm:text-sm text-[#F57F17]">
-            💡 Ces données sont des exemples. Remplacez-les par vos vraies œuvres.
-          </p>
+    <div className="min-h-screen bg-[var(--bg)]">
+      {/* Barre du haut */}
+      <div className="sticky top-0 z-30 bg-[var(--bg)] border-b border-[var(--line)] px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          {view !== 'home' && !inForm && (
+            <button
+              onClick={() => goHome()}
+              className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] min-h-[48px] px-2 flex-shrink-0"
+            >
+              ← Accueil
+            </button>
+          )}
+          <h1 className="font-body text-lg font-medium text-[var(--ink)] truncate">
+            {title}
+          </h1>
         </div>
-      )}
-
-      {/* Tabs */}
-      <div className="border-b border-[var(--border)] px-4 sm:px-6">
-        <div className="flex">
-          <button onClick={() => switchTab('paintings')} className={tabClass('paintings')}>
-            Tableaux
-          </button>
-          <button onClick={() => switchTab('events')} className={tabClass('events')}>
-            Expositions
-          </button>
-          <button onClick={() => switchTab('settings')} className={tabClass('settings')}>
-            Paramètres
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors min-h-[48px] px-2 hidden sm:inline-flex items-center"
+          >
+            👁 Voir mon site
+          </a>
+          <button
+            onClick={handleLogout}
+            className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors min-h-[48px] px-2"
+          >
+            Déconnexion
           </button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
-        {/* ── Paintings tab ── */}
-        {activeTab === 'paintings' && !showForm && (
-          <div>
-            <button
-              onClick={handleAddPainting}
-              className="btn-primary w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 min-h-[56px] sm:min-h-[52px] mb-6 sm:mb-8"
-            >
-              + Ajouter un tableau
-            </button>
-            <PaintingList key={refreshKey} onEdit={handleEditPainting} />
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        {flash && (
+          <div className="mb-6 p-4 bg-[var(--accent-soft)] border border-[var(--accent)]/30" role="status">
+            <p className="font-body text-base text-[var(--ink)] font-medium">{flash}</p>
           </div>
         )}
-        {activeTab === 'paintings' && showForm && (
-          <PaintingForm painting={editingPainting} onClose={handleFormClose} />
+
+        {view === 'home' && (
+          <AdminHome
+            paintingsCount={paintingsCount}
+            eventsCount={eventsCount}
+            onNavigate={handleNavigate}
+          />
         )}
 
-        {/* ── Events tab ── */}
-        {activeTab === 'events' && !showForm && (
-          <div>
-            <button
-              onClick={handleAddEvent}
-              className="btn-primary w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 min-h-[56px] sm:min-h-[52px] mb-6 sm:mb-8"
-            >
-              + Ajouter un événement
-            </button>
-            <EventList key={refreshKey} onEdit={handleEditEvent} />
-          </div>
+        {view === 'paintings' && !wizardOpen && (
+          <PaintingList
+            key={refreshKey}
+            onAdd={openNewPainting}
+            onEdit={openEditPainting}
+          />
         )}
-        {activeTab === 'events' && showForm && (
-          <EventForm event={editingEvent} onClose={handleFormClose} />
+        {view === 'paintings' && wizardOpen && (
+          <PaintingWizard
+            painting={editingPainting}
+            onDone={(msg: string) => backToList(msg)}
+            onCancel={() => backToList()}
+          />
         )}
 
-        {/* ── Settings tab ── */}
-        {activeTab === 'settings' && (
-          <AdminSettings />
+        {view === 'events' && !eventFormOpen && (
+          <EventList
+            key={refreshKey}
+            onAdd={openNewEvent}
+            onEdit={openEditEvent}
+          />
         )}
+        {view === 'events' && eventFormOpen && (
+          <EventForm
+            event={editingEvent}
+            onDone={(msg: string) => backToList(msg)}
+            onCancel={() => backToList()}
+          />
+        )}
+
+        {view === 'settings' && <AdminSettings />}
       </div>
     </div>
   )
