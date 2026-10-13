@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getPaintings, getPublishedEvents, getGallerySettings } from '@/lib/data'
+import { localizeEvent, localizePainting, localizeSettings } from '@/lib/i18n'
 import { alternatesFor, OG_LOCALE } from '@/lib/seo'
 import { routing, type Locale } from '@/i18n/routing'
 import MasonryGrid from '@/components/gallery/MasonryGrid'
@@ -32,18 +33,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function Home() {
+export default async function Home({ params }: Props) {
+  const locale = params.locale as Locale
   const t = await getTranslations('home')
   const th = await getTranslations('hero')
-  const [paintings, events, settings] = await Promise.all([
+  const [paintings, rawEvents, rawSettings] = await Promise.all([
     getPaintings(),
     getPublishedEvents(),
     getGallerySettings(),
   ])
+  const events = rawEvents.map((e) => localizeEvent(e, locale))
+  const settings = localizeSettings(rawSettings, locale)
+  const localized = paintings.map((p) => localizePainting(p, locale))
 
-  const featuredList = paintings.filter((p) => p.featured)
-  if (featuredList.length === 0 && paintings.length > 0) featuredList.push(paintings[0])
-  const selection = paintings.slice(0, 6)
+  const featuredList = localized.filter((p) => p.featured)
+  if (featuredList.length === 0 && localized.length > 0) featuredList.push(localized[0])
+  const selection = localized.slice(0, 6)
 
   // Première phrase de la présentation comme accroche du hero.
   const accroche = (settings.bio || '').split(/(?<=[.!?])\s/)[0] || ''

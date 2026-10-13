@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getPublishedEventById } from '@/lib/data'
+import { localizeEvent } from '@/lib/i18n'
 import { EventMedia } from '@/lib/types'
 import { blurDataUrl } from '@/lib/images'
 import { alternatesFor, OG_LOCALE } from '@/lib/seo'
@@ -22,18 +23,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: 'events' })
   const event = await getPublishedEventById(params.id)
   if (!event) return { title: t('notFound') }
+  const le = localizeEvent(event, locale)
 
-  const description = event.description?.slice(0, 160) ||
-    [event.location, event.eventDate && formatEventDate(event.eventDate, 'long', locale)]
+  const description = le.description?.slice(0, 160) ||
+    [le.location, event.eventDate && formatEventDate(event.eventDate, 'long', locale)]
       .filter(Boolean)
       .join(' — ')
 
   return {
-    title: event.title,
+    title: le.title,
     description,
     alternates: alternatesFor(`/expositions/${params.id}`, locale),
     openGraph: {
-      title: `${event.title} — Marie-Claire Scandella`,
+      title: `${le.title} — Marie-Claire Scandella`,
       description,
       images: event.coverUrl ? [event.coverUrl] : undefined,
       type: 'article',
@@ -100,6 +102,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
   const t = await getTranslations('events')
   const event = await getPublishedEventById(params.id)
   if (!event) notFound()
+  const le = localizeEvent(event, locale)
 
   const photos = event.media.filter((m) => m.type === 'photo')
   const videos = event.media.filter((m) => m.type === 'video')
@@ -123,15 +126,18 @@ export default async function ExpositionDetailPage({ params }: Props) {
             {event.eventDate && (
               <p className="eyebrow">{formatEventDate(event.eventDate, 'long', locale)}</p>
             )}
-            {event.location && (
+            {le.location && (
               <p className="font-body text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
-                {event.location}
+                {le.location}
               </p>
             )}
           </div>
           <h1 className="font-display text-4xl md:text-6xl text-[var(--ink)] mt-3 leading-[1.05] text-balance">
-            {event.title}
+            {le.title}
           </h1>
+          {le.titleOriginal && (
+            <p className="font-body text-xs text-[var(--muted)] mt-2 italic">{le.titleOriginal}</p>
+          )}
         </Reveal>
       </header>
 
@@ -140,7 +146,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
           <div className="relative aspect-[16/9] overflow-hidden bg-[var(--line)]">
             <Image
               src={event.coverUrl}
-              alt={event.title}
+              alt={le.title}
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 1024px"
@@ -152,10 +158,10 @@ export default async function ExpositionDetailPage({ params }: Props) {
         </Reveal>
       )}
 
-      {event.description && (
+      {le.description && (
         <Reveal className="max-w-3xl mx-auto px-5 md:px-8 pb-12 md:pb-16">
           <p className="font-body text-base md:text-lg text-[var(--ink-soft)] leading-relaxed whitespace-pre-line">
-            {event.description}
+            {le.description}
           </p>
         </Reveal>
       )}

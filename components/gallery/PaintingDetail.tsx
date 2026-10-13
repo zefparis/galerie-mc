@@ -77,6 +77,11 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-[var(--ink)] leading-[1.05] text-balance">
             {painting.title}
           </h1>
+          {painting.titleOriginal && (
+            <p className="font-body text-xs text-[var(--muted)] mt-2 italic">
+              {t('originalTitle', { title: painting.titleOriginal })}
+            </p>
+          )}
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-4 md:mt-6">
             <span className="font-body text-sm text-[var(--ink-soft)]">{painting.year}</span>

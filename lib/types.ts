@@ -14,6 +14,23 @@ export type PaintingCategory = 'peintures' | 'collages'
 
 export type PriceStatus = 'visible' | 'sur_demande' | 'vendu' | 'non_a_vendre'
 
+export type TargetLocale = 'en' | 'es' | 'de'
+export type TranslationStatus = 'auto' | 'corrige' | 'a_mettre_a_jour'
+
+export interface FieldTranslationMeta {
+  sourceHash: string
+  statut: TranslationStatus
+}
+
+// Traductions d'un contenu : { en: {champ: texte}, es: {...}, de: {...},
+// _meta: { champ: { langue: { sourceHash, statut } } } }
+export interface Translations {
+  en?: Record<string, string>
+  es?: Record<string, string>
+  de?: Record<string, string>
+  _meta?: Record<string, Partial<Record<TargetLocale, FieldTranslationMeta>>>
+}
+
 export interface Painting {
   id: string
   title: string
@@ -31,11 +48,16 @@ export interface Painting {
   featured: boolean
   order: number
   createdAt: string
+  translations?: Translations
+  // Renseigné côté public quand le titre affiché est traduit (pour montrer
+  // l'original français en petit sur la fiche œuvre).
+  titleOriginal?: string
 }
 
 export interface ArtistPhoto {
   url: string
   publicId: string
+  caption?: string
 }
 
 export interface GallerySettings {
@@ -47,6 +69,7 @@ export interface GallerySettings {
   instagram?: string
   processText?: string
   photos?: ArtistPhoto[]
+  translations?: Translations
   cloudinaryCloudName?: string
   cloudinaryUploadPreset?: string
   accentColor?: string
@@ -77,4 +100,6 @@ export interface GalleryEvent {
   published: boolean
   order: number
   createdAt: string
+  translations?: Translations
+  titleOriginal?: string
 }

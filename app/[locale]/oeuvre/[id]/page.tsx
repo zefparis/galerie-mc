@@ -4,7 +4,7 @@ import { getMessages, getTranslations } from 'next-intl/server'
 import { getPaintingById, getPaintings } from '@/lib/data'
 import { alternatesFor, OG_LOCALE } from '@/lib/seo'
 import { routing, type Locale } from '@/i18n/routing'
-import { techniqueLabel } from '@/lib/i18n'
+import { localizePainting, techniqueLabel } from '@/lib/i18n'
 import PaintingDetail from '@/components/gallery/PaintingDetail'
 
 export const dynamic = 'force-dynamic'
@@ -20,21 +20,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const messages = (await getMessages({ locale })) as { techniques?: Record<string, string> }
   const painting = await getPaintingById(params.id)
   if (!painting) return { title: t('detail.notFound') }
+  const lp = localizePainting(painting, locale)
 
   const description = [
     `${techniqueLabel(messages.techniques, painting.technique || '')}, ${painting.year}`,
     painting.dimensions,
-    painting.description?.slice(0, 140),
+    lp.description?.slice(0, 140),
   ]
     .filter(Boolean)
     .join(' — ')
 
   return {
-    title: painting.title,
+    title: lp.title,
     description,
     alternates: alternatesFor(`/oeuvre/${params.id}`, locale),
     openGraph: {
-      title: `${painting.title} — Marie-Claire Scandella`,
+      title: `${lp.title} — Marie-Claire Scandella`,
       description,
       images: [painting.imageUrl],
       type: 'article',
@@ -45,6 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function OeuvrePage({ params, searchParams }: Props) {
+  const locale = params.locale as Locale
   const [painting, all] = await Promise.all([
     getPaintingById(params.id),
     getPaintings(),
@@ -64,7 +66,7 @@ export default async function OeuvrePage({ params, searchParams }: Props) {
 
   return (
     <PaintingDetail
-      painting={painting}
+      painting={localizePainting(painting, locale)}
       prevId={prevId}
       nextId={nextId}
       category={cat === 'peintures' || cat === 'collages' ? cat : undefined}

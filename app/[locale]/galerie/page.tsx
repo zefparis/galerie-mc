@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import { getPaintings } from '@/lib/data'
+import { localizePainting } from '@/lib/i18n'
 import { isCategory } from '@/lib/catalog'
 import { alternatesFor, OG_LOCALE } from '@/lib/seo'
 import { routing, type Locale } from '@/i18n/routing'
@@ -41,9 +42,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   }
 }
 
-export default async function GaleriePage({ searchParams }: Props) {
+export default async function GaleriePage({ params, searchParams }: Props) {
   const t = await getTranslations()
-  const paintings = await getPaintings()
+  const paintings = (await getPaintings()).map((p) => localizePainting(p, params.locale as Locale))
   const cat = isCategory(searchParams.categorie) ? searchParams.categorie : null
   const title = cat ? t(`categories.${cat}`) : t('galerie.title')
   const introKey = cat === 'collages' ? 'introCollages' : cat === 'peintures' ? 'introPeintures' : 'introAll'

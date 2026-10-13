@@ -38,11 +38,12 @@ export async function POST(req: NextRequest) {
       b.imageWidth ?? null,
       b.imageHeight ?? null,
       b.category,
+      JSON.stringify(b.translations || {}),
     ]
     try {
       const { rows } = await pool.query(
-        `INSERT INTO paintings (id, title, year, technique, dimensions, description, image_url, image_public_id, price, price_status, featured, "order", image_width, image_height, category)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
+        `INSERT INTO paintings (id, title, year, technique, dimensions, description, image_url, image_public_id, price, price_status, featured, "order", image_width, image_height, category, translations)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
         values
       )
       return NextResponse.json(mapPaintingRow(rows[0]))

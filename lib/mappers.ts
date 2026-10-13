@@ -20,6 +20,7 @@ export function mapPaintingRow(r: any) {
     featured: r.featured,
     order: r.order,
     createdAt: r.created_at,
+    translations: r.translations || {},
   }
 }
 
@@ -36,5 +37,6 @@ export function mapEventRow(r: any) {
     published: r.published,
     order: r.order,
     createdAt: r.created_at,
+    translations: r.translations || {},
   }
 }

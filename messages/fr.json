@@ -91,6 +91,7 @@
     "prev": "← Précédente",
     "next": "Suivante →",
     "notFound": "Œuvre introuvable",
+    "originalTitle": "Titre original : {title}",
     "photoAlt": "{title} — {technique}, {year}"
   },
   "lightbox": {

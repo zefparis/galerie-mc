@@ -1,10 +1,19 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { GalleryEvent, EventMedia } from '@/lib/types'
+import { GalleryEvent, EventMedia, Translations } from '@/lib/types'
 import { isSessionExpired, redirectToLogin } from '@/lib/storage'
 import CloudinaryUpload from './CloudinaryUpload'
 import HelpTip from './HelpTip'
+import TranslationPanel from './TranslationPanel'
+
+function translateInBackground(entity: 'painting' | 'event' | 'settings', id?: string) {
+  fetch('/api/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entity, id }),
+  }).catch(() => {})
+}
 
 function getYouTubeId(url: string): string | null {
   const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/)
@@ -37,6 +46,7 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
   const [draftFound, setDraftFound] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [translations, setTranslations] = useState<Translations>(event?.translations || {})
   const restored = useRef(false)
 
   // Récupération du brouillon automatique
@@ -105,7 +115,11 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
         throw new Error('save-failed')
       }
       localStorage.removeItem(draftKey)
-      onDone(isEditing ? 'Modifications enregistrées ✓' : 'Votre événement est enregistré ✓')
+      translateInBackground('event', event?.id || (await res.json()).id)
+      onDone(
+        (isEditing ? 'Modifications enregistrées ✓' : 'Votre événement est enregistré ✓') +
+          ' Les traductions arrivent dans quelques secondes.'
+      )
     } catch (err) {
       if (isSessionExpired(err)) {
         redirectToLogin()
@@ -372,6 +386,26 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
             </div>
           )}
         </div>
+
+        {/* Traductions — seulement pour un événement déjà enregistré */}
+        {isEditing && (
+          <TranslationPanel
+            entity="event"
+            entityId={event.id}
+            fields={[
+              { key: 'title', label: 'Titre de l’événement' },
+              { key: 'description', label: 'Description', multiline: true },
+              { key: 'location', label: 'Lieu' },
+            ]}
+            french={{
+              title: form.title,
+              description: form.description,
+              location: form.location,
+            }}
+            translations={translations}
+            onTranslationsChange={setTranslations}
+          />
+        )}
 
         {/* Boutons */}
         <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-[var(--line)]">

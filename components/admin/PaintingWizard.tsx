@@ -3,10 +3,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { savePainting, updatePainting, getNextOrder, isSessionExpired, redirectToLogin } from '@/lib/storage'
-import { Painting, Technique, PriceStatus, PaintingCategory } from '@/lib/types'
+import { Painting, Technique, PriceStatus, PaintingCategory, Translations } from '@/lib/types'
 import { CATEGORIES, CATEGORY_LABEL, TECHNIQUES_BY_CATEGORY } from '@/lib/catalog'
 import CloudinaryUpload from './CloudinaryUpload'
 import HelpTip from './HelpTip'
+import TranslationPanel from './TranslationPanel'
+
+// La traduction part en arrière-plan : l'enregistrement n'attend jamais
+// le service de traduction, et un échec est silencieux (le texte est déjà
+// en ligne, la traduction pourra être relancée).
+function translateInBackground(entity: 'painting' | 'event' | 'settings', id?: string) {
+  fetch('/api/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entity, id }),
+  }).catch(() => {})
+}
 
 const PRICE_OPTIONS: { value: PriceStatus; label: string }[] = [
   { value: 'visible', label: 'Afficher le prix' },
@@ -72,6 +84,7 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
   const [draftFound, setDraftFound] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [translations, setTranslations] = useState<Translations>(painting?.translations || {})
   const restored = useRef(false)
 
   // Récupération du brouillon automatique
@@ -156,7 +169,11 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
         await savePainting(data)
       }
       localStorage.removeItem(draftKey)
-      onDone(isEditing ? 'Modifications enregistrées ✓' : 'Votre toile est en ligne ✓')
+      translateInBackground('painting', data.id)
+      onDone(
+        (isEditing ? 'Modifications enregistrées ✓' : 'Votre toile est en ligne ✓') +
+          ' Les traductions arrivent dans quelques secondes.'
+      )
     } catch (err) {
       if (isSessionExpired(err)) {
         redirectToLogin()
@@ -446,6 +463,23 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
               <p className="font-body text-base text-[var(--danger)]">{error}</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Traductions — seulement pour une toile déjà enregistrée */}
+      {isEditing && (
+        <div className="mt-8">
+          <TranslationPanel
+            entity="painting"
+            entityId={painting.id}
+            fields={[
+              { key: 'title', label: 'Titre de la toile' },
+              { key: 'description', label: 'Description', multiline: true },
+            ]}
+            french={{ title: form.title, description: form.description }}
+            translations={translations}
+            onTranslationsChange={setTranslations}
+          />
         </div>
       )}
 

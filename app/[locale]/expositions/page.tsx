@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { getPublishedEvents } from '@/lib/data'
+import { localizeEvent } from '@/lib/i18n'
 import { alternatesFor, OG_LOCALE } from '@/lib/seo'
 import { routing, type Locale } from '@/i18n/routing'
 import EventCard from '@/components/gallery/EventCard'
@@ -28,9 +29,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function ExpositionsPage() {
+export default async function ExpositionsPage({ params }: Props) {
   const t = await getTranslations('events')
-  const events = await getPublishedEvents()
+  const events = (await getPublishedEvents()).map((e) =>
+    localizeEvent(e, params.locale as Locale)
+  )
 
   return (
     <div className="pt-16 md:pt-20">

@@ -4,6 +4,9 @@ export const uuidSchema = z.string().uuid('Identifiant invalide')
 
 const priceStatusSchema = z.enum(['visible', 'sur_demande', 'vendu', 'non_a_vendre'])
 
+// Traductions déjà calculées (admin) : objet JSONB libre, optionnel.
+const translationsSchema = z.record(z.string(), z.unknown()).optional()
+
 export const paintingBodySchema = z.object({
   id: uuidSchema.optional(),
   title: z.string().trim().min(1, 'Le titre est obligatoire').max(300),
@@ -20,6 +23,7 @@ export const paintingBodySchema = z.object({
   category: z.enum(['peintures', 'collages']).optional().default('peintures'),
   featured: z.boolean().optional().default(false),
   order: z.number().int().optional().default(0),
+  translations: translationsSchema,
 })
 
 const mediaSchema = z.object({
@@ -43,6 +47,7 @@ export const eventBodySchema = z.object({
   media: z.array(mediaSchema).max(200).optional().default([]),
   published: z.boolean().optional().default(false),
   order: z.number().int().optional().default(0),
+  translations: translationsSchema,
 })
 
 export const reorderBodySchema = z.object({
@@ -57,6 +62,7 @@ export const loginBodySchema = z.object({
 const artistPhotoSchema = z.object({
   url: z.string().min(1).max(2000),
   publicId: z.string().max(500).optional().default(''),
+  caption: z.string().max(500).optional(),
 })
 
 export const settingsBodySchema = z.object({
@@ -68,4 +74,5 @@ export const settingsBodySchema = z.object({
   instagram: z.string().max(200).optional().default(''),
   processText: z.string().max(20000).optional().default(''),
   photos: z.array(artistPhotoSchema).max(3, 'Trois photos maximum').optional().default([]),
+  translations: translationsSchema,
 })

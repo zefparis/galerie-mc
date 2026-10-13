@@ -44,10 +44,24 @@ export async function getPublishedEvents(): Promise<GalleryEvent[]> {
 // défaut pour que le site fonctionne même avant la première sauvegarde).
 export async function getGallerySettings(): Promise<GallerySettings> {
   try {
-    const { rows } = await pool.query('SELECT data FROM settings WHERE id = 1')
+    const { rows } = await pool.query('SELECT data, translations FROM settings WHERE id = 1')
     if (!rows.length) return DEFAULT_SETTINGS
-    return { ...DEFAULT_SETTINGS, ...(rows[0].data as Partial<GallerySettings>) }
+    return {
+      ...DEFAULT_SETTINGS,
+      ...(rows[0].data as Partial<GallerySettings>),
+      translations: rows[0].translations || {},
+    }
   } catch (err) {
+    // Colonne translations pas encore créée : lecture sans elle.
+    if ((err as { code?: string })?.code === '42703') {
+      try {
+        const { rows } = await pool.query('SELECT data FROM settings WHERE id = 1')
+        if (!rows.length) return DEFAULT_SETTINGS
+        return { ...DEFAULT_SETTINGS, ...(rows[0].data as Partial<GallerySettings>) }
+      } catch {
+        return DEFAULT_SETTINGS
+      }
+    }
     console.error('[data] getGallerySettings', err)
     return DEFAULT_SETTINGS
   }

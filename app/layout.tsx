@@ -6,6 +6,7 @@ import Navbar from "@/components/ui/Navbar"
 import Footer from "@/components/ui/Footer"
 import LocaleBanner from "@/components/ui/LocaleBanner"
 import { getGallerySettings } from "@/lib/data"
+import { localizeSettings } from "@/lib/i18n"
 import { routing, type Locale } from "@/i18n/routing"
 
 // Fonts auto-hébergées : aucun appel réseau au build, rendu instantané.
@@ -54,10 +55,10 @@ export default async function RootLayout({
   children: React.ReactNode
   params: { locale?: string }
 }>) {
-  const settings = await getGallerySettings()
   const locale: Locale = routing.locales.includes(params.locale as Locale)
     ? (params.locale as Locale)
     : routing.defaultLocale
+  const settings = localizeSettings(await getGallerySettings(), locale)
   return (
     <html lang={locale} suppressHydrationWarning className={`${cormorant.variable} ${inter.variable}`}>
       <head>

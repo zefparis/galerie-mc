@@ -1,5 +1,7 @@
 'use client'
 
+import TranslateAllButton from './TranslateAllButton'
+
 interface Props {
   paintingsCount: number
   eventsCount: number
@@ -71,6 +73,8 @@ export default function AdminHome({ paintingsCount, eventsCount, onNavigate }: P
           </button>
         ))}
       </div>
+
+      <TranslateAllButton />
     </div>
   )
 }

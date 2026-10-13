@@ -90,6 +90,12 @@ const statements = [
   // Deux galeries : peintures / collages. Toutes les œuvres existantes
   // restent en 'peintures' grâce au DEFAULT.
   `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'peintures'`,
+  // Traductions automatiques (en/es/de) : { en: {champ: texte}, ...,
+  // _meta: { champ: { langue: { sourceHash, statut } } } }. Jamais de
+  // contenu existant modifié — colonne vide au départ.
+  `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS translations JSONB NOT NULL DEFAULT '{}'::jsonb`,
+  `ALTER TABLE events ADD COLUMN IF NOT EXISTS translations JSONB NOT NULL DEFAULT '{}'::jsonb`,
+  `ALTER TABLE settings ADD COLUMN IF NOT EXISTS translations JSONB NOT NULL DEFAULT '{}'::jsonb`,
 ]
 
 try {

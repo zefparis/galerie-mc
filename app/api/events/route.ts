@@ -27,21 +27,42 @@ export async function POST(req: NextRequest) {
 
   try {
     const b = eventBodySchema.parse(await req.json())
-    const { rows } = await pool.query(
-      `INSERT INTO events (title, description, location, event_date, cover_url, cover_public_id, media, published, "order")
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [
-        b.title,
-        b.description,
-        b.location,
-        b.eventDate || null,
-        b.coverUrl,
-        b.coverPublicId,
-        JSON.stringify(b.media),
-        b.published,
-        b.order,
-      ]
-    )
+    let rows
+    try {
+      ;({ rows } = await pool.query(
+        `INSERT INTO events (title, description, location, event_date, cover_url, cover_public_id, media, published, "order", translations)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+        [
+          b.title,
+          b.description,
+          b.location,
+          b.eventDate || null,
+          b.coverUrl,
+          b.coverPublicId,
+          JSON.stringify(b.media),
+          b.published,
+          b.order,
+          JSON.stringify(b.translations || {}),
+        ]
+      ))
+    } catch (err) {
+      if ((err as { code?: string })?.code !== '42703') throw err
+      ;({ rows } = await pool.query(
+        `INSERT INTO events (title, description, location, event_date, cover_url, cover_public_id, media, published, "order")
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+        [
+          b.title,
+          b.description,
+          b.location,
+          b.eventDate || null,
+          b.coverUrl,
+          b.coverPublicId,
+          JSON.stringify(b.media),
+          b.published,
+          b.order,
+        ]
+      ))
+    }
     return NextResponse.json(mapEventRow(rows[0]))
   } catch (err) {
     return handleRouteError(err)

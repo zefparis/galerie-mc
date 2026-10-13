@@ -3,8 +3,18 @@
 import { useState, useEffect, useRef } from 'react'
 import { getSettings, DEFAULT_SETTINGS, isSessionExpired, redirectToLogin } from '@/lib/storage'
 import { GallerySettings } from '@/lib/types'
+import { photoCaptionKey } from '@/lib/translations-core'
 import CloudinaryUpload from './CloudinaryUpload'
 import HelpTip from './HelpTip'
+import TranslationPanel from './TranslationPanel'
+
+function translateInBackground() {
+  fetch('/api/translate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entity: 'settings' }),
+  }).catch(() => {})
+}
 
 const DRAFT_KEY = 'mc-draft-settings'
 const MIGRATED_KEY = 'mc-settings-migrated'
@@ -119,7 +129,8 @@ export default function AdminSettings() {
       localStorage.removeItem(DRAFT_KEY)
       localStorage.setItem(MIGRATED_KEY, '1')
       setDraftFound(false)
-      setMessage('Votre présentation est enregistrée ✓ — elle est maintenant visible sur votre site.')
+      translateInBackground()
+      setMessage('Votre présentation est enregistrée ✓ — elle est maintenant visible sur votre site. Les traductions arrivent dans quelques secondes.')
       setTimeout(() => setMessage(''), 8000)
     } catch (err) {
       if (isSessionExpired(err)) {
@@ -370,6 +381,34 @@ export default function AdminSettings() {
               inputMode="tel"
             />
           </div>
+        </div>
+
+        {/* ── Traductions ── */}
+        <div className="border-t border-[var(--line)] pt-6">
+          <TranslationPanel
+            entity="settings"
+            fields={[
+              { key: 'bioShort', label: 'Phrase d’accroche' },
+              { key: 'bio', label: 'Votre présentation', multiline: true },
+              { key: 'processText', label: 'Ma démarche picturale', multiline: true },
+              ...photos
+                .filter((p) => p.publicId)
+                .map((p, i) => ({
+                  key: photoCaptionKey(p.publicId!),
+                  label: `Légende de la photo ${i + 1}`,
+                })),
+            ]}
+            french={{
+              bioShort: settings.bioShort,
+              bio: settings.bio,
+              processText: settings.processText || '',
+              ...Object.fromEntries(
+                photos.filter((p) => p.publicId).map((p) => [photoCaptionKey(p.publicId!), p.caption || ''])
+              ),
+            }}
+            translations={settings.translations}
+            onTranslationsChange={(t) => setSettings({ ...settings, translations: t })}
+          />
         </div>
       </div>
 
