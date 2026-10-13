@@ -12,6 +12,7 @@ export default function PaintingList({ onEdit }: Props) {
   const [paintings, setPaintings] = useState<Painting[]>([])
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
     loadPaintings()
@@ -23,16 +24,27 @@ export default function PaintingList({ onEdit }: Props) {
   }
 
   const handleDelete = async (id: string) => {
-    await deletePainting(id)
-    setDeleteConfirm(null)
-    setMessage('Tableau supprimé avec succès.')
-    await loadPaintings()
-    setTimeout(() => setMessage(''), 3000)
+    setError('')
+    try {
+      await deletePainting(id)
+      setDeleteConfirm(null)
+      setMessage('Tableau supprimé avec succès.')
+      await loadPaintings()
+      setTimeout(() => setMessage(''), 3000)
+    } catch (err) {
+      setDeleteConfirm(null)
+      setError(err instanceof Error ? err.message : 'La suppression a échoué. Réessayez.')
+    }
   }
 
   const handleReorder = async (id: string, direction: 'up' | 'down') => {
-    await reorderPainting(id, direction)
-    await loadPaintings()
+    setError('')
+    try {
+      await reorderPainting(id, direction)
+      await loadPaintings()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Le réordonnancement a échoué.')
+    }
   }
 
   const getPriceLabel = (painting: Painting) => {
@@ -49,6 +61,11 @@ export default function PaintingList({ onEdit }: Props) {
       {message && (
         <div className="mb-4 p-4 bg-[#2D6A4F]/10 border border-[#2D6A4F]/30">
           <p className="font-body text-sm text-[#2D6A4F] font-medium">{message}</p>
+        </div>
+      )}
+      {error && (
+        <div className="mb-4 p-4 bg-[#C0392B]/10 border border-[#C0392B]/30">
+          <p className="font-body text-sm text-[#C0392B] font-medium">{error}</p>
         </div>
       )}
 

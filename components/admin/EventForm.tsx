@@ -45,30 +45,42 @@ export default function EventForm({ event, onClose }: Props) {
 
     setSaving(true)
 
-    const body = {
-      ...form,
-      title: form.title.trim(),
-      media,
-      order: event?.order || 0,
-    }
+    try {
+      const body = {
+        ...form,
+        title: form.title.trim(),
+        media,
+        order: event?.order || 0,
+      }
 
-    if (isEditing) {
-      await fetch(`/api/events/${event.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-    } else {
-      await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-    }
+      const res = isEditing
+        ? await fetch(`/api/events/${event.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          })
+        : await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          })
 
-    setMessage(isEditing ? 'Événement modifié !' : 'Événement ajouté !')
-    setSaving(false)
-    setTimeout(() => onClose(), 1000)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(
+          res.status === 401
+            ? 'Session expirée — reconnectez-vous.'
+            : data.error || `Erreur serveur (${res.status})`
+        )
+      }
+
+      setMessage(isEditing ? 'Événement modifié !' : 'Événement ajouté !')
+      setTimeout(() => onClose(), 1000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur lors de l'enregistrement.")
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleAddVideo = () => {

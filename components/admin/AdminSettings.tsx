@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react'
 import { getSettings, saveSettings } from '@/lib/storage'
 import { GallerySettings } from '@/lib/types'
 import { testCloudinaryConnection } from '@/lib/cloudinary'
-import bcrypt from 'bcryptjs'
-import PasswordInput from '@/components/ui/PasswordInput'
 
 function AccordionSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -28,9 +26,6 @@ export default function AdminSettings() {
   const [settings, setSettings] = useState<GallerySettings | null>(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [passwordMessage, setPasswordMessage] = useState('')
   const [cloudinaryTesting, setCloudinaryTesting] = useState(false)
   const [cloudinaryResult, setCloudinaryResult] = useState<'success' | 'error' | ''>('')
 
@@ -48,30 +43,6 @@ export default function AdminSettings() {
     saveSettings(settings)
     setMessage('Paramètres enregistrés avec succès !')
     setTimeout(() => setMessage(''), 4000)
-  }
-
-  const handlePasswordChange = () => {
-    setPasswordMessage('')
-    if (!newPassword) {
-      setPasswordMessage('Veuillez entrer un nouveau mot de passe.')
-      return
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordMessage('Les mots de passe ne correspondent pas.')
-      return
-    }
-    if (newPassword.length < 6) {
-      setPasswordMessage('Le mot de passe doit faire au moins 6 caractères.')
-      return
-    }
-
-    const hash = bcrypt.hashSync(newPassword, 10)
-    const updatedSettings = { ...settings, adminPasswordHash: hash }
-    setSettings(updatedSettings)
-    saveSettings(updatedSettings)
-    setNewPassword('')
-    setConfirmPassword('')
-    setPasswordMessage('Mot de passe mis à jour avec succès !')
   }
 
   const handleTestCloudinary = async () => {
@@ -235,41 +206,14 @@ export default function AdminSettings() {
 
       {/* Password section */}
       <AccordionSection title="🔐 Mot de passe admin">
-
-        <div>
-          <label className="label-field">Nouveau mot de passe</label>
-          <PasswordInput
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Minimum 6 caractères"
-            className="input-field pr-12"
-          />
+        <div className="p-4 bg-[var(--cream)] border border-[var(--border)] rounded">
+          <p className="font-body text-sm text-warm-gray">
+            ℹ️ Le mot de passe est désormais défini côté serveur via la variable
+            d&apos;environnement <code className="font-mono">ADMIN_PASSWORD_HASH</code>.
+            Pour le changer, générez un nouveau hash et mettez à jour la variable sur
+            votre hébergeur.
+          </p>
         </div>
-
-        <div>
-          <label className="label-field">Confirmer le mot de passe</label>
-          <PasswordInput
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Retapez le mot de passe"
-            className="input-field pr-12"
-          />
-        </div>
-
-        {passwordMessage && (
-          <div className={`p-3 border ${passwordMessage.includes('succès') ? 'bg-[#2D6A4F]/10 border-[#2D6A4F]/30' : 'bg-[#C0392B]/10 border-[#C0392B]/30'}`}>
-            <p className={`font-body text-sm font-medium ${passwordMessage.includes('succès') ? 'text-[#2D6A4F]' : 'text-[#C0392B]'}`}>
-              {passwordMessage}
-            </p>
-          </div>
-        )}
-
-        <button
-          onClick={handlePasswordChange}
-          className="btn-secondary w-full sm:w-auto min-h-[52px] sm:min-h-[44px]"
-        >
-          Mettre à jour le mot de passe
-        </button>
       </AccordionSection>
 
       {/* Save all */}

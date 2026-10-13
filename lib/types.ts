@@ -34,7 +34,6 @@ export interface GallerySettings {
   instagram?: string
   cloudinaryCloudName: string
   cloudinaryUploadPreset: string
-  adminPasswordHash: string
   accentColor: string
 }
 

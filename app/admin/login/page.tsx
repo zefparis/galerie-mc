@@ -2,47 +2,42 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getSettings } from '@/lib/storage'
-import bcrypt from 'bcryptjs'
 import PasswordInput from '@/components/ui/PasswordInput'
-
-const DEFAULT_PASSWORD = 'mc-galerie-2024'
 
 export default function AdminLoginPage() {
   const router = useRouter()
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [isFirstAccess, setIsFirstAccess] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const session = sessionStorage.getItem('mc-admin-auth')
-    if (session === 'true') {
-      router.replace('/admin')
-    }
-
-    const settings = getSettings()
-    if (!settings.adminPasswordHash || settings.adminPasswordHash === '$2a$10$xJ8Kq3Q5Z5Z5Z5Z5Z5Z5ZuKq3Q5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z') {
-      setIsFirstAccess(true)
-    }
+    fetch('/api/auth/me')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated) router.replace('/admin')
+      })
+      .catch(() => {})
   }, [router])
 
   const handleLogin = async () => {
     setError('')
-    const settings = getSettings()
-
-    let isValid = false
-
-    if (isFirstAccess || !settings.adminPasswordHash || settings.adminPasswordHash === '$2a$10$xJ8Kq3Q5Z5Z5Z5Z5Z5Z5ZuKq3Q5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z') {
-      isValid = password === DEFAULT_PASSWORD
-    } else {
-      isValid = bcrypt.compareSync(password, settings.adminPasswordHash)
-    }
-
-    if (isValid) {
-      sessionStorage.setItem('mc-admin-auth', 'true')
-      router.push('/admin')
-    } else {
-      setError('Mot de passe incorrect.')
+    setLoading(true)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+      if (res.ok) {
+        router.push('/admin')
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error || 'Erreur de connexion. Réessayez.')
+      }
+    } catch {
+      setError('Erreur réseau. Vérifiez votre connexion et réessayez.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -53,18 +48,6 @@ export default function AdminLoginPage() {
           <h1 className="font-display text-3xl text-charcoal mb-2">Administration</h1>
           <p className="font-body text-sm text-warm-gray">Galerie Marie-Claire Scandella</p>
         </div>
-
-        {isFirstAccess && (
-          <div className="mb-6 p-4 bg-[#F0F7F4] border border-[#2D6A4F]/20 rounded">
-            <p className="font-body text-sm text-[#2D6A4F]">
-              <strong>Premier accès</strong> — Le mot de passe par défaut est :<br />
-              <code className="bg-white px-2 py-1 mt-1 inline-block font-mono text-base">{DEFAULT_PASSWORD}</code>
-            </p>
-            <p className="font-body text-xs text-warm-gray mt-2">
-              Pensez à le changer dans les paramètres après connexion.
-            </p>
-          </div>
-        )}
 
         <div className="space-y-4">
           <div onKeyDown={(e) => e.key === 'Enter' && handleLogin()}>
@@ -85,9 +68,10 @@ export default function AdminLoginPage() {
 
           <button
             onClick={handleLogin}
-            className="btn-primary w-full text-lg"
+            disabled={loading || !password}
+            className="btn-primary w-full text-lg disabled:opacity-50"
           >
-            Se connecter
+            {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </div>
       </div>

@@ -13,7 +13,6 @@ const DEFAULT_SETTINGS: GallerySettings = {
   instagram: '',
   cloudinaryCloudName: '',
   cloudinaryUploadPreset: '',
-  adminPasswordHash: '$2a$10$xJ8Kq3Q5Z5Z5Z5Z5Z5Z5ZuKq3Q5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z',
   accentColor: '#B8935A',
 }
 
@@ -49,12 +48,22 @@ export async function getPaintingById(id: string): Promise<Painting | undefined>
   return paintings.find((p) => p.id === id)
 }
 
+async function throwIfNotOk(res: Response): Promise<void> {
+  if (res.ok) return
+  const data = await res.json().catch(() => ({}))
+  if (res.status === 401) {
+    throw new Error('Session expirée — reconnectez-vous.')
+  }
+  throw new Error(data.error || `Erreur serveur (${res.status})`)
+}
+
 export async function savePainting(painting: Painting): Promise<Painting> {
   const res = await fetch('/api/paintings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(painting),
   })
+  await throwIfNotOk(res)
   return res.json()
 }
 
@@ -64,19 +73,22 @@ export async function updatePainting(id: string, painting: Painting): Promise<Pa
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(painting),
   })
+  await throwIfNotOk(res)
   return res.json()
 }
 
 export async function deletePainting(id: string): Promise<void> {
-  await fetch(`/api/paintings/${id}`, { method: 'DELETE' })
+  const res = await fetch(`/api/paintings/${id}`, { method: 'DELETE' })
+  await throwIfNotOk(res)
 }
 
 export async function reorderPainting(id: string, direction: 'up' | 'down'): Promise<void> {
-  await fetch('/api/paintings/reorder', {
+  const res = await fetch('/api/paintings/reorder', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id, direction }),
   })
+  await throwIfNotOk(res)
 }
 
 export async function getNextOrder(): Promise<number> {

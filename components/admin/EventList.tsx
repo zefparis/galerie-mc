@@ -17,6 +17,7 @@ export default function EventList({ onEdit }: Props) {
   const [events, setEvents] = useState<GalleryEvent[]>([])
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
     loadEvents()
@@ -24,12 +25,22 @@ export default function EventList({ onEdit }: Props) {
 
   const loadEvents = async () => {
     const res = await fetch('/api/events?all=true')
-    if (res.ok) setEvents(await res.json())
+    if (res.ok) {
+      setEvents(await res.json())
+    } else {
+      setError('Impossible de charger les événements.')
+    }
   }
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/events/${id}`, { method: 'DELETE' })
+    setError('')
+    const res = await fetch(`/api/events/${id}`, { method: 'DELETE' })
     setDeleteConfirm(null)
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setError(data.error || 'La suppression a échoué. Réessayez.')
+      return
+    }
     setMessage('Événement supprimé.')
     await loadEvents()
     setTimeout(() => setMessage(''), 3000)
@@ -40,6 +51,11 @@ export default function EventList({ onEdit }: Props) {
       {message && (
         <div className="mb-4 p-4 bg-[#2D6A4F]/10 border border-[#2D6A4F]/30 rounded">
           <p className="font-body text-sm text-[#2D6A4F] font-medium">{message}</p>
+        </div>
+      )}
+      {error && (
+        <div className="mb-4 p-4 bg-[#C0392B]/10 border border-[#C0392B]/30 rounded">
+          <p className="font-body text-sm text-[#C0392B] font-medium">{error}</p>
         </div>
       )}
 

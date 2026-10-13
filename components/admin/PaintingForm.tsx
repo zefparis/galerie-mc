@@ -60,35 +60,40 @@ export default function PaintingForm({ painting, onClose }: Props) {
 
     setSaving(true)
 
-    const order = painting?.order || await getNextOrder()
+    try {
+      const order = painting?.order || await getNextOrder()
 
-    const paintingData: Painting = {
-      id: painting?.id || uuidv4(),
-      title: form.title.trim(),
-      year: form.year,
-      technique: form.technique,
-      dimensions: form.dimensions.trim(),
-      description: form.description.trim(),
-      imageUrl: form.imageUrl,
-      imagePublicId: form.imagePublicId,
-      price: form.priceStatus === 'visible' ? form.price : undefined,
-      priceStatus: form.priceStatus,
-      featured: form.featured,
-      order,
-      createdAt: painting?.createdAt || new Date().toISOString(),
+      const paintingData: Painting = {
+        id: painting?.id || uuidv4(),
+        title: form.title.trim(),
+        year: form.year,
+        technique: form.technique,
+        dimensions: form.dimensions.trim(),
+        description: form.description.trim(),
+        imageUrl: form.imageUrl,
+        imagePublicId: form.imagePublicId,
+        price: form.priceStatus === 'visible' ? form.price : undefined,
+        priceStatus: form.priceStatus,
+        featured: form.featured,
+        order,
+        createdAt: painting?.createdAt || new Date().toISOString(),
+      }
+
+      if (isEditing) {
+        await updatePainting(paintingData.id, paintingData)
+      } else {
+        await savePainting(paintingData)
+      }
+      setMessage(isEditing ? 'Tableau modifié avec succès !' : 'Tableau ajouté avec succès !')
+
+      setTimeout(() => {
+        onClose()
+      }, 1000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur lors de l'enregistrement.")
+    } finally {
+      setSaving(false)
     }
-
-    if (isEditing) {
-      await updatePainting(paintingData.id, paintingData)
-    } else {
-      await savePainting(paintingData)
-    }
-    setMessage(isEditing ? 'Tableau modifié avec succès !' : 'Tableau ajouté avec succès !')
-    setSaving(false)
-
-    setTimeout(() => {
-      onClose()
-    }, 1000)
   }
 
   const handleImageUploaded = (url: string, publicId: string) => {
