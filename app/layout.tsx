@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import localFont from "next/font/local"
 import { NextIntlClientProvider } from "next-intl"
+import { getLocale, getMessages } from "next-intl/server"
 import "./globals.css"
 import Navbar from "@/components/ui/Navbar"
 import Footer from "@/components/ui/Footer"
@@ -50,15 +51,22 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-  params,
 }: Readonly<{
   children: React.ReactNode
-  params: { locale?: string }
 }>) {
-  const locale: Locale = routing.locales.includes(params.locale as Locale)
-    ? (params.locale as Locale)
+  // Le layout racine est au-dessus du segment [locale] : params.locale n'y
+  // arrive jamais. La locale réelle vient du header X-NEXT-INTL-LOCALE posé
+  // par le middleware (getLocale le lit) ; repli fr pour /admin et la 404.
+  const requestLocale = await getLocale().catch(() => undefined)
+  const locale: Locale = routing.locales.includes(requestLocale as Locale)
+    ? (requestLocale as Locale)
     : routing.defaultLocale
-  const settings = localizeSettings(await getGallerySettings(), locale)
+  const [settings, messages] = await Promise.all([
+    getGallerySettings().then((s) => localizeSettings(s, locale)),
+    // Messages explicites : garantis quelle que soit la stratégie de rendu
+    // (statique ou dynamique), l'héritage implicite n'étant pas fiable.
+    getMessages({ locale }).catch(() => undefined),
+  ])
   return (
     <html lang={locale} suppressHydrationWarning className={`${cormorant.variable} ${inter.variable}`}>
       <head>
@@ -72,7 +80,7 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen flex flex-col">
-        <NextIntlClientProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           <Navbar artistName={settings.artistName} />
           <main className="flex-1">{children}</main>
           <Footer settings={settings} />

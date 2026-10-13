@@ -52,9 +52,10 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
     { value: 'toutes', label: t('categories.toutes') },
     ...CATEGORIES.map((c) => ({ value: c.value, label: t(`categories.${c.value}`) })),
   ]
+  const FILTER_KEYS = { toutes: 'all', disponibles: 'available', vendues: 'sold' } as const
   const statusOptions = STATUS_VALUES.map((v) => ({
     value: v,
-    label: v === 'toutes' ? t('filters.all') : t(`filters.${v}`),
+    label: t(`filters.${FILTER_KEYS[v]}`),
   }))
 
   // Les techniques proposées correspondent à la galerie affichée.
