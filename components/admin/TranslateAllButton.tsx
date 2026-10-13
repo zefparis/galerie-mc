@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { isSessionExpired, redirectToLogin } from '@/lib/storage'
 
 type Phase = 'idle' | 'loading' | 'running' | 'done' | 'error'
+type Status = { configured: boolean; pending: number | null }
 
 // « Traduire tout mon site » : parcourt toiles, événements et réglages.
 // Idempotent — ne retraduit ni ce qui est à jour ni ce qui a été corrigé ;
@@ -13,6 +14,21 @@ export default function TranslateAllButton() {
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const [summary, setSummary] = useState('')
   const [error, setError] = useState('')
+  const [status, setStatus] = useState<Status | null>(null)
+
+  const refreshStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/translate')
+      if (res.status === 401) return
+      if (res.ok) setStatus(await res.json())
+    } catch {
+      /* indicateur facultatif : on ne bloque rien */
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshStatus()
+  }, [refreshStatus])
 
   const run = async () => {
     setError('')
@@ -71,6 +87,7 @@ export default function TranslateAllButton() {
           ? `C’est fait ✓ ${translated > 0 ? `${translated} texte${translated > 1 ? 's' : ''} traduit${translated > 1 ? 's' : ''}.` : 'Tout était déjà à jour.'}`
           : `Terminé, mais ${failures} contenu${failures > 1 ? 's n’ont' : ' n’a'} pas pu être traduit${failures > 1 ? 's' : ''} — relancez le bouton pour réessayer, rien n’est perdu.`
       )
+      refreshStatus()
     } catch (err) {
       if (isSessionExpired(err)) {
         redirectToLogin()
@@ -94,6 +111,23 @@ export default function TranslateAllButton() {
         traduit — vos toiles, vos événements, votre présentation. Ce qui est
         déjà traduit ou corrigé par vous n’est pas touché.
       </p>
+
+      {status && (
+        <p className="font-body text-sm font-medium text-[var(--ink)] mb-3" role="status">
+          {status.pending === null
+            ? 'État des traductions indisponible pour l’instant.'
+            : status.pending > 0
+              ? `${status.pending} contenu${status.pending > 1 ? 's' : ''} à traduire`
+              : 'Tout est traduit ✓'}
+        </p>
+      )}
+      {status && !status.configured && (
+        <p className="font-body text-sm text-[var(--danger)] mb-3" role="alert">
+          La traduction automatique n’est pas configurée (clé manquante) — les
+          boutons de traduction ne fonctionneront pas. Prévenez la personne qui
+          s’occupe du site.
+        </p>
+      )}
       <button
         type="button"
         onClick={run}

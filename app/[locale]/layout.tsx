@@ -1,5 +1,12 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { routing, type Locale } from '@/i18n/routing'
+
+// Titre par défaut du sous-arbre localisé (nom propre, valable dans toutes
+// les langues) — utilisé par la 404 localisée ; chaque page pose le sien.
+export const metadata: Metadata = {
+  title: { absolute: 'Marie-Claire Scandella' },
+}
 
 // Valide la langue : /xx/... inconnu → 404.
 export default function LocaleLayout({

@@ -6,7 +6,9 @@ import { handleRouteError, notFound } from '@/lib/api'
 import { uuidSchema } from '@/lib/validation'
 import {
   TARGET_LOCALES,
+  fieldStatus,
   markCorrected,
+  planField,
   settingsFrenchFields,
   translateFields,
 } from '@/lib/translations-core'
@@ -102,6 +104,70 @@ async function loadEntity(
     id: '1',
     french: settingsFrenchFields(settings),
     translations: (rows[0]?.translations as Translations) || {},
+  }
+}
+
+// État des traductions pour l'accueil admin : nombre de contenus ayant au
+// moins un champ à traduire ou à mettre à jour + présence de la clé API.
+export async function GET(req: NextRequest) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
+  try {
+    const needsWork = (french: Record<string, string>, translations: Translations) =>
+      TARGET_LOCALES.some((locale) =>
+        Object.entries(french).some(
+          ([field, text]) =>
+            planField(translations, field, text, locale) !== 'skip' ||
+            fieldStatus(translations, field, locale, text) === 'a_mettre_a_jour'
+        )
+      )
+
+    const [{ rows: paintings }, { rows: events }, { rows: settingsRows }] =
+      await Promise.all([
+        pool.query('SELECT title, description, translations FROM paintings'),
+        pool.query('SELECT title, description, location, translations FROM events'),
+        pool.query('SELECT data, translations FROM settings WHERE id = 1'),
+      ])
+
+    let pending = 0
+    for (const p of paintings)
+      if (
+        needsWork(
+          { title: p.title || '', description: p.description || '' },
+          p.translations || {}
+        )
+      )
+        pending++
+    for (const e of events)
+      if (
+        needsWork(
+          {
+            title: e.title || '',
+            description: e.description || '',
+            location: e.location || '',
+          },
+          e.translations || {}
+        )
+      )
+        pending++
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      ...((settingsRows[0]?.data || {}) as Partial<GallerySettings>),
+    }
+    if (needsWork(settingsFrenchFields(settings), settingsRows[0]?.translations || {}))
+      pending++
+
+    return NextResponse.json({ ok: true, configured: isTranslationConfigured(), pending })
+  } catch (err) {
+    // Colonne translations absente : l'admin reste utilisable, on signale
+    // simplement qu'on ne connaît pas l'état.
+    if ((err as { code?: string })?.code === '42703')
+      return NextResponse.json({
+        ok: true,
+        configured: isTranslationConfigured(),
+        pending: null,
+      })
+    return handleRouteError(err)
   }
 }
 

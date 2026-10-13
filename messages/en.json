@@ -164,5 +164,9 @@
     "technique-mixte-sur-papier": "Mixed media on paper",
     "encre-sur-papier": "Ink on paper",
     "autre": "Other"
+  },
+  "defaults": {
+    "bioShort": "Abstract painter | Montreuil-aux-Lions",
+    "bio": "Marie-Claire Scandella is a French painter based in Montreuil-aux-Lions. Her work explores abstraction through a sensitive palette and an expressive touch, developing a personal pictorial language that combines formal freedom with technical mastery. Her work has been shown in several group and solo exhibitions."
   }
 }

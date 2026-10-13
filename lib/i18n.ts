@@ -1,6 +1,7 @@
 import { useMessages } from 'next-intl'
 import type { Locale } from '@/i18n/routing'
 import { photoCaptionKey } from './translations-core'
+import { DEFAULT_SETTINGS } from './storage'
 import type { GalleryEvent, GallerySettings, Painting, Translations } from './types'
 
 export type { Locale }
@@ -99,21 +100,49 @@ export function localizeEvent(e: GalleryEvent, locale: Locale): GalleryEvent {
   }
 }
 
-export function localizeSettings(s: GallerySettings, locale: Locale): GallerySettings {
-  if (locale === 'fr' || !s.translations) return s
+const normText = (s: string) => (s || '').replace(/\s+/g, ' ').trim()
+
+/** Défauts localisés des réglages — messages[locale].defaults. */
+export interface SettingsDefaults {
+  bio?: string
+  bioShort?: string
+}
+
+/**
+ * Règle de lecture des réglages :
+ * - champ vide OU inchangé par rapport au défaut français d'origine
+ *   (comparaison tolérante aux espaces) → le défaut localisé des messages ;
+ * - champ personnalisé → sa traduction (translations), repli français.
+ */
+export function localizeSettings(
+  s: GallerySettings,
+  locale: Locale,
+  defaults: SettingsDefaults = {}
+): GallerySettings {
+  const resolveField = (field: 'bio' | 'bioShort' | 'processText'): string => {
+    const raw = (s[field] as string | undefined) || ''
+    const frDefault = (DEFAULT_SETTINGS[field] as string | undefined) || ''
+    if (!normText(raw) || normText(raw) === normText(frDefault))
+      return defaults[field as keyof SettingsDefaults] ?? raw
+    return getLocalizedField(s, field, locale)
+  }
   return {
     ...s,
-    bio: getLocalizedField(s, 'bio', locale),
-    bioShort: getLocalizedField(s, 'bioShort', locale),
-    processText: getLocalizedField(s, 'processText', locale),
-    photos: (s.photos || []).map((p) =>
-      p.publicId && p.caption
-        ? {
-            ...p,
-            caption:
-              s.translations?.[locale]?.[photoCaptionKey(p.publicId)]?.trim() || p.caption,
-          }
-        : p
-    ),
+    bio: resolveField('bio'),
+    bioShort: resolveField('bioShort'),
+    processText: resolveField('processText'),
+    photos:
+      locale === 'fr' || !s.translations
+        ? s.photos
+        : (s.photos || []).map((p) =>
+            p.publicId && p.caption
+              ? {
+                  ...p,
+                  caption:
+                    s.translations?.[locale]?.[photoCaptionKey(p.publicId)]?.trim() ||
+                    p.caption,
+                }
+              : p
+          ),
   }
 }

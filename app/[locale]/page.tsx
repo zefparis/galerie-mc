@@ -37,13 +37,17 @@ export default async function Home({ params }: Props) {
   const locale = params.locale as Locale
   const t = await getTranslations('home')
   const th = await getTranslations('hero')
+  const td = await getTranslations('defaults')
   const [paintings, rawEvents, rawSettings] = await Promise.all([
     getPaintings(),
     getPublishedEvents(),
     getGallerySettings(),
   ])
   const events = rawEvents.map((e) => localizeEvent(e, locale))
-  const settings = localizeSettings(rawSettings, locale)
+  const settings = localizeSettings(rawSettings, locale, {
+    bio: td('bio'),
+    bioShort: td('bioShort'),
+  })
   const localized = paintings.map((p) => localizePainting(p, locale))
 
   const featuredList = localized.filter((p) => p.featured)

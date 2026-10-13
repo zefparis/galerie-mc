@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import localFont from "next/font/local"
 import { NextIntlClientProvider } from "next-intl"
-import { getLocale, getMessages } from "next-intl/server"
+import { getLocale, getMessages, getTranslations } from "next-intl/server"
 import "./globals.css"
 import Navbar from "@/components/ui/Navbar"
 import Footer from "@/components/ui/Footer"
@@ -34,7 +34,9 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || "https://galerie-marie-claire.vercel.app"
   ),
   title: {
-    default: "Marie-Claire Scandella — Artiste Peintre",
+    // Nom propre seul : valable dans les 4 langues (utilisé par la 404
+    // racine et l'admin ; chaque page publique pose son propre titre).
+    default: "Marie-Claire Scandella",
     template: "%s — Marie-Claire Scandella",
   },
   description:
@@ -62,7 +64,9 @@ export default async function RootLayout({
     ? (requestLocale as Locale)
     : routing.defaultLocale
   const [settings, messages] = await Promise.all([
-    getGallerySettings().then((s) => localizeSettings(s, locale)),
+    Promise.all([getGallerySettings(), getTranslations({ locale, namespace: 'defaults' })]).then(
+      ([s, td]) => localizeSettings(s, locale, { bio: td('bio'), bioShort: td('bioShort') })
+    ),
     // Messages explicites : garantis quelle que soit la stratégie de rendu
     // (statique ou dynamique), l'héritage implicite n'étant pas fiable.
     getMessages({ locale }).catch(() => undefined),
