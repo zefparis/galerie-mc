@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
 import localFont from "next/font/local"
+import { NextIntlClientProvider } from "next-intl"
 import "./globals.css"
 import Navbar from "@/components/ui/Navbar"
 import Footer from "@/components/ui/Footer"
+import LocaleBanner from "@/components/ui/LocaleBanner"
 import { getGallerySettings } from "@/lib/data"
+import { routing, type Locale } from "@/i18n/routing"
 
 // Fonts auto-hébergées : aucun appel réseau au build, rendu instantané.
 const cormorant = localFont({
@@ -46,12 +49,17 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode
+  params: { locale?: string }
 }>) {
   const settings = await getGallerySettings()
+  const locale: Locale = routing.locales.includes(params.locale as Locale)
+    ? (params.locale as Locale)
+    : routing.defaultLocale
   return (
-    <html lang="fr" suppressHydrationWarning className={`${cormorant.variable} ${inter.variable}`}>
+    <html lang={locale} suppressHydrationWarning className={`${cormorant.variable} ${inter.variable}`}>
       <head>
         {/* Applique le thème avant le premier rendu — évite tout flash.
             Choix mémorisé en localStorage ; par défaut : suit l'appareil
@@ -63,9 +71,12 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen flex flex-col">
-        <Navbar artistName={settings.artistName} />
-        <main className="flex-1">{children}</main>
-        <Footer settings={settings} />
+        <NextIntlClientProvider>
+          <Navbar artistName={settings.artistName} />
+          <main className="flex-1">{children}</main>
+          <Footer settings={settings} />
+          <LocaleBanner />
+        </NextIntlClientProvider>
       </body>
     </html>
   )

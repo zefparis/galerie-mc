@@ -8,7 +8,8 @@
     "vercel-build": "node scripts/migrate.mjs --soft && next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/migrate.mjs"
+    "migrate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/migrate.mjs",
+    "i18n:check": "node scripts/i18n-check.mjs"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -25,6 +26,7 @@
     "lucide-react": "^1.14.0",
     "next": "^14.2.35",
     "next-cloudinary": "^6.17.5",
+    "next-intl": "^3.26.5",
     "pg": "^8.20.0",
     "postcss": "^8.4.49",
     "react": "^18.3.1",

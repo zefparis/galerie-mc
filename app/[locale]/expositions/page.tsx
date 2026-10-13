@@ -1,30 +1,44 @@
 import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
 import { getPublishedEvents } from '@/lib/data'
+import { alternatesFor, OG_LOCALE } from '@/lib/seo'
+import { routing, type Locale } from '@/i18n/routing'
 import EventCard from '@/components/gallery/EventCard'
 import Reveal from '@/components/ui/Reveal'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'Expositions & Événements',
-  description:
-    'Expositions et événements de Marie-Claire Scandella, artiste peintre à Montreuil-aux-Lions.',
-  openGraph: {
-    title: 'Expositions & Événements — Marie-Claire Scandella',
-    description: 'Expositions et événements de Marie-Claire Scandella.',
-  },
+interface Props {
+  params: { locale: string }
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = params.locale as Locale
+  const t = await getTranslations({ locale, namespace: 'events' })
+  return {
+    title: t('metaTitle'),
+    description: t('metaDesc'),
+    alternates: alternatesFor('/expositions', locale),
+    openGraph: {
+      title: `${t('metaTitle')} — Marie-Claire Scandella`,
+      description: t('metaDesc'),
+      locale: OG_LOCALE[locale],
+      alternateLocale: routing.locales.filter((l) => l !== locale).map((l) => OG_LOCALE[l]),
+    },
+  }
 }
 
 export default async function ExpositionsPage() {
+  const t = await getTranslations('events')
   const events = await getPublishedEvents()
 
   return (
     <div className="pt-16 md:pt-20">
       <header className="max-w-7xl mx-auto px-5 md:px-8 pt-10 md:pt-20 pb-10 md:pb-16">
         <Reveal>
-          <p className="eyebrow">Moments partagés</p>
+          <p className="eyebrow">{t('eyebrow')}</p>
           <h1 className="font-display text-5xl md:text-7xl text-[var(--ink)] mt-3">
-            Expositions &amp; Événements
+            {t('title')}
           </h1>
         </Reveal>
       </header>
@@ -32,7 +46,7 @@ export default async function ExpositionsPage() {
       <section className="max-w-7xl mx-auto px-5 md:px-8 pb-20 md:pb-32">
         {events.length === 0 ? (
           <p className="font-body text-[var(--muted)] py-16 text-center">
-            Aucune exposition pour le moment.
+            {t('empty')}
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-14">

@@ -1,36 +1,44 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
+import { Link } from '@/i18n/navigation'
 import { getPublishedEventById } from '@/lib/data'
 import { EventMedia } from '@/lib/types'
 import { blurDataUrl } from '@/lib/images'
+import { alternatesFor, OG_LOCALE } from '@/lib/seo'
+import { routing, type Locale } from '@/i18n/routing'
 import { formatEventDate } from '@/components/gallery/EventCard'
 import Reveal from '@/components/ui/Reveal'
 
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  params: { id: string }
+  params: { id: string; locale: string }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = params.locale as Locale
+  const t = await getTranslations({ locale, namespace: 'events' })
   const event = await getPublishedEventById(params.id)
-  if (!event) return { title: 'Événement introuvable' }
+  if (!event) return { title: t('notFound') }
 
   const description = event.description?.slice(0, 160) ||
-    [event.location, event.eventDate && formatEventDate(event.eventDate)]
+    [event.location, event.eventDate && formatEventDate(event.eventDate, 'long', locale)]
       .filter(Boolean)
       .join(' — ')
 
   return {
     title: event.title,
     description,
+    alternates: alternatesFor(`/expositions/${params.id}`, locale),
     openGraph: {
       title: `${event.title} — Marie-Claire Scandella`,
       description,
       images: event.coverUrl ? [event.coverUrl] : undefined,
       type: 'article',
+      locale: OG_LOCALE[locale],
+      alternateLocale: routing.locales.filter((l) => l !== locale).map((l) => OG_LOCALE[l]),
     },
   }
 }
@@ -40,7 +48,7 @@ function getYouTubeId(url: string): string | null {
   return match ? match[1] : null
 }
 
-function MediaItem({ media }: { media: EventMedia }) {
+function MediaItem({ media, photoAlt, videoTitle }: { media: EventMedia; photoAlt: string; videoTitle: string }) {
   if (media.type === 'video') {
     const ytId = getYouTubeId(media.url)
     if (!ytId) return null
@@ -49,7 +57,7 @@ function MediaItem({ media }: { media: EventMedia }) {
         <div className="aspect-[16/9] overflow-hidden bg-black">
           <iframe
             src={`https://www.youtube.com/embed/${ytId}`}
-            title={media.caption || 'Vidéo'}
+            title={media.caption || videoTitle}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             className="w-full h-full"
@@ -69,7 +77,7 @@ function MediaItem({ media }: { media: EventMedia }) {
     <figure className="break-inside-avoid mb-5">
       <Image
         src={media.url}
-        alt={media.caption || 'Photo de l\u2019événement'}
+        alt={media.caption || photoAlt}
         width={0}
         height={0}
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -88,11 +96,15 @@ function MediaItem({ media }: { media: EventMedia }) {
 }
 
 export default async function ExpositionDetailPage({ params }: Props) {
+  const locale = params.locale as Locale
+  const t = await getTranslations('events')
   const event = await getPublishedEventById(params.id)
   if (!event) notFound()
 
   const photos = event.media.filter((m) => m.type === 'photo')
   const videos = event.media.filter((m) => m.type === 'video')
+  const photoAlt = t('photoAlt')
+  const videoTitle = t('videoTitle')
 
   return (
     <div className="pt-16 md:pt-20">
@@ -101,7 +113,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
           href="/expositions"
           className="inline-flex items-center min-h-[44px] font-body text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)] hover:text-[var(--ink)] transition-colors duration-200"
         >
-          ← Expositions
+          {t('backList')}
         </Link>
       </div>
 
@@ -109,7 +121,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
         <Reveal>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {event.eventDate && (
-              <p className="eyebrow">{formatEventDate(event.eventDate)}</p>
+              <p className="eyebrow">{formatEventDate(event.eventDate, 'long', locale)}</p>
             )}
             {event.location && (
               <p className="font-body text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
@@ -152,12 +164,12 @@ export default async function ExpositionDetailPage({ params }: Props) {
         <section className="max-w-5xl mx-auto px-5 md:px-8 pb-12 md:pb-16">
           <Reveal>
             <h2 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-8">
-              Photos
+              {t('photos')}
             </h2>
           </Reveal>
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-5">
             {photos.map((m, i) => (
-              <MediaItem key={i} media={m} />
+              <MediaItem key={i} media={m} photoAlt={photoAlt} videoTitle={videoTitle} />
             ))}
           </div>
         </section>
@@ -167,12 +179,12 @@ export default async function ExpositionDetailPage({ params }: Props) {
         <section className="max-w-4xl mx-auto px-5 md:px-8 pb-12 md:pb-16">
           <Reveal>
             <h2 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-8">
-              Vidéos
+              {t('videos')}
             </h2>
           </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {videos.map((m, i) => (
-              <MediaItem key={i} media={m} />
+              <MediaItem key={i} media={m} photoAlt={photoAlt} videoTitle={videoTitle} />
             ))}
           </div>
         </section>

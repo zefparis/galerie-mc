@@ -1,11 +1,12 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useLocale, useTranslations } from 'next-intl'
+import { Link, useRouter } from '@/i18n/navigation'
 import { Painting } from '@/lib/types'
 import { blurDataUrl } from '@/lib/images'
+import { formatPrice, useTechniqueLabel, type Locale } from '@/lib/i18n'
 import Reveal from '@/components/ui/Reveal'
 import Lightbox from './Lightbox'
 
@@ -16,26 +17,24 @@ interface Props {
   category?: string
 }
 
-const STATUS_LABEL: Partial<Record<Painting['priceStatus'], string>> = {
-  sur_demande: 'Prix sur demande',
-  vendu: 'Vendu',
-  non_a_vendre: 'Non à vendre',
-}
-
 export default function PaintingDetail({ painting, prevId, nextId, category }: Props) {
+  const t = useTranslations('detail')
+  const ts = useTranslations('status')
+  const locale = useLocale() as Locale
+  const techLabel = useTechniqueLabel()
   const router = useRouter()
   const [lightbox, setLightbox] = useState(false)
   const qs = category ? `?categorie=${category}` : ''
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-    }).format(price)
-
-  const statusLabel = STATUS_LABEL[painting.priceStatus]
+  const technique = painting.technique ? techLabel(painting.technique) : ''
+  const statusLabel =
+    painting.priceStatus === 'sur_demande' ||
+    painting.priceStatus === 'vendu' ||
+    painting.priceStatus === 'non_a_vendre'
+      ? ts(painting.priceStatus)
+      : null
   const contactable = painting.priceStatus !== 'vendu' && painting.priceStatus !== 'non_a_vendre'
+  const imgAlt = t('photoAlt', { title: painting.title, technique, year: painting.year })
 
   return (
     <div className="pt-16 md:pt-20">
@@ -44,7 +43,7 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
           href={`/galerie${qs}`}
           className="inline-flex items-center min-h-[44px] font-body text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)] hover:text-[var(--ink)] transition-colors duration-200"
         >
-          ← Galerie
+          {t('back')}
         </Link>
       </div>
 
@@ -53,12 +52,12 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
         <Reveal className="md:w-[58%] md:flex-shrink-0 mt-4 md:mt-0">
           <button
             onClick={() => setLightbox(true)}
-            aria-label={`Agrandir « ${painting.title} »`}
+            aria-label={t('zoomHint') + ` — ${painting.title}`}
             className="block w-full bg-[var(--mat)] border border-[var(--line)] p-3 sm:p-5 md:sticky md:top-24 cursor-zoom-in"
           >
             <Image
               src={painting.imageUrl}
-              alt={`${painting.title} — ${painting.technique}, ${painting.year}`}
+              alt={imgAlt}
               width={0}
               height={0}
               sizes="(max-width: 768px) 100vw, 58vw"
@@ -69,7 +68,7 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
             />
           </button>
           <p className="font-body text-[11px] text-[var(--muted)] text-center mt-3">
-            Cliquer pour agrandir
+            {t('zoomHint')}
           </p>
         </Reveal>
 
@@ -81,8 +80,12 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-4 md:mt-6">
             <span className="font-body text-sm text-[var(--ink-soft)]">{painting.year}</span>
-            <span className="text-[var(--line)]" aria-hidden="true">·</span>
-            <span className="font-body text-sm text-[var(--ink-soft)]">{painting.technique}</span>
+            {technique && (
+              <>
+                <span className="text-[var(--line)]" aria-hidden="true">·</span>
+                <span className="font-body text-sm text-[var(--ink-soft)]">{technique}</span>
+              </>
+            )}
             {painting.dimensions && (
               <>
                 <span className="text-[var(--line)]" aria-hidden="true">·</span>
@@ -94,7 +97,7 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
           <div className="mt-6 md:mt-8">
             {painting.priceStatus === 'visible' && painting.price != null ? (
               <p className="font-body text-2xl text-[var(--ink)] font-medium">
-                {formatPrice(painting.price)}
+                {formatPrice(painting.price, locale)}
               </p>
             ) : statusLabel ? (
               <span
@@ -117,10 +120,10 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
 
           {contactable && (
             <Link
-              href={`/contact?sujet=${encodeURIComponent(`Intérêt pour « ${painting.title} »`)}`}
+              href={`/contact?sujet=${encodeURIComponent(t('interestSubject', { title: painting.title }))}`}
               className="btn-accent mt-8 md:mt-10 w-full sm:w-auto"
             >
-              Manifester son intérêt
+              {t('interest')}
             </Link>
           )}
         </Reveal>
@@ -134,7 +137,7 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
               href={`/oeuvre/${prevId}${qs}`}
               className="inline-flex items-center justify-center min-h-[48px] px-5 sm:px-7 border border-[var(--line)] font-body text-xs font-medium uppercase tracking-[0.16em] text-[var(--ink-soft)] hover:text-[var(--ink)] hover:border-[var(--ink-soft)] transition-colors duration-200"
             >
-              ← Précédente
+              {t('prev')}
             </Link>
           ) : <span />}
           {nextId ? (
@@ -142,7 +145,7 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
               href={`/oeuvre/${nextId}${qs}`}
               className="inline-flex items-center justify-center min-h-[48px] px-5 sm:px-7 border border-[var(--line)] font-body text-xs font-medium uppercase tracking-[0.16em] text-[var(--ink-soft)] hover:text-[var(--ink)] hover:border-[var(--ink-soft)] transition-colors duration-200"
             >
-              Suivante →
+              {t('next')}
             </Link>
           ) : <span />}
         </div>
@@ -151,7 +154,7 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
       {lightbox && (
         <Lightbox
           src={painting.imageUrl}
-          alt={`${painting.title} — ${painting.technique}, ${painting.year}`}
+          alt={imgAlt}
           onClose={() => setLightbox(false)}
           onPrev={prevId ? () => router.push(`/oeuvre/${prevId}${qs}`) : undefined}
           onNext={nextId ? () => router.push(`/oeuvre/${nextId}${qs}`) : undefined}

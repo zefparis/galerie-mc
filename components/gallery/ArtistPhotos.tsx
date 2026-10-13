@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import Lightbox from '@/components/gallery/Lightbox'
 import { blurDataUrl } from '@/lib/images'
 import { ArtistPhoto } from '@/lib/types'
@@ -14,6 +15,7 @@ interface Props {
 // 2–3 photos de l'artiste dans la section Présentation.
 // Toucher une photo l'ouvre en grand (lightbox avec navigation).
 export default function ArtistPhotos({ photos, artistName }: Props) {
+  const t = useTranslations('artistPhotos')
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   if (!photos.length) return null
 
@@ -29,11 +31,11 @@ export default function ArtistPhotos({ photos, artistName }: Props) {
             key={photo.publicId || photo.url}
             onClick={() => setOpenIndex(i)}
             className="relative aspect-[3/4] overflow-hidden bg-[var(--line)] group cursor-zoom-in"
-            aria-label={`Agrandir la photo ${i + 1} de ${artistName}`}
+            aria-label={t('zoomAria', { n: i + 1, name: artistName })}
           >
             <Image
               src={photo.url}
-              alt={`${artistName} — photo ${i + 1}`}
+              alt={t('alt', { name: artistName, n: i + 1 })}
               fill
               sizes="(max-width: 640px) 50vw, 33vw"
               placeholder="blur"
@@ -47,7 +49,7 @@ export default function ArtistPhotos({ photos, artistName }: Props) {
       {openIndex !== null && (
         <Lightbox
           src={photos[openIndex].url}
-          alt={`${artistName} — photo ${openIndex + 1}`}
+          alt={t('alt', { name: artistName, n: openIndex + 1 })}
           onClose={() => setOpenIndex(null)}
           onPrev={photos.length > 1 ? () => setOpenIndex((i) => (i! - 1 + photos.length) % photos.length) : undefined}
           onNext={photos.length > 1 ? () => setOpenIndex((i) => (i! + 1) % photos.length) : undefined}

@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { blurDataUrl } from '@/lib/images'
 import { Painting } from '@/lib/types'
 
@@ -16,6 +17,7 @@ interface Props {
 // œuvres sont mises en avant, fondu enchaîné toutes les 6 s avec points de
 // navigation — pause au survol ou au toucher.
 export default function HeroArtwork({ paintings }: Props) {
+  const t = useTranslations('hero')
   const [active, setActive] = useState(0)
   const paused = useRef(false)
 
@@ -73,13 +75,13 @@ export default function HeroArtwork({ paintings }: Props) {
           « {current.title} » — {current.technique}, {current.year}
         </p>
         {paintings.length > 1 && (
-          <div className="flex items-center gap-1 flex-shrink-0" role="tablist" aria-label="Choisir l'œuvre affichée">
+          <div className="flex items-center gap-1 flex-shrink-0" role="tablist" aria-label={t('chooseArtwork')}>
             {paintings.map((p, i) => (
               <button
                 key={p.id}
                 role="tab"
                 aria-selected={i === active}
-                aria-label={`Œuvre ${i + 1} : ${p.title}`}
+                aria-label={t('artworkN', { n: i + 1, title: p.title })}
                 onClick={() => setActive(i)}
                 className="p-2.5 min-w-[36px] min-h-[36px] flex items-center justify-center"
               >

@@ -1,21 +1,28 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { getMessages, getTranslations } from 'next-intl/server'
 import { getPaintingById, getPaintings } from '@/lib/data'
+import { alternatesFor, OG_LOCALE } from '@/lib/seo'
+import { routing, type Locale } from '@/i18n/routing'
+import { techniqueLabel } from '@/lib/i18n'
 import PaintingDetail from '@/components/gallery/PaintingDetail'
 
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  params: { id: string }
+  params: { id: string; locale: string }
   searchParams: { categorie?: string }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = params.locale as Locale
+  const t = await getTranslations({ locale })
+  const messages = (await getMessages({ locale })) as { techniques?: Record<string, string> }
   const painting = await getPaintingById(params.id)
-  if (!painting) return { title: 'Œuvre introuvable' }
+  if (!painting) return { title: t('detail.notFound') }
 
   const description = [
-    `${painting.technique}, ${painting.year}`,
+    `${techniqueLabel(messages.techniques, painting.technique || '')}, ${painting.year}`,
     painting.dimensions,
     painting.description?.slice(0, 140),
   ]
@@ -25,11 +32,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: painting.title,
     description,
+    alternates: alternatesFor(`/oeuvre/${params.id}`, locale),
     openGraph: {
       title: `${painting.title} — Marie-Claire Scandella`,
       description,
       images: [painting.imageUrl],
       type: 'article',
+      locale: OG_LOCALE[locale],
+      alternateLocale: routing.locales.filter((l) => l !== locale).map((l) => OG_LOCALE[l]),
     },
   }
 }

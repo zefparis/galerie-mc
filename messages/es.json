@@ -1,0 +1,167 @@
+{
+  "nav": {
+    "galerie": "Galería",
+    "expositions": "Exposiciones",
+    "contact": "Contacto",
+    "homeAria": "Inicio — Marie-Claire Scandella",
+    "openMenu": "Abrir el menú",
+    "closeMenu": "Cerrar el menú"
+  },
+  "theme": {
+    "label": "Cambiar la apariencia",
+    "auto": "Automático",
+    "light": "Claro",
+    "dark": "Oscuro"
+  },
+  "lang": {
+    "label": "Elegir idioma",
+    "fr": "Français",
+    "en": "English",
+    "es": "Español",
+    "de": "Deutsch"
+  },
+  "hero": {
+    "defaultEyebrow": "Pintora abstracta",
+    "ctaGallery": "Descubrir la galería",
+    "ctaContact": "Contactar con la artista",
+    "zoomAria": "Ampliar «{title}»",
+    "chooseArtwork": "Elegir la obra mostrada",
+    "artworkN": "Obra {n}: {title}"
+  },
+  "home": {
+    "worksEyebrow": "Obras",
+    "selection": "Selección",
+    "allGallery": "Toda la galería →",
+    "peinturesLink": "Pinturas contemporáneas →",
+    "collagesLink": "Collages sobre papel →",
+    "peinturesShort": "Pinturas →",
+    "collagesShort": "Collages →",
+    "agenda": "Agenda",
+    "upcoming": "Próximas exposiciones",
+    "recent": "Exposiciones recientes",
+    "seeAll": "Ver todo →",
+    "presentation": "Presentación",
+    "process": "Mi manera de pintar",
+    "contactMe": "Contactar",
+    "metaTitle": "Marie-Claire Scandella — Pintora",
+    "metaDesc": "Galería en línea de Marie-Claire Scandella, pintora abstracta en Montreuil-aux-Lions. Obras originales: óleo, acrílico, acuarela."
+  },
+  "galerie": {
+    "eyebrow": "Obras originales",
+    "title": "Galería",
+    "introAll": "Cada obra es una pieza única.",
+    "introPeintures": "Pinturas originales — cada obra es una pieza única.",
+    "introCollages": "Collages y técnicas mixtas sobre papel — cada obra es una pieza única.",
+    "metaDescAll": "Todas las obras originales de Marie-Claire Scandella: pinturas contemporáneas y collages sobre papel.",
+    "metaDescPeintures": "Pinturas contemporáneas de Marie-Claire Scandella — obras originales.",
+    "metaDescCollages": "Collages sobre papel de Marie-Claire Scandella — obras originales.",
+    "count": "{count, plural, =0 {Ninguna obra} one {# obra} other {# obras}}",
+    "emptyAll": "Ninguna obra corresponde a esta selección por ahora.",
+    "emptyPeintures": "Ninguna pintura corresponde a esta selección por ahora.",
+    "emptyCollages": "Los collages llegarán pronto."
+  },
+  "filters": {
+    "aria": "Filtrar las obras",
+    "ariaTechnique": "Filtrar por técnica",
+    "all": "Todas",
+    "available": "Disponibles",
+    "sold": "Vendidas"
+  },
+  "categories": {
+    "peintures": "Pinturas contemporáneas",
+    "collages": "Collages sobre papel",
+    "toutes": "Todas"
+  },
+  "status": {
+    "visible": "Precio indicado",
+    "sur_demande": "Precio a consultar",
+    "vendu": "Vendida",
+    "non_a_vendre": "No a la venta"
+  },
+  "artwork": {
+    "viewAria": "Ver la obra «{title}» — {meta}",
+    "soldBadge": "Vendida",
+    "untitled": "Sin título"
+  },
+  "detail": {
+    "back": "← Galería",
+    "zoomHint": "Pulse para ampliar",
+    "interest": "Manifestar su interés",
+    "interestSubject": "Interés por «{title}»",
+    "prev": "← Anterior",
+    "next": "Siguiente →",
+    "notFound": "Obra no encontrada",
+    "photoAlt": "{title} — {technique}, {year}"
+  },
+  "lightbox": {
+    "aria": "Visor — {alt}",
+    "close": "Cerrar el visor",
+    "prev": "Obra anterior",
+    "next": "Obra siguiente"
+  },
+  "artistPhotos": {
+    "zoomAria": "Ampliar la foto {n} de {name}",
+    "alt": "{name} — foto {n}"
+  },
+  "events": {
+    "eyebrow": "Momentos compartidos",
+    "title": "Exposiciones y Eventos",
+    "metaTitle": "Exposiciones y Eventos",
+    "metaDesc": "Exposiciones y eventos de Marie-Claire Scandella, pintora en Montreuil-aux-Lions.",
+    "empty": "No hay exposiciones por ahora.",
+    "backList": "← Exposiciones",
+    "photos": "Fotos",
+    "videos": "Vídeos",
+    "photoAlt": "Foto del evento",
+    "videoTitle": "Vídeo",
+    "notFound": "Evento no encontrado"
+  },
+  "contact": {
+    "eyebrow": "Escribir",
+    "title": "Contacto",
+    "intro": "¿Una pregunta, interés por una obra, una visita al taller? No dude en escribirme.",
+    "metaTitle": "Contacto",
+    "metaDesc": "Contactar con Marie-Claire Scandella — pregunta sobre una obra, encargo o visita al taller.",
+    "direct": "Contacte directamente:",
+    "notConfigured": "El formulario no está configurado. Contacte con la artista directamente por email.",
+    "name": "Nombre completo *",
+    "namePh": "Su nombre",
+    "email": "Email *",
+    "emailPh": "su@email.com",
+    "subject": "Asunto",
+    "subjectPh": "Asunto de su mensaje",
+    "message": "Mensaje *",
+    "messagePh": "Su mensaje...",
+    "send": "Enviar el mensaje",
+    "sending": "Enviando...",
+    "required": "Por favor, rellene todos los campos obligatorios.",
+    "sendError": "Error al enviar. Inténtelo de nuevo o contacte directamente con la artista.",
+    "successTitle": "Mensaje enviado",
+    "successBody": "Gracias — le responderé lo antes posible.",
+    "another": "Enviar otro mensaje",
+    "loading": "Cargando..."
+  },
+  "notFound": {
+    "eyebrow": "Página no encontrada",
+    "body": "Esta obra no existe o ha sido movida.",
+    "cta": "Volver a la galería"
+  },
+  "footer": {
+    "navigation": "Navegación",
+    "contact": "Contacto",
+    "rights": "Todos los derechos reservados",
+    "originals": "Obras originales — reproducción prohibida sin autorización"
+  },
+  "techniques": {
+    "huile-sur-toile": "Óleo sobre lienzo",
+    "acrylique": "Acrílico sobre lienzo",
+    "aquarelle": "Acuarela",
+    "pastel": "Pastel",
+    "fusain": "Carboncillo",
+    "technique-mixte": "Técnica mixta",
+    "collage": "Collage sobre papel",
+    "technique-mixte-sur-papier": "Técnica mixta sobre papel",
+    "encre-sur-papier": "Tinta sobre papel",
+    "autre": "Otra"
+  }
+}

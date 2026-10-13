@@ -1,5 +1,7 @@
 import Link from 'next/link'
 
+// 404 racine : sert les routes hors préfixe de langue (ex. /admin/...).
+// La page 404 localisée et traduite vit dans app/[locale]/not-found.tsx.
 export default function NotFound() {
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center px-6 pt-16 text-center">

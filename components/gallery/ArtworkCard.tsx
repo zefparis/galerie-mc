@@ -1,16 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
+import { useLocale, useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import { Painting } from '@/lib/types'
 import { blurDataUrl } from '@/lib/images'
+import { formatPrice, useTechniqueLabel, type Locale } from '@/lib/i18n'
 import StatusBadge from './StatusBadge'
-
-const STATUS_TEXT: Record<string, string> = {
-  sur_demande: 'Prix sur demande',
-  non_a_vendre: 'Non à vendre',
-}
 
 export default function ArtworkCard({
   painting: p,
@@ -19,6 +16,10 @@ export default function ArtworkCard({
   painting: Painting
   category?: string
 }) {
+  const t = useTranslations('artwork')
+  const ts = useTranslations('status')
+  const locale = useLocale() as Locale
+  const techLabel = useTechniqueLabel()
   const href =
     category && category !== 'toutes'
       ? `/oeuvre/${p.id}?categorie=${category}`
@@ -28,16 +29,19 @@ export default function ArtworkCard({
     p.imageWidth && p.imageHeight ? [p.imageWidth, p.imageHeight] : null
   )
 
-  const meta = [p.technique, p.dimensions, p.year].filter(Boolean).join(' · ')
+  const technique = p.technique ? techLabel(p.technique) : ''
+  const meta = [technique, p.dimensions, p.year].filter(Boolean).join(' · ')
   const info =
     p.priceStatus === 'visible' && p.price
-      ? `${p.price.toLocaleString('fr-FR')} €`
-      : STATUS_TEXT[p.priceStatus] || ''
+      ? formatPrice(p.price, locale)
+      : p.priceStatus === 'sur_demande' || p.priceStatus === 'vendu' || p.priceStatus === 'non_a_vendre'
+        ? ts(p.priceStatus)
+        : ''
 
   const img = (
     <Image
       src={p.imageUrl}
-      alt={`${p.title} — ${p.technique || 'œuvre'}${p.year ? `, ${p.year}` : ''}`}
+      alt={`${p.title} — ${technique || p.title}${p.year ? `, ${p.year}` : ''}`}
       {...(size
         ? { fill: true as const }
         : { width: 0 as const, height: 0 as const })}
@@ -59,7 +63,7 @@ export default function ArtworkCard({
     <Link
       href={href}
       className="group block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
-      aria-label={`Voir l'œuvre « ${p.title} »${meta ? ` — ${meta}` : ''}`}
+      aria-label={t('viewAria', { title: p.title, meta })}
     >
       <div
         className="relative overflow-hidden rounded-md bg-[var(--surface)]"
@@ -85,8 +89,8 @@ export default function ArtworkCard({
           {p.title}
           {p.year && <span className="text-[var(--muted)]"> · {p.year}</span>}
         </p>
-        {p.technique && (
-          <p className="mt-0.5 font-body text-xs text-[var(--ink-soft)]">{p.technique}</p>
+        {technique && (
+          <p className="mt-0.5 font-body text-xs text-[var(--ink-soft)]">{technique}</p>
         )}
         {info && (
           <p className="mt-0.5 font-body text-xs font-medium uppercase tracking-[0.12em] text-[var(--muted)]">

@@ -1,21 +1,29 @@
 import Image from 'next/image'
-import Link from 'next/link'
+import { getLocale } from 'next-intl/server'
+import { Link } from '@/i18n/navigation'
 import { GalleryEvent } from '@/lib/types'
 import { blurDataUrl } from '@/lib/images'
+import { formatDate, type Locale } from '@/lib/i18n'
 
-export function formatEventDate(dateStr: string, style: 'short' | 'long' = 'long'): string {
+export function formatEventDate(
+  dateStr: string,
+  style: 'short' | 'long' = 'long',
+  locale: Locale = 'fr'
+): string {
   if (!dateStr) return ''
   const d = new Date(dateStr + 'T00:00:00')
-  const formatted = d.toLocaleDateString(
-    'fr-FR',
+  const formatted = formatDate(
+    d,
+    locale,
     style === 'long'
       ? { day: 'numeric', month: 'long', year: 'numeric' }
       : { month: 'long', year: 'numeric' }
   )
-  return formatted.replace(/^\w/, (c) => c.toUpperCase())
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 }
 
-export default function EventCard({ event }: { event: GalleryEvent }) {
+export default async function EventCard({ event }: { event: GalleryEvent }) {
+  const locale = (await getLocale()) as Locale
   return (
     <Link href={`/expositions/${event.id}`} className="group block">
       <div className="relative aspect-[16/10] overflow-hidden bg-[var(--line)]">
@@ -39,7 +47,7 @@ export default function EventCard({ event }: { event: GalleryEvent }) {
       </div>
       <div className="mt-4">
         {event.eventDate && (
-          <p className="eyebrow">{formatEventDate(event.eventDate, 'short')}</p>
+          <p className="eyebrow">{formatEventDate(event.eventDate, 'short', locale)}</p>
         )}
         <h3 className="font-display text-2xl text-[var(--ink)] mt-1 leading-tight group-hover:text-[var(--accent)] transition-colors duration-200">
           {event.title}

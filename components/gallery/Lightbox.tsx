@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { blurDataUrl } from '@/lib/images'
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 // Lightbox plein écran : double-clic / double-tap = zoom ×2,5 ancré au point
 // touché, glisser pour déplacer quand zoomé, swipe latéral pour naviguer.
 export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
+  const t = useTranslations('lightbox')
   const [zoomed, setZoomed] = useState(false)
   const [origin, setOrigin] = useState('50% 50%')
   const [offset, setOffset] = useState({ x: 0, y: 0 })
@@ -141,13 +143,13 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
       className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center select-none"
       role="dialog"
       aria-modal="true"
-      aria-label={`Visionneuse — ${alt}`}
+      aria-label={t('aria', { alt })}
       onClick={onClose}
     >
       {/* Fermer */}
       <button
         onClick={onClose}
-        aria-label="Fermer la visionneuse"
+        aria-label={t('close')}
         className="absolute top-4 right-4 z-10 p-3 text-white/80 hover:text-white transition-colors duration-200"
       >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -159,7 +161,7 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
       {hasNav && onPrev && (
         <button
           onClick={(e) => { e.stopPropagation(); goPrev() }}
-          aria-label="Œuvre précédente"
+          aria-label={t('prev')}
           className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 z-10 p-3 text-white/70 hover:text-white transition-colors duration-200 hidden sm:block"
         >
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -170,7 +172,7 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
       {hasNav && onNext && (
         <button
           onClick={(e) => { e.stopPropagation(); goNext() }}
-          aria-label="Œuvre suivante"
+          aria-label={t('next')}
           className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 z-10 p-3 text-white/70 hover:text-white transition-colors duration-200 hidden sm:block"
         >
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

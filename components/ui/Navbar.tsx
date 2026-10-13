@@ -1,17 +1,16 @@
 'use client'
 
-import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 
-const links = [
-  { href: '/galerie', label: 'Galerie' },
-  { href: '/expositions', label: 'Expositions' },
-  { href: '/contact', label: 'Contact' },
-]
+const HREFS = ['/galerie', '/expositions', '/contact'] as const
 
 export default function Navbar({ artistName }: { artistName: string }) {
+  const t = useTranslations('nav')
   const pathname = usePathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const touchStartX = useRef(0)
@@ -25,7 +24,14 @@ export default function Navbar({ artistName }: { artistName: string }) {
     setDrawerOpen(false)
   }, [pathname])
 
-  const isActive = (href: string) => pathname.startsWith(href)
+  const labels: Record<(typeof HREFS)[number], string> = {
+    '/galerie': t('galerie'),
+    '/expositions': t('expositions'),
+    '/contact': t('contact'),
+  }
+  // Retire le préfixe de langue pour repérer la page active.
+  const barePath = pathname.replace(/^\/(en|es|de)(?=\/|$)/, '')
+  const isActive = (href: string) => barePath.startsWith(href)
 
   // L'admin a son propre header — pas de nav publique.
   if (pathname.startsWith('/admin')) return null
@@ -41,7 +47,7 @@ export default function Navbar({ artistName }: { artistName: string }) {
     <>
       <nav className="navbar fixed top-0 left-0 right-0 z-40 bg-[var(--bg)] text-[var(--ink)] border-b border-[var(--line)]">
         <div className="max-w-7xl mx-auto px-5 md:px-8 h-16 md:h-20 flex items-center justify-between">
-          <Link href="/" className="min-w-0" aria-label="Accueil — Marie-Claire Scandella">
+          <Link href="/" className="min-w-0" aria-label={t('homeAria')}>
             <span className="font-display text-xl md:text-2xl tracking-wide truncate block">
               {artistName}
             </span>
@@ -49,29 +55,34 @@ export default function Navbar({ artistName }: { artistName: string }) {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-9">
-            {links.map((link) => (
+            {HREFS.map((href) => (
               <Link
-                key={link.href}
-                href={link.href}
-                className={`font-body text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-200 ${
-                  isActive(link.href)
+                key={href}
+                href={href}
+                className={`font-body text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-200 whitespace-nowrap ${
+                  isActive(href)
                     ? 'text-[var(--accent)]'
                     : 'text-[var(--ink-soft)] hover:text-[var(--ink)]'
                 }`}
-                aria-current={isActive(link.href) ? 'page' : undefined}
+                aria-current={isActive(href) ? 'page' : undefined}
               >
-                {link.label}
+                {labels[href]}
               </Link>
             ))}
           </div>
 
           <div className="flex items-center">
+            <div className="hidden md:block">
+              <Suspense fallback={null}>
+                <LanguageSwitcher />
+              </Suspense>
+            </div>
             <ThemeToggle />
             {/* Mobile hamburger */}
             <button
             onClick={() => setDrawerOpen(true)}
             className="md:hidden p-2 -mr-2"
-            aria-label="Ouvrir le menu"
+            aria-label={t('openMenu')}
             aria-expanded={drawerOpen}
           >
             <div className="w-6 flex flex-col gap-[7px]">
@@ -107,7 +118,7 @@ export default function Navbar({ artistName }: { artistName: string }) {
             <button
               onClick={() => setDrawerOpen(false)}
               className="p-3 text-white/80 hover:text-white"
-              aria-label="Fermer le menu"
+              aria-label={t('closeMenu')}
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M18 6L6 18M6 6l12 12" />
@@ -115,22 +126,25 @@ export default function Navbar({ artistName }: { artistName: string }) {
             </button>
           </div>
           <div className="flex flex-col px-8 mt-2">
-            {links.map((link, i) => (
+            {HREFS.map((href, i) => (
               <Link
-                key={link.href}
-                href={link.href}
+                key={href}
+                href={href}
                 onClick={() => setDrawerOpen(false)}
                 className={`font-display text-3xl py-5 min-h-[56px] flex items-center border-b border-white/10 transition-colors duration-200 ${
-                  isActive(link.href) ? 'text-[var(--accent-soft)]' : 'text-white hover:text-white/70'
+                  isActive(href) ? 'text-[var(--accent-soft)]' : 'text-white hover:text-white/70'
                 }`}
                 style={{ transitionDelay: drawerOpen ? `${i * 40}ms` : '0ms' }}
               >
-                {link.label}
+                {labels[href]}
               </Link>
             ))}
           </div>
           <div className="mt-auto px-8 pb-10">
-            <p className="font-body text-xs text-white/40 uppercase tracking-[0.18em]">
+            <Suspense fallback={null}>
+              <LanguageSwitcher variant="dark" />
+            </Suspense>
+            <p className="font-body text-xs text-white/40 uppercase tracking-[0.18em] mt-6">
               {artistName}
             </p>
           </div>

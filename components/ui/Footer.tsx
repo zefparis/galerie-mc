@@ -1,7 +1,14 @@
-import Link from 'next/link'
+import { Suspense } from 'react'
+import { getTranslations } from 'next-intl/server'
+import { Link } from '@/i18n/navigation'
+import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 import { GallerySettings } from '@/lib/types'
 
-export default function Footer({ settings }: { settings: GallerySettings }) {
+export default async function Footer({ settings }: { settings: GallerySettings }) {
+  const t = await getTranslations('footer')
+  const tn = await getTranslations('nav')
+  const tl = await getTranslations('lang')
+
   return (
     <footer className="footer w-full border-t border-[var(--line)] bg-[var(--bg)]">
       <div className="max-w-7xl mx-auto px-5 md:px-8 py-12 md:py-16">
@@ -17,24 +24,24 @@ export default function Footer({ settings }: { settings: GallerySettings }) {
           </div>
 
           {/* Navigation */}
-          <nav aria-label="Pied de page">
-            <p className="eyebrow mb-4">Navigation</p>
+          <nav aria-label={t('navigation')}>
+            <p className="eyebrow mb-4">{t('navigation')}</p>
             <div className="flex flex-col gap-2">
               <Link href="/galerie" className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors">
-                Galerie
+                {tn('galerie')}
               </Link>
               <Link href="/expositions" className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors">
-                Expositions
+                {tn('expositions')}
               </Link>
               <Link href="/contact" className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors">
-                Contact
+                {tn('contact')}
               </Link>
             </div>
           </nav>
 
           {/* Contact */}
           <div>
-            <p className="eyebrow mb-4">Contact</p>
+            <p className="eyebrow mb-4">{t('contact')}</p>
             <div className="flex flex-col gap-2">
               {settings.email && (
                 <a
@@ -64,14 +71,24 @@ export default function Footer({ settings }: { settings: GallerySettings }) {
               )}
             </div>
           </div>
+
+          {/* Langues */}
+          <nav aria-label={tl('label')}>
+            <p className="eyebrow mb-4">{tl('label')}</p>
+            <div className="flex flex-col gap-2">
+              <Suspense fallback={null}>
+                <LanguageSwitcher variant="list" />
+              </Suspense>
+            </div>
+          </nav>
         </div>
 
         <div className="mt-12 pt-6 border-t border-[var(--line)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <p className="font-body text-xs text-[var(--muted)]">
-            &copy; {new Date().getFullYear()} {settings.artistName} — Tous droits réservés
+            &copy; {new Date().getFullYear()} {settings.artistName} — {t('rights')}
           </p>
           <p className="font-body text-xs text-[var(--muted)]">
-            Œuvres originales — reproduction interdite sans autorisation
+            {t('originals')}
           </p>
         </div>
       </div>

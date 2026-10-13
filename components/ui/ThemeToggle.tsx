@@ -1,17 +1,19 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { ThemeChoice, getThemeChoice, setThemeChoice, applyChoice, watchSystem } from '@/lib/theme'
 
-const OPTIONS: { value: ThemeChoice; label: string; icon: string }[] = [
-  { value: 'auto', label: 'Automatique', icon: '◐' },
-  { value: 'light', label: 'Clair', icon: '☀' },
-  { value: 'dark', label: 'Sombre', icon: '☾' },
+const OPTIONS: { value: ThemeChoice; icon: string }[] = [
+  { value: 'auto', icon: '◐' },
+  { value: 'light', icon: '☀' },
+  { value: 'dark', icon: '☾' },
 ]
 
 // Interrupteur discret du site public : icône soleil/lune, menu
 // Automatique / Clair / Sombre, utilisable clavier et tactile.
 export default function ThemeToggle() {
+  const t = useTranslations('theme')
   const [choice, setChoice] = useState<ThemeChoice | null>(null)
   const [open, setOpen] = useState(false)
   const [dark, setDark] = useState(false)
@@ -60,7 +62,7 @@ export default function ThemeToggle() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        aria-label="Changer l'apparence"
+        aria-label={t('label')}
         aria-expanded={open}
         aria-haspopup="menu"
         className="w-11 h-11 flex items-center justify-center text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors duration-200"
@@ -95,7 +97,7 @@ export default function ThemeToggle() {
               }`}
             >
               <span aria-hidden="true" className="w-4 text-center">{opt.icon}</span>
-              {opt.label}
+              {t(opt.value)}
               {(choice || 'auto') === opt.value && <span className="ml-auto" aria-hidden="true">✓</span>}
             </button>
           ))}

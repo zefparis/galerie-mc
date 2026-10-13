@@ -1,5 +1,9 @@
-import Link from 'next/link'
+import type { Metadata } from 'next'
+import { getTranslations } from 'next-intl/server'
+import { Link } from '@/i18n/navigation'
 import { getPaintings, getPublishedEvents, getGallerySettings } from '@/lib/data'
+import { alternatesFor, OG_LOCALE } from '@/lib/seo'
+import { routing, type Locale } from '@/i18n/routing'
 import MasonryGrid from '@/components/gallery/MasonryGrid'
 import EventCard from '@/components/gallery/EventCard'
 import ArtistPhotos from '@/components/gallery/ArtistPhotos'
@@ -8,7 +12,29 @@ import Reveal from '@/components/ui/Reveal'
 
 export const dynamic = 'force-dynamic'
 
+interface Props {
+  params: { locale: string }
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = params.locale as Locale
+  const t = await getTranslations({ locale, namespace: 'home' })
+  return {
+    title: { absolute: t('metaTitle') },
+    description: t('metaDesc'),
+    alternates: alternatesFor('', locale),
+    openGraph: {
+      title: t('metaTitle'),
+      description: t('metaDesc'),
+      locale: OG_LOCALE[locale],
+      alternateLocale: routing.locales.filter((l) => l !== locale).map((l) => OG_LOCALE[l]),
+    },
+  }
+}
+
 export default async function Home() {
+  const t = await getTranslations('home')
+  const th = await getTranslations('hero')
   const [paintings, events, settings] = await Promise.all([
     getPaintings(),
     getPublishedEvents(),
@@ -36,7 +62,7 @@ export default async function Home() {
           {/* Texte */}
           <div className="hero-fade">
             <p className="eyebrow">
-              {settings.bioShort || 'Artiste peintre'}
+              {settings.bioShort || th('defaultEyebrow')}
             </p>
             <h1 className="font-display text-5xl sm:text-6xl md:text-7xl mt-4 md:mt-5 leading-[0.98] text-balance text-[var(--ink)]">
               {settings.artistName}
@@ -48,10 +74,10 @@ export default async function Home() {
             )}
             <div className="mt-8 md:mt-10 flex flex-wrap gap-4">
               <Link href="/galerie" className="btn-primary">
-                Découvrir la galerie
+                {th('ctaGallery')}
               </Link>
               <Link href="/contact" className="btn-outline">
-                Contacter l&apos;artiste
+                {th('ctaContact')}
               </Link>
             </div>
           </div>
@@ -71,9 +97,9 @@ export default async function Home() {
           <Reveal>
             <div className="flex items-end justify-between gap-6 mb-10 md:mb-14">
               <div>
-                <p className="eyebrow">Œuvres</p>
+                <p className="eyebrow">{t('worksEyebrow')}</p>
                 <h2 className="font-display text-4xl md:text-5xl text-[var(--ink)] mt-2">
-                  Sélection
+                  {t('selection')}
                 </h2>
               </div>
               <div className="hidden sm:flex items-end gap-6">
@@ -81,19 +107,19 @@ export default async function Home() {
                   href="/galerie?categorie=peintures"
                   className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
                 >
-                  Peintures →
+                  {t('peinturesShort')}
                 </Link>
                 <Link
                   href="/galerie?categorie=collages"
                   className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
                 >
-                  Collages →
+                  {t('collagesShort')}
                 </Link>
                 <Link
                   href="/galerie"
                   className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
                 >
-                  Toute la galerie →
+                  {t('allGallery')}
                 </Link>
               </div>
             </div>
@@ -104,19 +130,19 @@ export default async function Home() {
               href="/galerie?categorie=peintures"
               className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)]"
             >
-              Peintures contemporaines →
+              {t('peinturesLink')}
             </Link>
             <Link
               href="/galerie?categorie=collages"
               className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)]"
             >
-              Collages sur papier →
+              {t('collagesLink')}
             </Link>
             <Link
               href="/galerie"
               className="inline-flex font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--accent)]"
             >
-              Toute la galerie →
+              {t('allGallery')}
             </Link>
           </Reveal>
         </section>
@@ -129,16 +155,16 @@ export default async function Home() {
             <Reveal>
               <div className="flex items-end justify-between gap-6 mb-10 md:mb-14">
                 <div>
-                  <p className="eyebrow">Agenda</p>
+                  <p className="eyebrow">{t('agenda')}</p>
                   <h2 className="font-display text-4xl md:text-5xl text-[var(--ink)] mt-2">
-                    {upcoming.length > 0 ? 'Prochaines expositions' : 'Expositions récentes'}
+                    {upcoming.length > 0 ? t('upcoming') : t('recent')}
                   </h2>
                 </div>
                 <Link
                   href="/expositions"
                   className="hidden sm:inline-flex font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
                 >
-                  Tout voir →
+                  {t('seeAll')}
                 </Link>
               </div>
             </Reveal>
@@ -166,7 +192,7 @@ export default async function Home() {
 
             {/* Texte */}
             <Reveal delay={120}>
-              <p className="eyebrow">Présentation</p>
+              <p className="eyebrow">{t('presentation')}</p>
               <h2 className="font-display text-4xl md:text-5xl text-[var(--ink)] mt-2">
                 {settings.artistName}
               </h2>
@@ -174,7 +200,7 @@ export default async function Home() {
                 {settings.bio}
               </p>
               <Link href="/contact" className="btn-outline mt-8 md:mt-10">
-                Me contacter
+                {t('contactMe')}
               </Link>
             </Reveal>
           </div>
@@ -183,7 +209,7 @@ export default async function Home() {
           {settings.processText && (
             <Reveal className="mt-14 md:mt-20">
               <div className="border-t border-[var(--line)] pt-10 md:pt-14 max-w-3xl mx-auto text-center">
-                <p className="eyebrow mb-6">Ma démarche picturale</p>
+                <p className="eyebrow mb-6">{t('process')}</p>
                 <p className="font-display text-2xl md:text-3xl text-[var(--ink-soft)] leading-relaxed italic whitespace-pre-line">
                   {settings.processText}
                 </p>
