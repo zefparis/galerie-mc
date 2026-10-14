@@ -29,8 +29,24 @@ function parseTokens(source) {
   return tokens
 }
 
-const light = parseTokens(block(':root'))
+// Tous les blocs :root sont fusionnés (les variables de texture vivent
+// dans un second bloc, plus bas dans le fichier).
+const light = parseTokens(
+  [...css.matchAll(/:root\s*\{([^}]*)\}/g)].map((m) => m[1]).join('\n')
+)
 const dark = { ...light, ...parseTokens(block('html\\.dark')) }
+
+// ── Texture « lin » : pire cas local ───────────────────────────────────
+// La texture composite des 3 couches, mesurée sur les tuiles réelles
+// (scripts/texture-peak.mjs — fenêtre glissante de 8 px, taille d'un
+// glyphe), atteint ~0.72 × --texture-opacity d'alpha local sur le fond de
+// page. Tout couple dont le fond est le fond de page (--bg) est évalué
+// contre ce pire cas en plus du fond uni.
+const TEX_PEAK_PER_OPACITY = 0.72
+const TEX_FIBER = {
+  light: { r: 0.235 * 255, g: 0.176 * 255, b: 0.118 * 255 }, // fils bruns
+  dark: { r: 0.055 * 255, g: 0.043 * 255, b: 0.032 * 255 },  // fils foncés
+}
 
 // ── Couleurs ───────────────────────────────────────────────────────────
 function parseColor(value, tokens) {
@@ -122,6 +138,8 @@ const PAIRS = [
 let failures = 0
 
 for (const [themeName, tokens] of [['clair', light], ['sombre', dark]]) {
+  const themeKey = themeName === 'clair' ? 'light' : 'dark'
+  const texPeak = TEX_PEAK_PER_OPACITY * Number(tokens['texture-opacity'] || 0)
   for (const [fgTok, bgSpec, min, note] of PAIRS) {
     let fg, bg
     try {
@@ -137,11 +155,22 @@ for (const [themeName, tokens] of [['clair', light], ['sombre', dark]]) {
       failures++
       continue
     }
-    const r = ratio(fg, bg)
+    let r = ratio(fg, bg)
+    let tag = ''
+    // Texte posé directement sur le fond de page : la texture peut
+    // l'éclaircir ou l'assombrir localement — on évalue le pire cas.
+    if (bgSpec === 'bg' && texPeak > 0) {
+      const bgTex = composite({ ...TEX_FIBER[themeKey], a: texPeak }, bg)
+      const rTex = ratio(fg, bgTex)
+      if (rTex < r) {
+        r = rTex
+        tag = ' [pic texture]'
+      }
+    }
     const mark = r >= min ? '✓' : '✗'
     if (r < min) failures++
     console.log(
-      `${mark} [${themeName}] ${String(fgTok).padEnd(18)} sur ${String(typeof bgSpec === 'object' ? 'blend' : bgSpec).padEnd(18)} = ${r.toFixed(2)}:1 (min ${min}) — ${note}`
+      `${mark} [${themeName}] ${String(fgTok).padEnd(18)} sur ${String(typeof bgSpec === 'object' ? 'blend' : bgSpec).padEnd(18)} = ${r.toFixed(2)}:1 (min ${min})${tag} — ${note}`
     )
   }
 }

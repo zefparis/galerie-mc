@@ -45,7 +45,9 @@ export default async function LocaleLayout({
     <NextIntlClientProvider locale={locale} messages={messages}>
       <HtmlLang locale={locale} />
       <Navbar artistName={settings.artistName} locale={locale} />
-      <main className="flex-1">{children}</main>
+      {/* .site-texture active la texture « lin » en fond (globals.css,
+          body:has) — absente de l'admin, qui garde un fond uni. */}
+      <main className="site-texture flex-1">{children}</main>
       <Footer settings={settings} locale={locale} />
       <LocaleBanner />
       {/* Invitation d'installation : bannière mobile différée + aide

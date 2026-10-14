@@ -448,3 +448,60 @@ textarea::placeholder {
   overflow-wrap: anywhere;
   hyphens: auto;
 }
+
+/* ─── Texture « lin brut » — site public uniquement ──────────────────────
+   Trois couches de bruit SVG en data URI (aucun fichier réseau) :
+   fils dans les deux sens + variations douces à grande échelle, comme un
+   lin légèrement irrégulier. Posée en pseudo-élément fixe sous tout le
+   contenu — pas de background-attachment:fixed (bogué sur iPhone).
+   .site-texture marque le sous-arbre public ([locale]) : l'admin ne le
+   rend pas → aucun pseudo-élément, fond uni. Navigateurs sans :has() :
+   pas de texture (amélioration progressive). */
+:root {
+  /* Intensité — monter ou baisser cette valeur pour renforcer ou adoucir
+     la texture (mode clair). 0.10 : au pic local mesuré (fenêtre 8 px,
+     scripts/texture-peak.mjs), accent/muted/danger/success restent
+     ≥ 4.5:1 — au-delà de ~0.12 ils passeraient sous WCAG AA. */
+  --texture-opacity: 0.10;
+  /* Fils horizontaux — brun chaud qui assombrit légèrement le fond clair */
+  --tex-fils-h: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='300'%20height='300'%3E%3Cfilter%20id='f'%20x='0'%20y='0'%20width='100%'%20height='100%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9%200.025'%20numOctaves='2'%20seed='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200.235%200%200%200%200%200.176%200%200%200%200%200.118%201%200%200%200%20-0.22'/%3E%3C/filter%3E%3Crect%20width='100%'%20height='100%'%20filter='url(%23f)'/%3E%3C/svg%3E");
+  /* Fils verticaux */
+  --tex-fils-v: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='300'%20height='300'%3E%3Cfilter%20id='f'%20x='0'%20y='0'%20width='100%'%20height='100%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.025%200.9'%20numOctaves='2'%20seed='9'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200.235%200%200%200%200%200.176%200%200%200%200%200.118%201%200%200%200%20-0.22'/%3E%3C/filter%3E%3Crect%20width='100%'%20height='100%'%20filter='url(%23f)'/%3E%3C/svg%3E");
+  /* Grandes variations douces (lin irrégulier) */
+  --tex-nuances: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='900'%20height='900'%3E%3Cfilter%20id='f'%20x='0'%20y='0'%20width='100%'%20height='100%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.01%200.01'%20numOctaves='2'%20seed='3'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200.235%200%200%200%200%200.176%200%200%200%200%200.118%200.45%200%200%200%20-0.06'/%3E%3C/filter%3E%3Crect%20width='100%'%20height='100%'%20filter='url(%23f)'/%3E%3C/svg%3E");
+}
+html.dark {
+  /* Intensité — monter ou baisser cette valeur pour renforcer ou adoucir
+     la texture (mode sombre). */
+  --texture-opacity: 0.3;
+  /* Mêmes couches, mais fils SOMBRES (#0E0B08) : un fil de lin foncé sur
+     toile sombre assombrit légèrement le fond — le contraste du texte
+     clair ne fait qu'augmenter (des fils crème casseraient les textes
+     secondaires à tout niveau d'opacité visible). */
+  --tex-fils-h: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='300'%20height='300'%3E%3Cfilter%20id='f'%20x='0'%20y='0'%20width='100%'%20height='100%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9%200.025'%20numOctaves='2'%20seed='2'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200.055%200%200%200%200%200.043%200%200%200%200%200.032%200.9%200%200%200%20-0.2'/%3E%3C/filter%3E%3Crect%20width='100%'%20height='100%'%20filter='url(%23f)'/%3E%3C/svg%3E");
+  --tex-fils-v: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='300'%20height='300'%3E%3Cfilter%20id='f'%20x='0'%20y='0'%20width='100%'%20height='100%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.025%200.9'%20numOctaves='2'%20seed='9'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200.055%200%200%200%200%200.043%200%200%200%200%200.032%200.9%200%200%200%20-0.2'/%3E%3C/filter%3E%3Crect%20width='100%'%20height='100%'%20filter='url(%23f)'/%3E%3C/svg%3E");
+  --tex-nuances: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='900'%20height='900'%3E%3Cfilter%20id='f'%20x='0'%20y='0'%20width='100%'%20height='100%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.01%200.01'%20numOctaves='2'%20seed='3'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200.055%200%200%200%200%200.043%200%200%200%200%200.032%200.45%200%200%200%20-0.06'/%3E%3C/filter%3E%3Crect%20width='100%'%20height='100%'%20filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+body:has(.site-texture) {
+  isolation: isolate;
+}
+body:has(.site-texture)::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--texture-opacity);
+  background-image: var(--tex-fils-h), var(--tex-fils-v), var(--tex-nuances);
+  background-size: 300px 300px, 300px 300px, 900px 900px;
+  background-repeat: repeat;
+}
+
+/* La texture reste un confort visuel : contraste renforcé ou impression →
+   on la retire complètement. */
+@media print, (prefers-contrast: more) {
+  body:has(.site-texture)::before {
+    opacity: 0;
+  }
+}
