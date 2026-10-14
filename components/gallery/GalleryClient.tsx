@@ -214,7 +214,7 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
               ref={panelRef}
               role="dialog"
               aria-label={t('filters.panelTitle')}
-              className="fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-[var(--line)] bg-[var(--surface)] p-5 pb-8 shadow-[0_-12px_40px_-12px_var(--shadow)] md:absolute md:inset-x-auto md:bottom-auto md:right-0 md:top-full md:mt-2 md:w-72 md:rounded-md md:border md:p-4 md:shadow-lg"
+              className="fixed inset-x-0 bottom-0 z-50 max-h-[75vh] overflow-y-auto rounded-t-2xl border-t border-[var(--line)] bg-[var(--surface)] p-5 pb-8 shadow-[0_-12px_40px_-12px_var(--shadow)] md:absolute md:inset-x-auto md:bottom-auto md:right-0 md:top-full md:mt-2 md:max-h-[70vh] md:w-72 md:rounded-md md:border md:p-4 md:shadow-lg"
             >
               <div className="flex items-center justify-between md:hidden mb-2">
                 <p className="eyebrow">{t('filters.panelTitle')}</p>
