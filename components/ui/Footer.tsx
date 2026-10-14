@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 import Logo from '@/components/ui/Logo'
+import InstallLink from '@/components/pwa/InstallLink'
 import { GallerySettings } from '@/lib/types'
 import type { Locale } from '@/i18n/routing'
 
@@ -16,6 +17,7 @@ export default async function Footer({
   const t = await getTranslations('footer')
   const tn = await getTranslations('nav')
   const tl = await getTranslations('lang')
+  const ti = await getTranslations('install')
 
   return (
     <footer className="footer w-full border-t border-[var(--line)] bg-[var(--bg)]">
@@ -93,6 +95,11 @@ export default async function Footer({
               </Suspense>
             </div>
           </nav>
+        </div>
+
+        {/* Installation de l'app — mobile uniquement */}
+        <div className="mt-8 md:hidden">
+          <InstallLink label={ti('link')} />
         </div>
 
         <div className="mt-12 pt-6 border-t border-[var(--line)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

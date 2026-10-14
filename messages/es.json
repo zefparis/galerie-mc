@@ -195,5 +195,19 @@
     "message": "La conexión se ha interrumpido. La página se cargará en cuanto vuelva.",
     "retry": "Reintentar",
     "home": "Volver al inicio"
+  },
+  "install": {
+    "bannerText": "Instala Scandell’Art en tu teléfono",
+    "install": "Instalar",
+    "close": "Cerrar",
+    "link": "Instalar la aplicación",
+    "helpTitle": "Instalar Scandell’Art",
+    "iosStep1": "Pulsa Compartir",
+    "iosStep2": "y luego «Añadir a pantalla de inicio».",
+    "androidSteps": "Abre el menú ⋮ y luego «Instalar aplicación».",
+    "inAppAndroid": "Para instalar, abre esta página en Chrome.",
+    "inAppIos": "Para instalar, abre esta página en Safari.",
+    "copy": "Copiar enlace",
+    "copied": "¡Enlace copiado!"
   }
 }

@@ -9,7 +9,8 @@ import PaintingWizard from '@/components/admin/PaintingWizard'
 import EventList from '@/components/admin/EventList'
 import EventForm from '@/components/admin/EventForm'
 import AdminSettings from '@/components/admin/AdminSettings'
-import InstallAppPrompt from '@/components/admin/InstallAppPrompt'
+import AdminInstallCard from '@/components/admin/AdminInstallCard'
+import AdminInstallLink from '@/components/admin/AdminInstallLink'
 import { getPaintings } from '@/lib/storage'
 import { Painting, GalleryEvent } from '@/lib/types'
 
@@ -131,6 +132,7 @@ export default function AdminClient() {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <AdminThemeToggle />
+          <AdminInstallLink />
           <a
             href="/"
             target="_blank"
@@ -148,8 +150,6 @@ export default function AdminClient() {
         </div>
       </div>
 
-      <InstallAppPrompt />
-
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {flash && (
           <div className="mb-6 p-4 bg-[var(--accent-soft)] border border-[var(--accent)]/30" role="status">
@@ -157,6 +157,9 @@ export default function AdminClient() {
           </div>
         )}
 
+        {view === 'home' && (
+          <AdminInstallCard />
+        )}
         {view === 'home' && (
           <AdminHome
             paintingsCount={paintingsCount}

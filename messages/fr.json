@@ -195,5 +195,19 @@
     "message": "Vous êtes hors ligne. La page se chargera dès que la connexion revient.",
     "retry": "Réessayer",
     "home": "Retour à l'accueil"
+  },
+  "install": {
+    "bannerText": "Installez Scandell’Art sur votre téléphone",
+    "install": "Installer",
+    "close": "Fermer",
+    "link": "Installer l’application",
+    "helpTitle": "Installer Scandell’Art",
+    "iosStep1": "Appuyez sur Partager",
+    "iosStep2": "puis « Sur l’écran d’accueil ».",
+    "androidSteps": "Ouvrez le menu ⋮ puis « Installer l’application ».",
+    "inAppAndroid": "Pour installer, ouvrez cette page dans Chrome.",
+    "inAppIos": "Pour installer, ouvrez cette page dans Safari.",
+    "copy": "Copier le lien",
+    "copied": "Lien copié !"
   }
 }

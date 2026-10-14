@@ -7,6 +7,7 @@ import { useCleanPathname } from '@/i18n/pathname'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 import Logo from '@/components/ui/Logo'
+import InstallLink from '@/components/pwa/InstallLink'
 import type { Locale } from '@/i18n/routing'
 
 const HREFS = ['/galerie', '/expositions', '/contact'] as const
@@ -16,6 +17,7 @@ const HREFS = ['/galerie', '/expositions', '/contact'] as const
 // client potentiellement périmé.
 export default function Navbar({ artistName, locale }: { artistName: string; locale?: Locale }) {
   const t = useTranslations('nav')
+  const ti = useTranslations('install')
   const pathname = useCleanPathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const touchStartX = useRef(0)
@@ -157,6 +159,7 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
             ))}
           </div>
           <div className="mt-auto px-8 pb-10">
+            <InstallLink label={ti('link')} variant="night" />
             <Suspense fallback={null}>
               <LanguageSwitcher variant="dark" locale={locale} />
             </Suspense>

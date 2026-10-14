@@ -195,5 +195,19 @@
     "message": "The connection is interrupted. The page will load as soon as it comes back.",
     "retry": "Try again",
     "home": "Back to home"
+  },
+  "install": {
+    "bannerText": "Install Scandell’Art on your phone",
+    "install": "Install",
+    "close": "Close",
+    "link": "Install the app",
+    "helpTitle": "Install Scandell’Art",
+    "iosStep1": "Tap Share",
+    "iosStep2": "then “Add to Home Screen”.",
+    "androidSteps": "Open the ⋮ menu then “Install app”.",
+    "inAppAndroid": "To install, open this page in Chrome.",
+    "inAppIos": "To install, open this page in Safari.",
+    "copy": "Copy link",
+    "copied": "Link copied!"
   }
 }

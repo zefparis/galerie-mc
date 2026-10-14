@@ -6,6 +6,8 @@ import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 import LocaleBanner from '@/components/ui/LocaleBanner'
 import HtmlLang from '@/components/ui/HtmlLang'
+import InstallBanner from '@/components/pwa/InstallBanner'
+import InstallHelpDialog from '@/components/pwa/InstallHelpDialog'
 import { getGallerySettings } from '@/lib/data'
 import { localizeSettings } from '@/lib/i18n'
 import { routing, type Locale } from '@/i18n/routing'
@@ -46,6 +48,10 @@ export default async function LocaleLayout({
       <main className="flex-1">{children}</main>
       <Footer settings={settings} locale={locale} />
       <LocaleBanner />
+      {/* Invitation d'installation : bannière mobile différée + aide
+          partagée (tiroir, pied de page, bannière). */}
+      <InstallBanner />
+      <InstallHelpDialog />
     </NextIntlClientProvider>
   )
 }

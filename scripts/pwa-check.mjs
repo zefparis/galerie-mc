@@ -16,6 +16,7 @@
 
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
+import { createHmac } from 'node:crypto'
 
 const PORT = 3599
 const BASE = process.env.PWA_BASE || `http://localhost:${PORT}`
@@ -219,6 +220,210 @@ async function checkServiceWorker(chromium) {
   await browser.close()
 }
 
+// ─── Invitations d'installation (visiteurs + atelier) ───────────────────────
+const ANDROID_UA =
+  'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
+const IOS_UA =
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+const INSTAGRAM_UA =
+  'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36 Instagram 300.0.0.0'
+const BANNER = '[role="region"]'
+
+const STANDALONE_OVERRIDE = `
+  const origMM = window.matchMedia.bind(window)
+  window.matchMedia = (q) => q === '(display-mode: standalone)'
+    ? { matches: true, media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }
+    : origMM(q)
+`
+
+const secondVisit = (page) =>
+  page.addInitScript(() => localStorage.setItem('mc-install-visits', '2'))
+
+function adminCookie() {
+  const payload = Buffer.from(
+    JSON.stringify({ sub: 'admin', exp: Date.now() + 7 * 864e5 })
+  ).toString('base64url')
+  const sig = createHmac('sha256', process.env.SESSION_SECRET)
+    .update(payload)
+    .digest('base64url')
+  return {
+    name: 'mc_admin_session',
+    value: `${payload}.${sig}`,
+    url: BASE,
+  }
+}
+
+async function checkInstallPrompts(chromium) {
+  console.log("\n— Invitations d'installation —")
+  const browser = await chromium.launch()
+  const mobile = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }
+
+  // 1) Première visite : absente à 1 s, encore absente à 6 s (délai 20 s).
+  {
+    const ctx = await browser.newContext({ ...mobile, userAgent: ANDROID_UA })
+    const page = await ctx.newPage()
+    await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(1200)
+    ;(await page.locator(BANNER).count()) === 0
+      ? ok('bannière absente à la 1re seconde (1re visite)')
+      : fail('bannière visible dès la 1re seconde')
+    await page.waitForTimeout(5000)
+    ;(await page.locator(BANNER).count()) === 0
+      ? ok('bannière encore absente à 6 s (attend les 20 s)')
+      : fail('bannière apparue trop tôt')
+    await ctx.close()
+  }
+
+  // 2) 2e visite : bannière présente, puis fermeture mémorisée 30 jours.
+  {
+    const ctx = await browser.newContext({ ...mobile, userAgent: ANDROID_UA })
+    const page = await ctx.newPage()
+    await secondVisit(page)
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+    const banner = page.locator(BANNER).first()
+    try {
+      await banner.waitFor({ state: 'visible', timeout: 8000 })
+      ok('bannière visible à la 2e visite')
+    } catch {
+      fail('bannière absente à la 2e visite')
+    }
+    await banner.locator('button[aria-label="Fermer"]').click()
+    await page.waitForTimeout(300)
+    await page.reload({ waitUntil: 'networkidle' })
+    await page.waitForTimeout(6000)
+    ;(await page.locator(BANNER).count()) === 0
+      ? ok('fermeture mémorisée (30 jours)')
+      : fail('bannière revenue après fermeture')
+    await ctx.close()
+  }
+
+  // 3) Standalone simulé : jamais affichée.
+  {
+    const ctx = await browser.newContext({ ...mobile, userAgent: ANDROID_UA })
+    const page = await ctx.newPage()
+    await page.addInitScript(STANDALONE_OVERRIDE)
+    await secondVisit(page)
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+    await page.waitForTimeout(6000)
+    ;(await page.locator(BANNER).count()) === 0
+      ? ok('bannière absente en mode standalone')
+      : fail('bannière visible en standalone')
+    await ctx.close()
+  }
+
+  // 4) Desktop : jamais affichée ; lien pied de page masqué.
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+    const page = await ctx.newPage()
+    await secondVisit(page)
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+    await page.waitForTimeout(6000)
+    ;(await page.locator(BANNER).count()) === 0
+      ? ok('bannière absente sur desktop')
+      : fail('bannière visible sur desktop')
+    ;(await page.locator('footer button:has-text("Installer")').count()) === 0 ||
+      !(await page.locator('footer button:has-text("Installer")').first().isVisible().catch(() => false))
+      ? ok('lien pied de page masqué sur desktop')
+      : fail('lien pied de page visible sur desktop')
+    await ctx.close()
+  }
+
+  // 5) Liens permanents : tiroir mobile + pied de page mobile.
+  {
+    const ctx = await browser.newContext({ ...mobile, userAgent: ANDROID_UA })
+    const page = await ctx.newPage()
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+    const footerLink = page.locator('footer button:has-text("Installer")')
+    ;(await footerLink.isVisible().catch(() => false))
+      ? ok('lien « Installer » présent dans le pied de page mobile')
+      : fail('lien pied de page absent sur mobile')
+    await page.locator('button[aria-label*="menu" i], button[aria-label*="Menu"]').first().click()
+    await page.waitForTimeout(600)
+    const drawerLink = page.locator('[role="dialog"] button:has-text("Installer")')
+    ;(await drawerLink.isVisible().catch(() => false))
+      ? ok('lien « Installer » présent dans le tiroir mobile')
+      : fail('lien tiroir mobile absent')
+    await ctx.close()
+  }
+
+  // 6) iPhone : aide « Partager → Sur l'écran d'accueil ».
+  {
+    const ctx = await browser.newContext({ ...mobile, userAgent: IOS_UA })
+    const page = await ctx.newPage()
+    await secondVisit(page)
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+    const banner = page.locator(BANNER).first()
+    try {
+      await banner.waitFor({ state: 'visible', timeout: 8000 })
+      await banner.locator('button:has-text("Installer")').click()
+      const dialog = page.locator('[role="dialog"]').last()
+      ;(await dialog.textContent()).includes('Sur l’écran d’accueil')
+        ? ok('iPhone : aide « Partager → Sur l’écran d’accueil »')
+        : fail('iPhone : aide iOS absente')
+    } catch {
+      fail('iPhone : bannière ou aide absente')
+    }
+    await ctx.close()
+  }
+
+  // 7) Navigateur intégré (Instagram) : « ouvrez dans Chrome » + copier.
+  {
+    const ctx = await browser.newContext({ ...mobile, userAgent: INSTAGRAM_UA })
+    const page = await ctx.newPage()
+    await secondVisit(page)
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
+    const banner = page.locator(BANNER).first()
+    try {
+      await banner.waitFor({ state: 'visible', timeout: 8000 })
+      const txt = await banner.textContent()
+      txt.includes('ouvrez cette page dans Chrome') &&
+      (await banner.locator('button:has-text("Copier le lien")').count()) === 1
+        ? ok('navigateur intégré : « ouvrez dans Chrome » + copier le lien')
+        : fail(`intégré : message inattendu « ${txt.slice(0, 80)} »`)
+    } catch {
+      fail('intégré : bannière absente')
+    }
+    await ctx.close()
+  }
+
+  // 8) /admin/installer : accessible sans connexion.
+  {
+    const res = await fetch(`${BASE}/admin/installer`)
+    const html = await res.text()
+    res.status === 200 && html.includes('Mon atelier') && !html.includes('/admin/login')
+      ? ok('/admin/installer accessible sans connexion')
+      : fail(`/admin/installer → HTTP ${res.status}`)
+  }
+
+  // 9) Carte admin : visible connectée, « Plus tard » la masque 7 jours.
+  {
+    const ctx = await browser.newContext({ ...mobile, userAgent: ANDROID_UA })
+    await ctx.addCookies([adminCookie()])
+    const page = await ctx.newPage()
+    await page.goto(`${BASE}/admin`, { waitUntil: 'networkidle' })
+    const card = page.locator('[role="region"]:has-text("Mon atelier")')
+    try {
+      await card.waitFor({ state: 'visible', timeout: 8000 })
+      ok('carte « Installez Mon atelier » visible dans l’admin')
+      await card.locator('button:has-text("Plus tard")').click()
+      await page.reload({ waitUntil: 'networkidle' })
+      await page.waitForTimeout(1500)
+      ;(await page.locator('[role="region"]:has-text("Mon atelier")').count()) === 0
+        ? ok('« Plus tard » masque la carte (7 jours)')
+        : fail('carte admin revenue après « Plus tard »')
+    } catch {
+      fail('carte admin absente')
+    }
+    // Lien d'en-tête présent
+    ;(await page.locator('a[href="/admin/installer"]:visible').count()) >= 1
+      ? ok('lien « Installer » dans l’en-tête admin')
+      : fail('lien en-tête admin absent')
+    await ctx.close()
+  }
+
+  await browser.close()
+}
+
 const main = async () => {
   await ensureServer()
   await checkManifest()
@@ -231,6 +436,7 @@ const main = async () => {
       }),
   }
   await checkServiceWorker(launcher)
+  await checkInstallPrompts(launcher)
   console.log('')
   if (failures) {
     console.error(`pwa-check ÉCHEC — ${failures} problème(s).`)

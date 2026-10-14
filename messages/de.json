@@ -195,5 +195,19 @@
     "message": "Sie sind offline. Die Seite lädt, sobald die Verbindung zurück ist.",
     "retry": "Erneut versuchen",
     "home": "Zurück zur Startseite"
+  },
+  "install": {
+    "bannerText": "Installiere Scandell’Art auf deinem Handy",
+    "install": "Installieren",
+    "close": "Schließen",
+    "link": "App installieren",
+    "helpTitle": "Scandell’Art installieren",
+    "iosStep1": "Tippe auf Teilen",
+    "iosStep2": "dann „Zum Home-Bildschirm“.",
+    "androidSteps": "Öffne das ⋮-Menü, dann „App installieren“.",
+    "inAppAndroid": "Öffne diese Seite zum Installieren in Chrome.",
+    "inAppIos": "Öffne diese Seite zum Installieren in Safari.",
+    "copy": "Link kopieren",
+    "copied": "Link kopiert!"
   }
 }
