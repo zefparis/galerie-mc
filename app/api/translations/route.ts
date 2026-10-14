@@ -302,7 +302,7 @@ export async function POST(req: NextRequest) {
         await client.query('BEGIN')
         const { rows: batches } = await client.query(
           `SELECT batch_id, max(created_at) AS dernier
-           FROM translation_backups GROUP BY batch_id
+           FROM translation_backups WHERE source='import' GROUP BY batch_id
            ORDER BY dernier DESC LIMIT 1`
         )
         if (batches.length === 0) {

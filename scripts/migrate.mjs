@@ -107,6 +107,10 @@ const statements = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS idx_translation_backups_batch ON translation_backups (batch_id)`,
+  // Origine de la sauvegarde : 'import' (bouton « Annuler le dernier
+  // import ») ou 'auto' (traduction automatique — jamais restaurée par
+  // le bouton d'annulation d'import).
+  `ALTER TABLE translation_backups ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'import'`,
 ]
 
 try {

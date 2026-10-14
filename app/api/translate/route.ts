@@ -16,12 +16,15 @@ import { getTranslator, isTranslationConfigured } from '@/lib/translate'
 import { DEFAULT_SETTINGS } from '@/lib/storage'
 import type { GallerySettings, TargetLocale, Translations } from '@/lib/types'
 
-// La traduction d'un contenu peut prendre plusieurs dizaines de secondes
-// (appels champ par champ + relecture des longs textes). Sans maxDuration,
-// Vercel tue la fonction au bout de ~10 s : le JSONB n'était jamais écrit,
-// d'où des traductions « lancées » qui n'arrivaient jamais.
+// Une requête = un contenu (éventuellement une seule langue/quelques
+// champs, côté « Traduire tout » le client envoie UNE langue par requête).
+// Le budget interne arrête de lancer de nouveaux champs avant la limite :
+// les champs restants sont signalés et le client relance — chaque champ
+// réussi est écrit au fil de l'eau, rien n'est perdu sur une coupure.
 export const maxDuration = 60
 export const dynamic = 'force-dynamic'
+
+const TIME_BUDGET_MS = 45_000
 
 const bodySchema = z.object({
   entity: z.enum(['painting', 'event', 'settings']),
@@ -64,6 +67,27 @@ const migrationNeeded = () =>
     },
     { status: 503 }
   )
+
+// Sauvegarde de l'état translations avant la première écriture de la
+// requête (source 'auto' — distincte des sauvegardes d'import manuel).
+// Best-effort : si la table n'existe pas encore (migration en retard),
+// on continue sans bloquer la traduction.
+async function backupBeforeWrite(entity: Loaded) {
+  try {
+    await pool.query(
+      'INSERT INTO translation_backups (batch_id, table_name, entity_id, translations, source) VALUES ($1,$2,$3,$4,$5)',
+      [
+        crypto.randomUUID(),
+        entity.table,
+        entity.id,
+        JSON.stringify(entity.translations || {}),
+        'auto',
+      ]
+    )
+  } catch (err) {
+    if ((err as { code?: string })?.code !== '42P01') throw err
+  }
+}
 
 async function loadEntity(
   entity: 'painting' | 'event' | 'settings',
@@ -224,12 +248,24 @@ export async function POST(req: NextRequest) {
     const entity = await loadEntity(b.entity, b.id)
     if (!entity) return notFound('Contenu introuvable')
 
+    const startedAt = Date.now()
+    let backedUp = false
+    const persistStep = async (t: Translations) => {
+      // Un champ vient d'être écrit : sauvegarde initiale une seule fois,
+      // puis écriture au fil de l'eau — une coupure ne perd rien.
+      if (!backedUp) {
+        backedUp = true
+        await backupBeforeWrite(entity)
+      }
+      await persist(entity, t)
+    }
+
     const report = await translateFields(
       entity.french,
       entity.translations,
       locales,
       getTranslator(),
-      { force: b.force, fields: b.fields }
+      { force: b.force, fields: b.fields, budgetMs: TIME_BUDGET_MS, onProgress: persistStep }
     )
 
     try {
@@ -239,15 +275,26 @@ export async function POST(req: NextRequest) {
       throw err
     }
 
+    const seconds = ((Date.now() - startedAt) / 1000).toFixed(1)
+    console.log(
+      `[translate] ${b.entity}${b.id ? ` ${b.id.slice(0, 8)}` : ''} ` +
+        `[${locales.join(',')}] — ${seconds}s, ${report.translated} traduit(s), ` +
+        `${report.errors} échec(s), ${report.remaining} restant(s)`
+    )
+
     return NextResponse.json({
-      ok: report.errors === 0,
+      ok: report.errors === 0 && report.remaining === 0,
       translated: report.translated,
       skipped: report.skipped,
       stale: report.stale,
       errors: report.errors,
+      remaining: report.remaining,
+      failures: report.failures,
       translations: report.translations,
     })
   } catch (err) {
+    // Écriture incrémentale : la colonne peut manquer sur un ancien schéma.
+    if ((err as { code?: string })?.code === '42703') return migrationNeeded()
     return handleRouteError(err)
   }
 }

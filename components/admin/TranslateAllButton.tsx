@@ -2,17 +2,39 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { isSessionExpired, redirectToLogin } from '@/lib/storage'
+import {
+  buildJobs,
+  failedResults,
+  failureLine,
+  jobsToRetry,
+  summaryText,
+  type ContentJob,
+  type JobResult,
+  type LocaleJob,
+} from '@/lib/translate-all'
 
 type Phase = 'idle' | 'loading' | 'running' | 'done' | 'error'
 type Status = { configured: boolean; pending: number | null }
 
-// « Traduire tout mon site » : parcourt toiles, événements et réglages.
-// Idempotent — ne retraduit ni ce qui est à jour ni ce qui a été corrigé ;
-// on peut le relancer sans risque, il reprend là où ça manque.
+const TRANSIENT = new Set([408, 409, 425, 429])
+const isTransientStatus = (s: number) => TRANSIENT.has(s) || s >= 500
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+// Une requête par couple (contenu, langue). Si le budget serveur laisse
+// des champs restants, on relance la même requête (idempotent).
+const MAX_CONTINUATIONS = 8
+// 1 retry automatique sur erreur transitoire, en plus des continuations.
+const RETRY_DELAY_MS = 2_000
+
+// « Traduire tout mon site » : parcourt toiles, événements et réglages,
+// une petite requête à la fois. Les champs réussis sont écrits au fil de
+// l'eau ; les échecs sont détaillés (contenu, langue, cause) et peuvent
+// être relancés seuls — jamais ce qui a déjà réussi ou été corrigé.
 export default function TranslateAllButton() {
   const [phase, setPhase] = useState<Phase>('idle')
   const [progress, setProgress] = useState({ done: 0, total: 0 })
-  const [summary, setSummary] = useState('')
+  const [results, setResults] = useState<JobResult[]>([])
+  const [translated, setTranslated] = useState(0)
   const [error, setError] = useState('')
   const [status, setStatus] = useState<Status | null>(null)
 
@@ -30,12 +52,102 @@ export default function TranslateAllButton() {
     refreshStatus()
   }, [refreshStatus])
 
-  const run = async () => {
+  // Un couple (contenu, langue) — continuations incluses, 1 retry
+  // transitoire (429/5xx/coupure), puis le verdict.
+  const runJob = async (job: LocaleJob): Promise<JobResult> => {
+    const failures: JobResult['failures'] = []
+    let translated = 0
+    let retried = false
+    for (let step = 0; step < MAX_CONTINUATIONS; step++) {
+      let res: Response
+      try {
+        res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entity: job.entity, id: job.id, locales: [job.locale] }),
+        })
+      } catch (netErr) {
+        if (!retried) {
+          retried = true
+          await sleep(RETRY_DELAY_MS)
+          step--
+          continue
+        }
+        return {
+          job,
+          translated,
+          failures: [{ field: '(tout)', raison: 'La connexion a été coupée — réessayez' }],
+          detail: String(netErr),
+        }
+      }
+      if (res.status === 401) {
+        redirectToLogin()
+        return { job, translated, failures: [] }
+      }
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        if (isTransientStatus(res.status) && !retried) {
+          retried = true
+          await sleep(RETRY_DELAY_MS)
+          step--
+          continue
+        }
+        const raison =
+          res.status === 504 || res.status === 502
+            ? 'La requête a pris trop de temps — réessayez'
+            : data.error || 'La requête a échoué — réessayez'
+        return { job, translated, failures: [{ field: '(tout)', raison }], detail: `HTTP ${res.status}` }
+      }
+      translated += data.translated || 0
+      for (const f of data.failures || []) failures.push(f)
+      if ((data.remaining || 0) <= 0) {
+        return { job, translated, failures }
+      }
+      // Budget serveur épuisé : on relance la même requête, planField
+      // reprend exactement là où on s'était arrêté.
+    }
+    return {
+      job,
+      translated,
+      failures: [
+        ...failures,
+        { field: '(tout)', raison: 'Texte trop long pour une seule passe — réessayez' },
+      ],
+      detail: 'trop de continuations',
+    }
+  }
+
+  const run = async (jobs: LocaleJob[]) => {
     setError('')
-    setSummary('')
+    setPhase('running')
+    try {
+      const out: JobResult[] = []
+      let translatedCount = 0
+      for (let i = 0; i < jobs.length; i++) {
+        setProgress({ done: i, total: jobs.length })
+        const r = await runJob(jobs[i])
+        out.push(r)
+        translatedCount += r.translated
+        setProgress({ done: i + 1, total: jobs.length })
+      }
+      setResults(out)
+      setTranslated(translatedCount)
+      setPhase('done')
+      refreshStatus()
+    } catch (err) {
+      if (isSessionExpired(err)) {
+        redirectToLogin()
+        return
+      }
+      setPhase('error')
+      setError('La traduction n’a pas pu démarrer — vérifiez votre connexion et réessayez.')
+    }
+  }
+
+  const start = async () => {
+    setError('')
     setPhase('loading')
     try {
-      // On récupère la liste des contenus à traduire.
       const [paintingsRes, eventsRes, settingsRes] = await Promise.all([
         fetch('/api/paintings'),
         fetch('/api/events?all=true'),
@@ -47,49 +159,29 @@ export default function TranslateAllButton() {
       }
       const paintings = paintingsRes.ok ? await paintingsRes.json() : []
       const events = eventsRes.ok ? await eventsRes.json() : []
-      const jobs: { entity: 'painting' | 'event' | 'settings'; id?: string }[] = [
-        ...paintings.map((p: { id: string }) => ({ entity: 'painting' as const, id: p.id })),
-        ...events.map((e: { id: string }) => ({ entity: 'event' as const, id: e.id })),
-        ...(settingsRes.ok ? [{ entity: 'settings' as const }] : []),
+      const contents: ContentJob[] = [
+        ...paintings.map((p: { id: string; title?: string }) => ({
+          entity: 'painting' as const,
+          id: p.id,
+          label: p.title || 'Toile sans titre',
+        })),
+        ...events.map((e: { id: string; title?: string }) => ({
+          entity: 'event' as const,
+          id: e.id,
+          label: e.title || 'Événement sans titre',
+        })),
+        ...(settingsRes.ok
+          ? [{ entity: 'settings' as const, label: 'Votre présentation et vos légendes' }]
+          : []),
       ]
+      const jobs = buildJobs(contents)
       if (jobs.length === 0) {
         setPhase('done')
-        setSummary('Rien à traduire pour l’instant.')
+        setResults([])
         return
       }
-
-      setPhase('running')
-      setProgress({ done: 0, total: jobs.length })
-      let translated = 0
-      let failures = 0
-      for (const job of jobs) {
-        try {
-          const res = await fetch('/api/translate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(job),
-          })
-          if (res.status === 401) {
-            redirectToLogin()
-            return
-          }
-          const data = await res.json().catch(() => ({}))
-          // Un contenu compte en échec dès qu'un champ n'a pas été traduit —
-          // la route renvoie 200 avec errors>0, jamais de faux succès.
-          if (!res.ok || (data.errors || 0) > 0) failures++
-          else translated += data.translated || 0
-        } catch {
-          failures++
-        }
-        setProgress((p) => ({ ...p, done: p.done + 1 }))
-      }
-      setPhase('done')
-      setSummary(
-        failures === 0
-          ? `C’est fait ✓ ${translated > 0 ? `${translated} texte${translated > 1 ? 's' : ''} traduit${translated > 1 ? 's' : ''}.` : 'Tout était déjà à jour.'}`
-          : `Terminé, mais ${failures} contenu${failures > 1 ? 's n’ont' : ' n’a'} pas pu être traduit${failures > 1 ? 's' : ''} — relancez le bouton pour réessayer, rien n’est perdu.`
-      )
-      refreshStatus()
+      setResults([])
+      await run(jobs)
     } catch (err) {
       if (isSessionExpired(err)) {
         redirectToLogin()
@@ -102,6 +194,8 @@ export default function TranslateAllButton() {
 
   const busy = phase === 'loading' || phase === 'running'
   const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0
+  const failedJobs = jobsToRetry(results)
+  const failureLines = failedResults(results).flatMap(failureLine)
 
   return (
     <div className="mt-6 p-5 border border-[var(--line)] bg-[var(--surface)]">
@@ -132,11 +226,11 @@ export default function TranslateAllButton() {
       )}
       <button
         type="button"
-        onClick={run}
+        onClick={start}
         disabled={busy}
         className="btn-primary w-full text-base disabled:opacity-50"
       >
-        {busy ? 'Traduction en cours...' : '🌐 Traduire tout mon site'}
+        {busy ? 'Traduction en cours…' : '🌐 Traduire tout mon site'}
       </button>
 
       {phase === 'running' && (
@@ -148,16 +242,56 @@ export default function TranslateAllButton() {
             />
           </div>
           <p className="font-body text-sm text-[var(--muted)] mt-2">
-            {progress.done} contenu{progress.done > 1 ? 's' : ''} sur {progress.total}…
+            Traduction {progress.done} sur {progress.total}…
           </p>
         </div>
       )}
 
-      {summary && (
-        <p className="font-body text-sm text-[var(--ink)] mt-4" role="status">
-          {summary}
-        </p>
+      {phase === 'done' && (
+        <div className="mt-4" role="status">
+          <p className="font-body text-sm text-[var(--ink)]">
+            {results.length === 0
+              ? 'Rien à traduire pour l’instant.'
+              : summaryText(results, translated)}
+          </p>
+          {failureLines.length > 0 && (
+            <ul className="mt-2 space-y-1">
+              {failureLines.map((l, i) => (
+                <li key={i} className="font-body text-sm text-[var(--danger)]">
+                  {l}
+                </li>
+              ))}
+            </ul>
+          )}
+          {failedJobs.length > 0 && (
+            <button
+              type="button"
+              onClick={() => run(failedJobs)}
+              disabled={busy}
+              className="btn-primary w-full text-base mt-3 disabled:opacity-50"
+            >
+              ↻ Réessayer seulement ceux qui ont échoué
+            </button>
+          )}
+          {results.some((r) => r.detail) && (
+            <details className="mt-3">
+              <summary className="font-body text-xs text-[var(--muted)] cursor-pointer">
+                Détails techniques
+              </summary>
+              <ul className="mt-1 space-y-0.5">
+                {results
+                  .filter((r) => r.detail)
+                  .map((r, i) => (
+                    <li key={i} className="font-body text-xs text-[var(--muted)]">
+                      {r.job.label} / {r.job.locale} — {r.detail}
+                    </li>
+                  ))}
+              </ul>
+            </details>
+          )}
+        </div>
       )}
+
       {error && (
         <p className="font-body text-sm text-[var(--danger)] mt-4" role="alert">
           {error}

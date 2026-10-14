@@ -246,16 +246,36 @@ export type TranslateFn = (
   locale: TargetLocale
 ) => Promise<TranslateOutcome>
 
+export interface FieldFailure {
+  field: string
+  locale: TargetLocale
+  raison: string
+}
+
 export interface TranslateReport {
   translations: Translations
   translated: number
   skipped: number
   stale: number
   errors: number
+  // Détail par champ des échecs (raison en français, affichable en admin).
+  failures: FieldFailure[]
+  // Champs prévus mais non tentés : le budget de temps de la requête était
+  // épuisé — l'appelant relance la même demande, planField reprendra là où
+  // on s'est arrêté.
+  remaining: number
 }
 
 /**
- * Traduit les champs français d'un contenu dans les langues demandées.
+ * Traduit les champs français d'un contenu dans les langues demandées,
+ * CHAMP PAR CHAMP (une entrée de `texts` par appel fournisseur) :
+ * - un champ réussi est persisté tout de suite via onProgress — une coupure
+ *   en cours de route ne perd jamais ce qui a réussi ;
+ * - opts.budgetMs borne la durée de la requête : passée la limite, les
+ *   champs restants sont comptés dans `remaining`, jamais tentés à moitié ;
+ * - jamais d'écrasement d'une traduction réussie par un échec (markEchec
+ *   conserve le texte existant) ni d'une correction « Corrigé par vous »
+ *   ou « Traduit et relu ».
  * Idempotent : ne retraduit ni ce qui est à jour ni ce qui a été corrigé.
  */
 export async function translateFields(
@@ -263,40 +283,63 @@ export async function translateFields(
   existing: Translations | undefined | null,
   locales: TargetLocale[],
   translate: TranslateFn,
-  opts: { force?: boolean; fields?: string[] } = {}
+  opts: {
+    force?: boolean
+    fields?: string[]
+    budgetMs?: number
+    onProgress?: (t: Translations) => Promise<void> | void
+  } = {}
 ): Promise<TranslateReport> {
   let translations: Translations = existing ? JSON.parse(JSON.stringify(existing)) : {}
-  const report: TranslateReport = { translations, translated: 0, skipped: 0, stale: 0, errors: 0 }
+  const report: TranslateReport = {
+    translations,
+    translated: 0,
+    skipped: 0,
+    stale: 0,
+    errors: 0,
+    failures: [],
+    remaining: 0,
+  }
   const wanted = opts.fields ? new Set(opts.fields) : null
+  const startedAt = Date.now()
+  let budgetHit = false
 
   for (const locale of locales) {
-    const toTranslate: Record<string, string> = {}
     for (const [field, french] of Object.entries(frenchFields)) {
       if (wanted && !wanted.has(field)) continue
       const plan = planField(translations, field, french, locale, opts.force)
-      if (plan === 'translate' && french.trim()) toTranslate[field] = french
-      else if (plan === 'mark-stale') {
+      if (plan === 'mark-stale') {
         translations = markStale(translations, field, locale)
         report.stale++
-      } else report.skipped++
-    }
-    if (Object.keys(toTranslate).length === 0) continue
-    let outcome: TranslateOutcome
-    try {
-      outcome = await translate(toTranslate, locale)
-    } catch {
-      outcome = { ok: {}, failed: {} }
-    }
-    for (const field of Object.keys(toTranslate)) {
+        await opts.onProgress?.(translations)
+        continue
+      }
+      if (plan !== 'translate' || !french.trim()) {
+        report.skipped++
+        continue
+      }
+      if (budgetHit || (opts.budgetMs && Date.now() - startedAt > opts.budgetMs)) {
+        budgetHit = true
+        report.remaining++
+        continue
+      }
+      let outcome: TranslateOutcome
+      try {
+        outcome = await translate({ [field]: french }, locale)
+      } catch {
+        outcome = { ok: {}, failed: {} }
+      }
       const text = outcome.ok[field]
       if (typeof text === 'string' && text.trim()) {
-        translations = setFieldTranslation(translations, field, locale, text, toTranslate[field])
+        translations = setFieldTranslation(translations, field, locale, text, french)
         report.translated++
       } else {
         const raison = outcome.failed[field] || 'Le service de traduction ne répond pas'
-        translations = markEchec(translations, field, locale, raison, toTranslate[field])
+        translations = markEchec(translations, field, locale, raison, french)
         report.errors++
+        report.failures.push({ field, locale, raison })
       }
+      await opts.onProgress?.(translations)
     }
   }
   report.translations = translations

@@ -211,9 +211,20 @@ export function failureReason(err: unknown): string {
   return 'La traduction a échoué'
 }
 
-/** Log serveur sobre : champ, langue, modèle, raison — jamais de clé ni de texte. */
-function logFailure(locale: TargetLocale, field: string, model: string, reason: string) {
-  console.error(`[translate] ${locale} ${field} — ${reason} (${model})`)
+/** Log serveur sobre : champ, langue, modèle, durée, code HTTP éventuel,
+ *  raison — jamais de clé ni de texte source/traduit. */
+function logFailure(
+  locale: TargetLocale,
+  field: string,
+  model: string,
+  reason: string,
+  status?: number,
+  ms?: number
+) {
+  const parts = [model]
+  if (typeof status === 'number') parts.push(`HTTP ${status}`)
+  if (typeof ms === 'number') parts.push(`${(ms / 1000).toFixed(1)}s`)
+  console.error(`[translate] ${locale} ${field} — ${reason} (${parts.join(', ')})`)
 }
 
 // ─── Fournisseurs ──────────────────────────────────────────────────────────
@@ -322,6 +333,7 @@ async function translateField(
   field: string,
   source: string
 ): Promise<string> {
+  const startedAt = Date.now()
   const longForm = source.trim().length > LONG_TEXT_CHARS
   const model = longForm
     ? process.env.TRANSLATION_MODEL_LONGFORM || LONGFORM_MODEL_DEFAULT
@@ -339,7 +351,7 @@ async function translateField(
 
   const invalid = validateTranslation(source, out)
   if (invalid) {
-    logFailure(locale, field, model, invalid)
+    logFailure(locale, field, model, invalid, undefined, Date.now() - startedAt)
     throw new Error(invalid)
   }
   return out
@@ -366,11 +378,16 @@ async function claudeTranslate(
     const model = longForm
       ? process.env.TRANSLATION_MODEL_LONGFORM || LONGFORM_MODEL_DEFAULT
       : process.env.ANTHROPIC_MODEL || MODEL_DEFAULT
+    const fieldStart = Date.now()
     try {
       outcome.ok[field] = await translateField(client, locale, field, source)
+      console.log(
+        `[translate] ${locale} ${field} — ok (${model}, ${((Date.now() - fieldStart) / 1000).toFixed(1)}s)`
+      )
     } catch (err) {
       const reason = failureReason(err)
-      logFailure(locale, field, model, reason)
+      const status = (err as { status?: number })?.status
+      logFailure(locale, field, model, reason, status, Date.now() - fieldStart)
       outcome.failed[field] = reason
     }
   }
@@ -430,7 +447,8 @@ async function deeplTranslate(
     }
     if (lastError) {
       const reason = failureReason(lastError)
-      logFailure(locale, field, 'deepl', reason)
+      const status = (lastError as { status?: number })?.status
+      logFailure(locale, field, 'deepl', reason, status)
       outcome.failed[field] = reason
     }
   }
