@@ -75,6 +75,7 @@ async function checkManifest() {
   console.log('\n— Manifestes —')
   const m = await (await fetch(`${BASE}/manifest.webmanifest`)).json()
   const must = {
+    id: '/',
     name: 'Scandell’Art',
     short_name: 'Scandell’Art',
     display: 'standalone',
@@ -93,7 +94,7 @@ async function checkManifest() {
   }
 
   const am = await (await fetch(`${BASE}/admin/manifest.webmanifest`)).json()
-  const amust = { name: 'Mon atelier', short_name: 'Atelier', start_url: '/admin', scope: '/admin', display: 'standalone' }
+  const amust = { id: '/admin', name: 'Mon atelier', short_name: 'Atelier', start_url: '/admin', scope: '/admin', display: 'standalone' }
   for (const [k, v] of Object.entries(amust))
     am[k] === v ? ok(`atelier : ${k} = « ${v} »`) : fail(`atelier : ${k} = « ${am[k]} » (attendu « ${v} »)`)
   const adminIcons = (am.icons || []).map((i) => i.src)
@@ -137,6 +138,27 @@ async function checkServiceWorker(chromium) {
     await browser.close()
     return
   }
+
+  // URL de script versionnée par l'identifiant de build.
+  const scriptUrl = await page.evaluate(
+    async () => (await navigator.serviceWorker.getRegistration())?.active?.scriptURL || ''
+  )
+  scriptUrl.includes('/sw.js?v=')
+    ? ok(`worker versionné : ${scriptUrl.split('/').pop()}`)
+    : fail(`worker non versionné : ${scriptUrl}`)
+
+  // Enregistrement même en ouvrant /admin en premier (sans page publique).
+  const ctxAdmin = await browser.newContext({ serviceWorkers: 'allow' })
+  const adminPage = await ctxAdmin.newPage()
+  await adminPage.goto(`${BASE}/admin/login`, { waitUntil: 'networkidle' })
+  const adminSw = await adminPage.evaluate(async () => {
+    const reg = await navigator.serviceWorker?.getRegistration()
+    return reg ? 'enregistré' : 'absent'
+  })
+  adminSw === 'enregistré'
+    ? ok('worker enregistré depuis /admin en première visite')
+    : fail(`depuis /admin : worker ${adminSw}`)
+  await ctxAdmin.close()
 
   // Temps pour l'installation (pré-cache des pages hors ligne).
   await page.waitForTimeout(1500)
@@ -187,10 +209,11 @@ async function checkServiceWorker(chromium) {
       : fail(`hors ligne ${path} : repli absent (reçu « ${body.slice(0, 80)} »)`)
   }
 
-  // 6) Caches = seulement la version courante.
+  // 6) Caches = seulement la version courante (suffixe = build id).
   const names = await page.evaluate(() => caches.keys())
-  names.every((n) => n.endsWith('-v1') || !n.startsWith('mc-'))
-    ? ok(`caches versionnés : ${names.join(', ')}`)
+  const v = new URL(scriptUrl).searchParams.get('v')
+  names.every((n) => !n.startsWith('mc-') || n.endsWith(`-${v}`))
+    ? ok(`caches versionnés par build : ${names.join(', ')}`)
     : fail(`caches inattendus : ${names.join(', ')}`)
 
   await browser.close()

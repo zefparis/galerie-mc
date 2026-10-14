@@ -11,7 +11,11 @@
  *    Les pages ne sont jamais mises en cache : un déploiement ne peut pas
  *    servir de HTML périmé.
  */
-const VERSION = 'v1'
+// Le worker est enregistré en /sw.js?v=<identifiant de build> : chaque
+// déploiement produit une nouvelle URL de script → nouveau worker →
+// nouveaux caches → purge des anciens. Jamais de fichier périmé servi.
+const VERSION =
+  new URL(self.location.href).searchParams.get('v') || 'v1'
 const CACHES = {
   static: `mc-static-${VERSION}`,
   images: `mc-images-${VERSION}`,
