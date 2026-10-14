@@ -66,6 +66,12 @@ const WHITELIST = new Set(
     'Instagram',
     'EmailJS',
     'Cloudinary',
+    // Nom de marque — ne se traduit jamais, affiché en deux segments.
+    'Scandell’Art',
+    'Scandell\'Art',
+    'Scandell',
+    '’Art',
+    '\'Art',
   ].map(normalize)
 )
 
@@ -76,6 +82,8 @@ function isInvariable(text) {
   if (/^[^\s]+@[^\s]+$/.test(t)) return true // email
   if (/^https?:\/\//.test(t)) return true // url
   if (t.length <= 2) return true
+  // Dimensions d'œuvre (« 80 × 60 cm », « 100x80 cm ») : mesure, pas du texte.
+  if (/^\d+([.,]\d+)?\s*[×x]\s*\d+([.,]\d+)?\s*(cm|mm)?$/i.test(t)) return true
   return false
 }
 
@@ -167,12 +175,28 @@ const frTechNeedles = Object.entries(frMessages.techniques || {})
   }))
   .sort((a, b) => b.val.length - a.val.length)
 
+// Traductions par langue, tri décroissant — retirées du texte avant la
+// recherche : « Collage » (aiguille fr) est une sous-chaîne de la bonne
+// traduction « Collage auf Papier » et ne doit pas être signalée.
+const translatedTechByLocale = Object.fromEntries(
+  ['en', 'es', 'de'].map((locale) => [
+    locale,
+    Object.values(localeMessages[locale]?.techniques || {})
+      .map(normalize)
+      .sort((a, b) => b.length - a.length),
+  ])
+)
+
 // Une technique française visible sur une page traduite = échec, sauf
 // coïncidence légitime (la traduction est orthographiquement identique,
 // ex. « Pastel » en anglais).
 function findUntranslatedTechnique(text, locale) {
+  let haystack = text
+  for (const tr of translatedTechByLocale[locale] || []) {
+    if (tr) haystack = haystack.split(tr).join(' ')
+  }
   for (const { key, val, re } of frTechNeedles) {
-    if (!re.test(text)) continue
+    if (!re.test(haystack)) continue
     // Coïncidence légitime : la traduction est orthographiquement identique.
     const target = localeMessages[locale]?.techniques?.[key]
     if (target && normalize(target) === val) continue
