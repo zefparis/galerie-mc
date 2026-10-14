@@ -12,7 +12,7 @@ export const DEFAULT_SETTINGS: GallerySettings = {
   // (ni le nom ni le lieu, déjà affichés dans le hero).
   tagline: 'Peintures et collages — la matière en lumière',
   presentation: '',
-  email: 'contact@marie-claire-scandella.fr',
+  email: 'marieclairescandella@yahoo.fr',
   phone: '',
   instagram: '',
   processText: '',

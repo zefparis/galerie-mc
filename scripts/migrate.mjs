@@ -127,6 +127,10 @@ const statements = [
   // Signature de l'œuvre (ex. « signée en bas à droite ») — affichée dans
   // la fiche technique uniquement quand elle est renseignée.
   `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS signature TEXT`,
+  // Adresse de contact officielle — mise à jour uniquement si le champ est
+  // vide ou garde encore l'ancienne valeur par défaut ; une adresse saisie
+  // par l'artiste n'est jamais écrasée.
+  `UPDATE settings SET data = jsonb_set(data, '{email}', '"marieclairescandella@yahoo.fr"') WHERE id = 1 AND COALESCE(NULLIF(TRIM(data->>'email'), ''), 'contact@marie-claire-scandella.fr') = 'contact@marie-claire-scandella.fr'`,
 ]
 
 try {
