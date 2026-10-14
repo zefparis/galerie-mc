@@ -169,6 +169,18 @@ button, a {
 .footer {
   padding-bottom: env(safe-area-inset-bottom);
 }
+/* Barre épinglée de l'atelier : respecte l'encoche en standalone. */
+.admin-topbar {
+  padding-top: env(safe-area-inset-top);
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+@media (min-width: 640px) {
+  .admin-topbar {
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+  }
+}
 
 /* ─── Fondu d'entrée du hero (600–800 ms, reduced-motion géré plus bas) ── */
 @keyframes heroFade {

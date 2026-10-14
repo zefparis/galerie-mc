@@ -16,10 +16,19 @@ const NIGHT = '#1A1612'
 const COPPER = '#C98A5B'
 const PAPER = '#EDE8DF'
 
-/** Favicon / icône : « S » serif cuivre sur carré arrondi sombre. */
-export async function brandMark(px: number) {
+/**
+ * Favicon / icône : « S » serif cuivre sur carré arrondi sombre.
+ * maskable : fond plein bord à bord, « S » réduit dans la zone sûre (~40 %).
+ * inverted : variante « Mon atelier » — fond cuivre, « S » sombre.
+ */
+export async function brandMark(
+  px: number,
+  opts: { maskable?: boolean; inverted?: boolean } = {}
+) {
   const font = await fraunces()
-  const radius = Math.round(px * 0.22)
+  const radius = opts.maskable ? 0 : Math.round(px * 0.22)
+  const bg = opts.inverted ? COPPER : NIGHT
+  const fg = opts.inverted ? NIGHT : COPPER
   return new ImageResponse(
     (
       <div
@@ -29,15 +38,15 @@ export async function brandMark(px: number) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: NIGHT,
+          background: bg,
           borderRadius: radius,
         }}
       >
         <div
           style={{
             fontFamily: 'Fraunces',
-            color: COPPER,
-            fontSize: Math.round(px * 0.62),
+            color: fg,
+            fontSize: Math.round(px * (opts.maskable ? 0.4 : 0.62)),
             lineHeight: 1,
             paddingTop: Math.round(px * 0.04),
           }}

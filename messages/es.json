@@ -189,5 +189,11 @@
   },
   "brand": {
     "tagline": "Pintora abstracta · Montreuil-aux-Lions"
+  },
+  "offline": {
+    "title": "Sin conexión",
+    "message": "La conexión se ha interrumpido. La página se cargará en cuanto vuelva.",
+    "retry": "Reintentar",
+    "home": "Volver al inicio"
   }
 }

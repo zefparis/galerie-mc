@@ -189,5 +189,11 @@
   },
   "brand": {
     "tagline": "Artiste peintre abstraite · Montreuil-aux-Lions"
+  },
+  "offline": {
+    "title": "Connexion interrompue",
+    "message": "Vous êtes hors ligne. La page se chargera dès que la connexion revient.",
+    "retry": "Réessayer",
+    "home": "Retour à l'accueil"
   }
 }

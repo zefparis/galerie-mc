@@ -9,6 +9,7 @@ import PaintingWizard from '@/components/admin/PaintingWizard'
 import EventList from '@/components/admin/EventList'
 import EventForm from '@/components/admin/EventForm'
 import AdminSettings from '@/components/admin/AdminSettings'
+import InstallAppPrompt from '@/components/admin/InstallAppPrompt'
 import { getPaintings } from '@/lib/storage'
 import { Painting, GalleryEvent } from '@/lib/types'
 
@@ -114,7 +115,7 @@ export default function AdminClient() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Barre du haut */}
-      <div className="sticky top-0 z-30 bg-[var(--bg)] border-b border-[var(--line)] px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
+      <div className="admin-topbar sticky top-0 z-30 bg-[var(--bg)] border-b border-[var(--line)] py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           {view !== 'home' && !inForm && (
             <button
@@ -146,6 +147,8 @@ export default function AdminClient() {
           </button>
         </div>
       </div>
+
+      <InstallAppPrompt />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {flash && (

@@ -189,5 +189,11 @@
   },
   "brand": {
     "tagline": "Abstrakte Malerin · Montreuil-aux-Lions"
+  },
+  "offline": {
+    "title": "Keine Verbindung",
+    "message": "Sie sind offline. Die Seite lädt, sobald die Verbindung zurück ist.",
+    "retry": "Erneut versuchen",
+    "home": "Zurück zur Startseite"
   }
 }

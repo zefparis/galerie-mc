@@ -1,9 +1,10 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages } from "next-intl/server"
 import "./globals.css"
 import { routing, type Locale } from "@/i18n/routing"
+import SwRegister from "@/components/pwa/SwRegister"
 
 // Fonts auto-hébergées : aucun appel réseau au build, rendu instantané.
 const cormorant = localFont({
@@ -51,6 +52,21 @@ export const metadata: Metadata = {
     locale: "fr_FR",
     type: "website",
   },
+  appleWebApp: {
+    capable: true,
+    title: "Scandell’Art",
+    statusBarStyle: "black-translucent",
+  },
+  // Manifeste visiteurs — l'admin le remplace par le sien dans
+  // app/admin/layout.tsx (le champ `manifest` enfant écrase le parent).
+  manifest: "/manifest.webmanifest",
+}
+
+// viewport-fit=cover : le contenu passe sous l'encoche iPhone, les
+// safe-area-inset en CSS gardent les zones utiles accessibles.
+export const viewport: Viewport = {
+  themeColor: "#1A1612",
+  viewportFit: "cover",
 }
 
 export default async function RootLayout({
@@ -90,6 +106,7 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>
+        <SwRegister />
       </body>
     </html>
   )

@@ -189,5 +189,11 @@
   },
   "brand": {
     "tagline": "Abstract painter · Montreuil-aux-Lions"
+  },
+  "offline": {
+    "title": "You are offline",
+    "message": "The connection is interrupted. The page will load as soon as it comes back.",
+    "retry": "Try again",
+    "home": "Back to home"
   }
 }
