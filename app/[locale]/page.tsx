@@ -91,10 +91,10 @@ export default async function Home({ params }: Props) {
             </div>
           </div>
 
-          {/* Œuvre mise en avant, présentée encadrée */}
+          {/* Œuvre mise en avant, « accrochée au mur » */}
           {featuredList.length > 0 && (
             <div className="hero-fade" style={{ animationDelay: '0.25s' }}>
-              <HeroArtwork paintings={featuredList} />
+              <HeroArtwork paintings={featuredList} artistName={settings.artistName} />
             </div>
           )}
         </div>

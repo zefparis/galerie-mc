@@ -1,111 +1,200 @@
 'use client'
 
-import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { blurDataUrl } from '@/lib/images'
 import { useTechniqueLabel } from '@/lib/i18n'
 import { Painting } from '@/lib/types'
+import Lightbox from './Lightbox'
+import WallArtwork from './WallArtwork'
 
 const INTERVAL_MS = 6000
+const SWIPE_MIN_PX = 45
 
 interface Props {
   paintings: Painting[]
+  artistName: string
 }
 
-// Œuvre mise en avant présentée comme une toile encadrée : ratio naturel
-// (object-contain, jamais recadrée), fond blanc, ombre douce. Si plusieurs
-// œuvres sont mises en avant, fondu enchaîné toutes les 6 s avec points de
-// navigation — pause au survol ou au toucher.
-export default function HeroArtwork({ paintings }: Props) {
+// Carrousel du tableau en vedette : chaque œuvre est « accrochée au mur »
+// dans une zone de hauteur fixe, alignée par le bas (ligne de base
+// commune), cartel centré dessous, points de navigation centrés sous le
+// cartel. Fondu enchaîné 350 ms, pause au survol/focus, balayage tactile,
+// flèches du clavier, aria-live, clic/Entrée → lightbox existante.
+export default function HeroArtwork({ paintings, artistName }: Props) {
   const t = useTranslations('hero')
-  const ta = useTranslations('artwork')
   const techLabel = useTechniqueLabel()
   const [active, setActive] = useState(0)
+  const [lightbox, setLightbox] = useState(false)
+  const [reduced, setReduced] = useState(false)
+  const hovered = useRef(false)
+  const focused = useRef(false)
+  const manualPause = useRef(false)
   const paused = useRef(false)
+  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const touchX = useRef<number | null>(null)
+
+  const len = paintings.length
+  const current = paintings[active]
+
+  const syncPause = () => {
+    paused.current = hovered.current || focused.current || manualPause.current
+  }
+  const pauseBriefly = (ms = 4000) => {
+    manualPause.current = true
+    syncPause()
+    if (resumeTimer.current) clearTimeout(resumeTimer.current)
+    resumeTimer.current = setTimeout(() => {
+      manualPause.current = false
+      syncPause()
+    }, ms)
+  }
+
+  const next = () => setActive((a) => (a + 1) % len)
+  const prev = () => setActive((a) => (a - 1 + len) % len)
+
+  // Pas de défilement automatique si l'utilisateur préfère réduire les
+  // animations (le fondu est déjà neutralisé par la règle CSS globale).
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = () => setReduced(mq.matches)
+    onChange()
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
 
   useEffect(() => {
-    if (paintings.length < 2) return
-    const t = setInterval(() => {
-      if (!paused.current) {
-        setActive((i) => (i + 1) % paintings.length)
-      }
+    if (len < 2 || reduced) return
+    const id = setInterval(() => {
+      if (!paused.current) setActive((a) => (a + 1) % len)
     }, INTERVAL_MS)
-    return () => clearInterval(t)
-  }, [paintings.length])
+    return () => clearInterval(id)
+  }, [len, reduced])
 
-  const current = paintings[active]
+  if (len === 0) return null
+
+  const altFor = (p: Painting) =>
+    t('photoAlt', {
+      title: p.title,
+      technique: p.technique ? techLabel(p.technique) : '',
+      year: p.year,
+      artist: artistName,
+    })
 
   return (
     <figure
-      onMouseEnter={() => { paused.current = true }}
-      onMouseLeave={() => { paused.current = false }}
-      onTouchStart={() => { paused.current = true }}
-      onTouchEnd={() => {
-        // reprend quelques secondes après le toucher
-        setTimeout(() => { paused.current = false }, 4000)
+      onMouseEnter={() => {
+        hovered.current = true
+        syncPause()
+      }}
+      onMouseLeave={() => {
+        hovered.current = false
+        syncPause()
+      }}
+      onFocusCapture={() => {
+        focused.current = true
+        syncPause()
+      }}
+      onBlurCapture={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          focused.current = false
+          syncPause()
+        }
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault()
+          next()
+          pauseBriefly()
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault()
+          prev()
+          pauseBriefly()
+        }
+      }}
+      onTouchStart={(e) => {
+        touchX.current = e.touches[0].clientX
+      }}
+      onTouchEnd={(e) => {
+        if (touchX.current === null || len < 2) return
+        const dx = e.changedTouches[0].clientX - touchX.current
+        touchX.current = null
+        if (Math.abs(dx) >= SWIPE_MIN_PX) {
+          if (dx < 0) next()
+          else prev()
+          pauseBriefly()
+        }
       }}
     >
-      {/* Cadre : mat blanc + filet discret + ombre douce */}
-      <div className="bg-[var(--mat)] p-3 sm:p-4 border border-[var(--line)] shadow-[0_18px_50px_-18px_var(--shadow)]">
-        <div className="relative h-[46svh] sm:h-[52svh] lg:h-[58vh]">
-          {paintings.map((p, i) => (
-            <div
-              key={p.id}
-              aria-hidden={i !== active}
-              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                i === active ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              <Image
-                src={p.imageUrl}
-                alt={i === active ? p.title : ''}
-                fill
-                priority={i === 0}
-                sizes="(max-width: 768px) 92vw, 44vw"
-                placeholder="blur"
-                blurDataURL={blurDataUrl(p.imageUrl)}
-                className="object-contain"
-              />
-            </div>
-          ))}
-        </div>
+      {/* Zone de hauteur fixe : l'ancrage ne bouge jamais, quel que soit
+          le format du tableau. */}
+      <div className="relative h-[calc(60vh+64px)] md:h-[calc(min(68vh,560px)+64px)]">
+        {paintings.map((p, i) => (
+          <div
+            key={p.id}
+            aria-hidden={i !== active}
+            className={`absolute inset-x-0 bottom-0 flex justify-center transition-opacity duration-[350ms] ease-in-out ${
+              i === active ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
+          >
+            <WallArtwork
+              painting={p}
+              alt={altFor(p)}
+              sizes="(max-width: 768px) 92vw, 44vw"
+              priority={i === 0}
+              cartel
+              onOpen={i === active ? () => setLightbox(true) : undefined}
+              openLabel={t('zoomAria', { title: p.title })}
+              focusable={i === active}
+              className="w-full"
+            />
+          </div>
+        ))}
       </div>
 
-      {/* Légende — texte en dehors de l'image, lisible */}
-      <figcaption className="mt-4 flex items-start justify-between gap-4">
-        <p className="font-body text-sm md:text-base text-[var(--ink-soft)]">
-          {ta('caption', {
-            title: current.title,
-            meta: [
-              current.technique ? techLabel(current.technique) : '',
-              current.year,
-            ]
-              .filter(Boolean)
-              .join(', '),
-          })}
-        </p>
-        {paintings.length > 1 && (
-          <div className="flex items-center gap-1 flex-shrink-0" role="tablist" aria-label={t('chooseArtwork')}>
-            {paintings.map((p, i) => (
-              <button
-                key={p.id}
-                role="tab"
-                aria-selected={i === active}
-                aria-label={t('artworkN', { n: i + 1, title: p.title })}
-                onClick={() => setActive(i)}
-                className="p-2.5 min-w-[36px] min-h-[36px] flex items-center justify-center"
-              >
-                <span
-                  className={`block w-2 h-2 rounded-full transition-colors duration-300 ${
-                    i === active ? 'bg-[var(--accent)]' : 'bg-[var(--muted)]'
-                  }`}
-                />
-              </button>
-            ))}
-          </div>
-        )}
-      </figcaption>
+      <p className="sr-only" role="status" aria-live="polite">
+        {t('artworkN', { n: active + 1, title: current.title })}
+      </p>
+
+      {len > 1 && (
+        <div
+          className="mt-4 flex items-center justify-center gap-1"
+          role="tablist"
+          aria-label={t('chooseArtwork')}
+        >
+          {paintings.map((p, i) => (
+            <button
+              key={p.id}
+              type="button"
+              role="tab"
+              aria-selected={i === active}
+              aria-label={t('artworkN', { n: i + 1, title: p.title })}
+              onClick={() => {
+                setActive(i)
+                pauseBriefly()
+              }}
+              className={`h-11 w-11 flex items-center justify-center transition-opacity duration-200 ${
+                i === active ? 'opacity-100' : 'opacity-35 hover:opacity-70'
+              }`}
+            >
+              <span
+                className={`block h-[5px] w-[5px] rounded-full ${
+                  i === active ? 'bg-[var(--accent)]' : 'bg-[var(--ink-soft)]'
+                }`}
+              />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {lightbox && (
+        <Lightbox
+          src={current.imageUrl}
+          alt={altFor(current)}
+          onClose={() => setLightbox(false)}
+          onPrev={len > 1 ? prev : undefined}
+          onNext={len > 1 ? next : undefined}
+        />
+      )}
     </figure>
   )
 }

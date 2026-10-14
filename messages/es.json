@@ -26,7 +26,8 @@
     "ctaContact": "Contactar con la artista",
     "zoomAria": "Ampliar «{title}»",
     "chooseArtwork": "Elegir la obra mostrada",
-    "artworkN": "Obra {n}: {title}"
+    "artworkN": "Obra {n}: {title}",
+    "photoAlt": "{title}, {technique}, {year}, de {artist}"
   },
   "home": {
     "worksEyebrow": "Obras",
@@ -100,7 +101,7 @@
     "next": "Siguiente →",
     "notFound": "Obra no encontrada",
     "originalTitle": "Título original: {title}",
-    "photoAlt": "{title} — {technique}, {year}"
+    "photoAlt": "{title}, {technique}, {year}, de {artist}"
   },
   "lightbox": {
     "aria": "Visor — {alt}",

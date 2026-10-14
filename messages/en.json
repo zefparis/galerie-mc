@@ -26,7 +26,8 @@
     "ctaContact": "Contact the artist",
     "zoomAria": "Enlarge “{title}”",
     "chooseArtwork": "Choose the artwork shown",
-    "artworkN": "Artwork {n}: {title}"
+    "artworkN": "Artwork {n}: {title}",
+    "photoAlt": "{title}, {technique}, {year}, by {artist}"
   },
   "home": {
     "worksEyebrow": "Works",
@@ -100,7 +101,7 @@
     "next": "Next →",
     "notFound": "Artwork not found",
     "originalTitle": "Original title: {title}",
-    "photoAlt": "{title} — {technique}, {year}"
+    "photoAlt": "{title}, {technique}, {year}, by {artist}"
   },
   "lightbox": {
     "aria": "Viewer — {alt}",

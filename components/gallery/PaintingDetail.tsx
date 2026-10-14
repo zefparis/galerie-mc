@@ -1,23 +1,23 @@
 'use client'
 
-import Image from 'next/image'
 import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n/navigation'
 import { Painting } from '@/lib/types'
-import { blurDataUrl } from '@/lib/images'
 import { formatPrice, useTechniqueLabel, type Locale } from '@/lib/i18n'
 import Reveal from '@/components/ui/Reveal'
 import Lightbox from './Lightbox'
+import WallArtwork from './WallArtwork'
 
 interface Props {
   painting: Painting
+  artistName: string
   prevId?: string
   nextId?: string
   category?: string
 }
 
-export default function PaintingDetail({ painting, prevId, nextId, category }: Props) {
+export default function PaintingDetail({ painting, artistName, prevId, nextId, category }: Props) {
   const t = useTranslations('detail')
   const ts = useTranslations('status')
   const locale = useLocale() as Locale
@@ -34,7 +34,12 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
       ? ts(painting.priceStatus)
       : null
   const contactable = painting.priceStatus !== 'vendu' && painting.priceStatus !== 'non_a_vendre'
-  const imgAlt = t('photoAlt', { title: painting.title, technique, year: painting.year })
+  const imgAlt = t('photoAlt', {
+    title: painting.title,
+    technique,
+    year: painting.year,
+    artist: artistName,
+  })
 
   return (
     <div className="pt-16 md:pt-20">
@@ -50,23 +55,17 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
       <div className="max-w-7xl mx-auto gutter-x md:flex md:gap-12 lg:gap-20 pb-10">
         {/* Image — cliquable vers la lightbox */}
         <Reveal className="md:w-[58%] md:flex-shrink-0 mt-4 md:mt-0">
-          <button
-            onClick={() => setLightbox(true)}
-            aria-label={t('zoomHint') + ` — ${painting.title}`}
-            className="block w-full bg-[var(--mat)] border border-[var(--line)] p-3 sm:p-5 md:sticky md:top-24 cursor-zoom-in"
-          >
-            <Image
-              src={painting.imageUrl}
+          <div className="md:sticky md:top-24">
+            <WallArtwork
+              painting={painting}
               alt={imgAlt}
-              width={0}
-              height={0}
               sizes="(max-width: 768px) 100vw, 58vw"
               priority
-              placeholder="blur"
-              blurDataURL={blurDataUrl(painting.imageUrl)}
-              className="w-full h-auto max-h-[80svh] object-contain mx-auto"
+              variant="detail"
+              onOpen={() => setLightbox(true)}
+              openLabel={t('zoomHint') + ` — ${painting.title}`}
             />
-          </button>
+          </div>
           <p className="font-body text-[11px] text-[var(--muted)] text-center mt-3">
             {t('zoomHint')}
           </p>

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getMessages, getTranslations } from 'next-intl/server'
-import { getPaintingById, getPaintings } from '@/lib/data'
+import { getPaintingById, getPaintings, getGallerySettings } from '@/lib/data'
 import { alternatesFor, OG_LOCALE } from '@/lib/seo'
 import { routing, type Locale } from '@/i18n/routing'
 import { localizePainting, techniqueLabel } from '@/lib/i18n'
@@ -47,9 +47,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function OeuvrePage({ params, searchParams }: Props) {
   const locale = params.locale as Locale
-  const [painting, all] = await Promise.all([
+  const [painting, all, settings] = await Promise.all([
     getPaintingById(params.id),
     getPaintings(),
+    getGallerySettings(),
   ])
   if (!painting) notFound()
 
@@ -67,6 +68,7 @@ export default async function OeuvrePage({ params, searchParams }: Props) {
   return (
     <PaintingDetail
       painting={localizePainting(painting, locale)}
+      artistName={settings.artistName}
       prevId={prevId}
       nextId={nextId}
       category={cat === 'peintures' || cat === 'collages' ? cat : undefined}
