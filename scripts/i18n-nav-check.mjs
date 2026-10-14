@@ -112,8 +112,17 @@ async function checkServed(url, label, expect404 = false) {
 async function clickLanguage(page, zone, locale) {
   const label = AUTONYM[locale]
   if (zone === 'navbar') {
-    await page.locator(SEL_SWITCHER_BTN).first().click()
-    await page.locator(`.navbar a[role="menuitemradio"]:has-text("${label}")`).first().click()
+    const item = page.locator(`.navbar a[role="menuitemradio"]:has-text("${label}")`).first()
+    // Un clic avant la fin de l'hydratation est ignoré — on retente.
+    for (let i = 0; i < 3; i++) {
+      await page.locator(SEL_SWITCHER_BTN).first().click()
+      const opened = await item
+        .waitFor({ state: 'visible', timeout: 4000 })
+        .then(() => true)
+        .catch(() => false)
+      if (opened) break
+    }
+    await item.click()
   } else if (zone === 'footer') {
     await page.locator(`footer a[role="menuitemradio"]:has-text("${label}")`).first().click()
   } else {
@@ -151,6 +160,14 @@ async function assertAfterClick(page, locale, label, { expectPathContains, keepS
   if (active.some((t) => t.includes(wanted))) ok(`${label} : sélecteur sur ${wanted}`)
   else fail(`${label} : sélecteur n'affiche pas ${wanted} (trouvé : ${active.join(', ') || 'rien'})`)
 
+  // Code de langue affiché par le bouton de la navbar (bug « FR » sur /en).
+  const btn = page.locator(SEL_SWITCHER_BTN).first()
+  if (await btn.isVisible().catch(() => false)) {
+    const code = (await btn.innerText()).trim().split(/\s/)[0].toUpperCase()
+    if (code === locale.toUpperCase()) ok(`${label} : bouton affiche ${code}`)
+    else fail(`${label} : bouton affiche « ${code} » ≠ ${locale.toUpperCase()}`)
+  }
+
   if (expectPathContains && !res.pathname.includes(expectPathContains)) {
     fail(`${label} : chemin ${res.pathname} ne contient pas ${expectPathContains}`)
   }
@@ -177,6 +194,19 @@ async function scenarioFooter(page) {
   for (const locale of ['de', 'en', 'fr', 'es']) {
     await clickLanguage(page, 'footer', locale)
     await assertAfterClick(page, locale, `footer → ${locale}`)
+  }
+}
+
+// Chargement direct (SSR + hydratation) de chaque page publique dans chaque
+// langue : le sélecteur doit refléter la langue de la page dès le premier
+// rendu — sans aucune navigation client préalable.
+async function scenarioReload(page) {
+  for (const p of ['/', '/galerie', '/expositions', '/contact', '/page-inexistante-nav']) {
+    for (const locale of ['fr', 'en', 'es', 'de']) {
+      const url = `${BASE}${locale === 'fr' ? p : `/${locale}${p === '/' ? '' : p}`}`
+      await page.goto(url, { waitUntil: 'networkidle' })
+      await assertAfterClick(page, locale, `reload ${locale === 'fr' ? '' : `/${locale}`}${p}`)
+    }
   }
 }
 
@@ -269,6 +299,10 @@ async function run() {
     const mpage = await mctx.newPage()
     await mpage.goto(`${BASE}/en/galerie`, { waitUntil: 'networkidle' })
     await scenarioDrawer(mpage)
+
+    // ── Rechargement dur sur toutes les pages publiques ──
+    console.log('\n— Rechargement direct (toutes pages × 4 langues) —')
+    await scenarioReload(page)
 
     await ctx.close()
     await mctx.close()

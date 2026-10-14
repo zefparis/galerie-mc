@@ -81,7 +81,8 @@
   "artwork": {
     "viewAria": "Ver la obra «{title}» — {meta}",
     "soldBadge": "Vendida",
-    "untitled": "Sin título"
+    "untitled": "Sin título",
+    "caption": "«{title}» — {meta}"
   },
   "detail": {
     "back": "← Galería",
@@ -163,7 +164,17 @@
     "collage": "Collage sobre papel",
     "technique-mixte-sur-papier": "Técnica mixta sobre papel",
     "encre-sur-papier": "Tinta sobre papel",
-    "autre": "Otra"
+    "autre": "Otra",
+    "acrylique-sur-toile": "Acrílico sobre lienzo",
+    "acrylique-sur-papier": "Acrílico sobre papel",
+    "collage-sur-papier": "Collage sobre papel",
+    "technique-mixte-sur-toile": "Técnica mixta sobre lienzo",
+    "huile": "Óleo",
+    "huile-sur-papier": "Óleo sobre papel",
+    "pastel-sur-papier": "Pastel sobre papel",
+    "gouache": "Gouache",
+    "encre": "Tinta",
+    "crayon": "Lápiz"
   },
   "defaults": {
     "bioShort": "Artista pintora abstracta | Montreuil-aux-Lions",

@@ -81,7 +81,8 @@
   "artwork": {
     "viewAria": "View “{title}” — {meta}",
     "soldBadge": "Sold",
-    "untitled": "Untitled"
+    "untitled": "Untitled",
+    "caption": "“{title}” — {meta}"
   },
   "detail": {
     "back": "← Gallery",
@@ -163,7 +164,17 @@
     "collage": "Paper collage",
     "technique-mixte-sur-papier": "Mixed media on paper",
     "encre-sur-papier": "Ink on paper",
-    "autre": "Other"
+    "autre": "Other",
+    "acrylique-sur-toile": "Acrylic on canvas",
+    "acrylique-sur-papier": "Acrylic on paper",
+    "collage-sur-papier": "Paper collage",
+    "technique-mixte-sur-toile": "Mixed media on canvas",
+    "huile": "Oil paint",
+    "huile-sur-papier": "Oil on paper",
+    "pastel-sur-papier": "Pastel on paper",
+    "gouache": "Gouache",
+    "encre": "Ink",
+    "crayon": "Pencil"
   },
   "defaults": {
     "bioShort": "Abstract painter | Montreuil-aux-Lions",

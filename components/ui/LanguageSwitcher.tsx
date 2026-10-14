@@ -10,12 +10,21 @@ import { routing, type Locale } from '@/i18n/routing'
 // Sélecteur de langue : menu déroulant dans la navbar, liste pleine largeur
 // dans le tiroir mobile (variant="dark"). Chaque langue est écrite dans sa
 // propre langue et le lien conserve la page et les filtres courants.
-export default function LanguageSwitcher({ variant = 'light' }: { variant?: 'light' | 'dark' | 'list' }) {
+// `locale` (optionnelle) est la langue déterminée côté serveur par le
+// layout [locale] — prioritaire sur toute déduction côté client.
+export default function LanguageSwitcher({
+  variant = 'light',
+  locale: serverLocale,
+}: {
+  variant?: 'light' | 'dark' | 'list'
+  locale?: Locale
+}) {
   const t = useTranslations('lang')
   const providerLocale = useLocale() as Locale
-  // La langue affichée vient de l'URL (fiable même si le provider est périmé
-  // après une navigation client, et sur les 404) ; repli sur le provider.
-  const locale = useUrlLocale() ?? providerLocale
+  const urlLocale = useUrlLocale()
+  // Langue affichée : prop serveur (rendue avec la page) > URL réelle
+  // (navigations client, 404) > provider.
+  const locale = serverLocale ?? urlLocale ?? providerLocale
   // Chemin sans AUCUN préfixe de langue : Link locale={l} ne peut plus
   // empiler les préfixes (/en/en), même sur une adresse déjà cassée.
   const pathname = useCleanPathname()

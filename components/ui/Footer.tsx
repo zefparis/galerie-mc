@@ -3,8 +3,15 @@ import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 import { GallerySettings } from '@/lib/types'
+import type { Locale } from '@/i18n/routing'
 
-export default async function Footer({ settings }: { settings: GallerySettings }) {
+export default async function Footer({
+  settings,
+  locale,
+}: {
+  settings: GallerySettings
+  locale?: Locale
+}) {
   const t = await getTranslations('footer')
   const tn = await getTranslations('nav')
   const tl = await getTranslations('lang')
@@ -77,7 +84,7 @@ export default async function Footer({ settings }: { settings: GallerySettings }
             <p className="eyebrow mb-4">{tl('label')}</p>
             <div className="flex flex-col gap-2">
               <Suspense fallback={null}>
-                <LanguageSwitcher variant="list" />
+                <LanguageSwitcher variant="list" locale={locale} />
               </Suspense>
             </div>
           </nav>

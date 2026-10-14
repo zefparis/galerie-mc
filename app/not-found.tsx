@@ -26,11 +26,11 @@ export default async function NotFound() {
   })
   return (
     <>
-      <Navbar artistName={localized.artistName} />
+      <Navbar artistName={localized.artistName} locale={locale} />
       <main className="flex-1">
         <NotFoundContent />
       </main>
-      <Footer settings={localized} />
+      <Footer settings={localized} locale={locale} />
     </>
   )
 }

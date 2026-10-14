@@ -15,7 +15,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "i18n:render-check": "node scripts/i18n-render-check.mjs",
-    "test:i18n-nav": "node scripts/i18n-nav-check.mjs"
+    "test:i18n-nav": "node scripts/i18n-nav-check.mjs",
+    "techniques:audit": "node scripts/techniques-audit.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

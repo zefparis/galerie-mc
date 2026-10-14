@@ -6,10 +6,14 @@ import { Link } from '@/i18n/navigation'
 import { useCleanPathname } from '@/i18n/pathname'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
+import type { Locale } from '@/i18n/routing'
 
 const HREFS = ['/galerie', '/expositions', '/contact'] as const
 
-export default function Navbar({ artistName }: { artistName: string }) {
+// `locale` vient du layout serveur ([locale] ou 404 racine) : la langue
+// affichée par le sélecteur est celle de la page servie, jamais un état
+// client potentiellement périmé.
+export default function Navbar({ artistName, locale }: { artistName: string; locale?: Locale }) {
   const t = useTranslations('nav')
   const pathname = useCleanPathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -73,7 +77,7 @@ export default function Navbar({ artistName }: { artistName: string }) {
           <div className="flex items-center">
             <div className="hidden md:block">
               <Suspense fallback={null}>
-                <LanguageSwitcher />
+                <LanguageSwitcher locale={locale} />
               </Suspense>
             </div>
             <ThemeToggle />
@@ -143,7 +147,7 @@ export default function Navbar({ artistName }: { artistName: string }) {
           </div>
           <div className="mt-auto px-8 pb-10">
             <Suspense fallback={null}>
-              <LanguageSwitcher variant="dark" />
+              <LanguageSwitcher variant="dark" locale={locale} />
             </Suspense>
             <p className="font-body text-xs text-[var(--on-night-faint)] uppercase tracking-[0.18em] mt-6">
               {artistName}

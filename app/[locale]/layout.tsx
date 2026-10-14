@@ -42,9 +42,9 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <HtmlLang locale={locale} />
-      <Navbar artistName={settings.artistName} />
+      <Navbar artistName={settings.artistName} locale={locale} />
       <main className="flex-1">{children}</main>
-      <Footer settings={settings} />
+      <Footer settings={settings} locale={locale} />
       <LocaleBanner />
     </NextIntlClientProvider>
   )

@@ -41,9 +41,22 @@ export function techniqueKey(value: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
+// Suffixes de support tolérés : « Acrylique sur toile » retombe sur la clé
+// « acrylique » si la variante exacte n'est pas dans le dictionnaire.
+const SUPPORT_SUFFIXES = ['-sur-toile', '-sur-papier', '-on-canvas', '-on-paper']
+
 /** Libellé traduit d'une technique ; repli sur le texte saisi si inconnu. */
 export function techniqueLabel(dict: Record<string, string> | undefined, value: string): string {
-  return dict?.[techniqueKey(value)] ?? value
+  if (!dict) return value
+  const key = techniqueKey(value)
+  if (dict[key]) return dict[key]
+  for (const suffix of SUPPORT_SUFFIXES) {
+    if (key.endsWith(suffix)) {
+      const base = key.slice(0, -suffix.length)
+      if (dict[base]) return dict[base]
+    }
+  }
+  return value
 }
 
 /** Côté client : retourne un traducteur de techniques (repli : texte d'origine). */

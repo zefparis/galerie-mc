@@ -81,6 +81,12 @@ function isInvariable(text) {
 
 // ─── Classification A / B / C ─────────────────────────────────────────────────
 const frMessages = JSON.parse(readFileSync(new URL('../messages/fr.json', import.meta.url)))
+const localeMessages = Object.fromEntries(
+  LOCALES.map((l) => [
+    l,
+    JSON.parse(readFileSync(new URL(`../messages/${l}.json`, import.meta.url))),
+  ])
+)
 const fixedTexts = new Set()
 const collectValues = (obj) => {
   for (const v of Object.values(obj)) {
@@ -135,6 +141,83 @@ function classify(text) {
   if (defaultTexts.has(t)) return 'B'
   if (fixedTexts.has(t)) return 'A'
   return 'C'
+}
+
+// ─── Techniques : couverture du dictionnaire ─────────────────────────────────
+// Même normalisation que lib/i18n.ts → techniqueKey.
+const techniqueKey = (v) =>
+  (v || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+const TECH_SUFFIXES = ['-sur-toile', '-sur-papier', '-on-canvas', '-on-paper']
+const techCovered = (dict, key) =>
+  !!dict[key] || TECH_SUFFIXES.some((s) => key.endsWith(s) && dict[key.slice(0, -s.length)])
+
+// Valeurs françaises du dictionnaire servant d'aiguilles dans les pages
+// traduites (tri décroissant : « Huile sur toile » avant « Huile »).
+const frTechNeedles = Object.entries(frMessages.techniques || {})
+  .map(([key, val]) => ({
+    key,
+    val: normalize(val),
+    re: new RegExp(`(^|[^\\p{L}])${normalize(val).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}]|$)`, 'u'),
+  }))
+  .sort((a, b) => b.val.length - a.val.length)
+
+// Une technique française visible sur une page traduite = échec, sauf
+// coïncidence légitime (la traduction est orthographiquement identique,
+// ex. « Pastel » en anglais).
+function findUntranslatedTechnique(text, locale) {
+  for (const { key, val, re } of frTechNeedles) {
+    if (!re.test(text)) continue
+    // Coïncidence légitime : la traduction est orthographiquement identique.
+    const target = localeMessages[locale]?.techniques?.[key]
+    if (target && normalize(target) === val) continue
+    return { key, val }
+  }
+  return null
+}
+
+// Vérifie côté base (si DATABASE_URL) que chaque technique saisie a une
+// traduction dans les 3 langues. Lecture seule.
+async function auditDbTechniques(report) {
+  if (!process.env.DATABASE_URL) {
+    console.log('  (DATABASE_URL absente — couverture limitée aux pages rendues)')
+    return
+  }
+  try {
+    const { Client } = await import('pg')
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl:
+        process.env.DATABASE_SSL === 'false'
+          ? false
+          : { rejectUnauthorized: false },
+    })
+    await client.connect()
+    const { rows } = await client.query(
+      `SELECT DISTINCT technique FROM paintings WHERE technique IS NOT NULL AND btrim(technique) <> ''`
+    )
+    await client.end()
+    for (const { technique } of rows) {
+      const key = techniqueKey(technique)
+      for (const locale of ['en', 'es', 'de']) {
+        if (!techCovered(localeMessages[locale]?.techniques || {}, key)) {
+          report.push({ locale, page: '(base)', text: technique })
+        }
+      }
+      // Signale aussi la clé inconnue même si un repli la couvre.
+      if (!(frMessages.techniques || {})[key]) {
+        report.push({ locale: 'fr', page: '(base, valeur hors dictionnaire)', text: technique })
+      }
+    }
+    if (rows.length) console.log(`  ${rows.length} technique(s) distincte(s) vérifiée(s) en base`)
+  } catch (e) {
+    console.log(`  (base injoignable — contrôle base ignoré : ${e.message})`)
+  }
 }
 
 // ─── Serveur local ────────────────────────────────────────────────────────────
@@ -196,7 +279,7 @@ async function discoverPaths() {
 }
 
 // ─── Audit ────────────────────────────────────────────────────────────────────
-const results = { A: [], B: [], C: [], skipped: [] }
+const results = { A: [], B: [], C: [], T: [], skipped: [] }
 
 async function auditPage(frPath) {
   const frUrl = `${BASE}${frPath}`
@@ -215,6 +298,10 @@ async function auditPage(frPath) {
     }
     const texts = extractTexts(await res.text())
     for (const text of texts) {
+      // Technique française visible dans un texte composé (légende, méta) —
+      // l'égalité exacte ci-dessous ne la verrait pas.
+      const tech = findUntranslatedTechnique(text, locale)
+      if (tech) results.T.push({ locale, page: pathFor(frPath, locale), text: `${tech.val} (dans « ${text} »)` })
       if (isInvariable(text)) continue
       if (!frTexts.has(text)) continue // différent du français : traduit
       if (isCoincidence(text, locale)) continue // orthographe identique, traduction correcte
@@ -238,9 +325,13 @@ const main = async () => {
       return !seen.has(k) && seen.add(k)
     })
   }
+  // Couverture des techniques saisies en base (si DATABASE_URL).
+  await auditDbTechniques(results.T)
+
   const a = dedup(results.A)
   const b = dedup(results.B)
   const c = dedup(results.C)
+  const t = dedup(results.T)
 
   console.log('\n─── Audit i18n du rendu ───')
   console.log(`Pages auditées : ${pages.length} × 4 langues`)
@@ -254,13 +345,14 @@ const main = async () => {
   }
   show('A — textes fixes non traduits', a)
   show('B — valeurs par défaut en français', b)
+  show('T — techniques sans traduction', t)
   show('C — contenus de l’artiste non traduits (informatif)', c)
 
-  if (a.length || b.length) {
-    console.error('\ni18n:render-check ÉCHEC — textes français visibles sur le site traduit.')
+  if (a.length || b.length || t.length) {
+    console.error('\ni18n:render-check ÉCHEC — textes ou techniques français visibles sur le site traduit.')
     process.exit(1)
   }
-  console.log('\ni18n:render-check OK — aucun texte fixe ni valeur par défaut en français hors /fr.')
+  console.log('\ni18n:render-check OK — aucun texte fixe, défaut ni technique en français hors /fr.')
 }
 
 main()

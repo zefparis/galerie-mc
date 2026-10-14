@@ -24,7 +24,7 @@
     "defaultEyebrow": "Artiste peintre",
     "ctaGallery": "Découvrir la galerie",
     "ctaContact": "Contacter l'artiste",
-    "zoomAria": "Agrandir « {title} »",
+    "zoomAria": "Agrandir « {title} »",
     "chooseArtwork": "Choisir l'œuvre affichée",
     "artworkN": "Œuvre {n} : {title}"
   },
@@ -79,15 +79,16 @@
     "non_a_vendre": "Non à vendre"
   },
   "artwork": {
-    "viewAria": "Voir l'œuvre « {title} » — {meta}",
+    "viewAria": "Voir l'œuvre « {title} » — {meta}",
     "soldBadge": "Vendue",
-    "untitled": "Sans titre"
+    "untitled": "Sans titre",
+    "caption": "« {title} » — {meta}"
   },
   "detail": {
     "back": "← Galerie",
     "zoomHint": "Cliquer pour agrandir",
     "interest": "Manifester son intérêt",
-    "interestSubject": "Intérêt pour « {title} »",
+    "interestSubject": "Intérêt pour « {title} »",
     "prev": "← Précédente",
     "next": "Suivante →",
     "notFound": "Œuvre introuvable",
@@ -163,7 +164,17 @@
     "collage": "Collage",
     "technique-mixte-sur-papier": "Technique mixte sur papier",
     "encre-sur-papier": "Encre sur papier",
-    "autre": "Autre"
+    "autre": "Autre",
+    "acrylique-sur-toile": "Acrylique sur toile",
+    "acrylique-sur-papier": "Acrylique sur papier",
+    "collage-sur-papier": "Collage sur papier",
+    "technique-mixte-sur-toile": "Technique mixte sur toile",
+    "huile": "Huile",
+    "huile-sur-papier": "Huile sur papier",
+    "pastel-sur-papier": "Pastel sur papier",
+    "gouache": "Gouache",
+    "encre": "Encre",
+    "crayon": "Crayon"
   },
   "defaults": {
     "bioShort": "Artiste peintre abstraite | Montreuil-aux-Lions",

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { blurDataUrl } from '@/lib/images'
+import { useTechniqueLabel } from '@/lib/i18n'
 import { Painting } from '@/lib/types'
 
 const INTERVAL_MS = 6000
@@ -18,6 +19,8 @@ interface Props {
 // navigation — pause au survol ou au toucher.
 export default function HeroArtwork({ paintings }: Props) {
   const t = useTranslations('hero')
+  const ta = useTranslations('artwork')
+  const techLabel = useTechniqueLabel()
   const [active, setActive] = useState(0)
   const paused = useRef(false)
 
@@ -72,7 +75,15 @@ export default function HeroArtwork({ paintings }: Props) {
       {/* Légende — texte en dehors de l'image, lisible */}
       <figcaption className="mt-4 flex items-start justify-between gap-4">
         <p className="font-body text-sm md:text-base text-[var(--ink-soft)]">
-          « {current.title} » — {current.technique}, {current.year}
+          {ta('caption', {
+            title: current.title,
+            meta: [
+              current.technique ? techLabel(current.technique) : '',
+              current.year,
+            ]
+              .filter(Boolean)
+              .join(', '),
+          })}
         </p>
         {paintings.length > 1 && (
           <div className="flex items-center gap-1 flex-shrink-0" role="tablist" aria-label={t('chooseArtwork')}>
