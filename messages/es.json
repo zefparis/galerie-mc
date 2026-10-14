@@ -169,7 +169,8 @@
     "navigation": "Navegación",
     "contact": "Contacto",
     "rights": "Todos los derechos reservados",
-    "originals": "Obras originales — reproducción prohibida sin autorización"
+    "originals": "Obras originales — reproducción prohibida sin autorización",
+    "legal": "Información legal"
   },
   "techniques": {
     "huile-sur-toile": "Óleo sobre lienzo",
@@ -219,5 +220,20 @@
     "inAppIos": "Para instalar, abre esta página en Safari.",
     "copy": "Copiar enlace",
     "copied": "¡Enlace copiado!"
+  },
+  "legal": {
+    "eyebrow": "El sitio",
+    "title": "Información legal",
+    "metaTitle": "Información legal",
+    "metaDesc": "Aviso legal, privacidad y condiciones de compra — sitio de Marie-Claire Scandella.",
+    "updated": "Última actualización: {date}",
+    "disclaimer": "Traducción facilitada a título informativo. Prevalece la versión francesa.",
+    "contactCta": "Escribir mediante el formulario de contacto",
+    "s1Title": "Aviso legal",
+    "s1Body": "Editora del sitio y directora de la publicación: Marie-Claire Scandella, artista pintora, a título particular, Montreuil-aux-Lions (Aisne), Francia.\n\nContacto: a través del formulario de contacto del sitio.\n\nAlojamiento: Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, Estados Unidos.\n\nLas obras, fotografías y textos de este sitio están protegidos por el derecho de autor: cualquier reproducción sin la autorización escrita de la artista está prohibida. Los colores de las fotografías pueden diferir ligeramente de la obra real según la pantalla.",
+    "s2Title": "Privacidad",
+    "s2Body": "El formulario de contacto recoge su nombre, su dirección de correo electrónico y su mensaje, únicamente para responder a su solicitud. Estos datos no se venden ni se utilizan con fines publicitarios. Se transmiten a la artista a través de un proveedor de envío de mensajes (EmailJS) y se conservan como máximo 12 meses después del último intercambio.\n\nPuede solicitar su consulta, rectificación o supresión a través del formulario de contacto, y presentar una reclamación ante la CNIL (cnil.fr).\n\nEl sitio no utiliza ninguna cookie de seguimiento ni publicitaria: solo guarda en su dispositivo sus preferencias de visualización (tema, idioma) y puede guardar páginas en caché para funcionar más rápido o sin conexión.",
+    "s3Title": "Comprar una obra",
+    "s3Body": "Las obras son piezas originales y únicas, vendidas directamente por la artista de forma ocasional, como particular. El sitio no ofrece pago en línea: para adquirir una obra, escriba a la artista a través del formulario de contacto.\n\nLa venta se concluye cuando usted ha confirmado por escrito su acuerdo sobre la obra, el precio (en euros, neto — la artista no está sujeta al IVA) y las modalidades de entrega. El pago se realiza por transferencia o cheque antes de la entrega de la obra.\n\nLa obra se retira en Montreuil-aux-Lions o la envía la artista, cuidadosamente embalada, a cargo del comprador salvo acuerdo en contrario. Al recibirla, compruebe su estado y notifique cualquier daño en un plazo de 48 horas con fotografías.\n\nLa compra se refiere al objeto: la artista conserva sus derechos de autor, y cualquier reproducción o difusión de la obra requiere su consentimiento por escrito. En caso de dificultad, buscamos primero una solución amistosa; se aplica el derecho francés."
   }
 }

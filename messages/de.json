@@ -169,7 +169,8 @@
     "navigation": "Navigation",
     "contact": "Kontakt",
     "rights": "Alle Rechte vorbehalten",
-    "originals": "Originalwerke — Reproduktion ohne Genehmigung untersagt"
+    "originals": "Originalwerke — Reproduktion ohne Genehmigung untersagt",
+    "legal": "Rechtliche Hinweise"
   },
   "techniques": {
     "huile-sur-toile": "Öl auf Leinwand",
@@ -219,5 +220,20 @@
     "inAppIos": "Öffne diese Seite zum Installieren in Safari.",
     "copy": "Link kopieren",
     "copied": "Link kopiert!"
+  },
+  "legal": {
+    "eyebrow": "Die Website",
+    "title": "Rechtliche Hinweise",
+    "metaTitle": "Rechtliche Hinweise",
+    "metaDesc": "Impressum, Datenschutz und Kaufinformationen — Website von Marie-Claire Scandella.",
+    "updated": "Zuletzt aktualisiert: {date}",
+    "disclaimer": "Übersetzung nur zur Information. Maßgeblich ist die französische Fassung.",
+    "contactCta": "Über das Kontaktformular schreiben",
+    "s1Title": "Impressum",
+    "s1Body": "Herausgeberin der Website und für den Inhalt verantwortlich: Marie-Claire Scandella, Malerin, als Privatperson, Montreuil-aux-Lions (Aisne), Frankreich.\n\nKontakt: über das Kontaktformular der Website.\n\nHosting: Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, USA.\n\nDie Werke, Fotografien und Texte dieser Website sind urheberrechtlich geschützt: jede Vervielfältigung ohne schriftliche Genehmigung der Künstlerin ist untersagt. Die Farben der Fotografien können je nach Bildschirm leicht vom Original abweichen.",
+    "s2Title": "Datenschutz",
+    "s2Body": "Das Kontaktformular erhebt Ihren Namen, Ihre E-Mail-Adresse und Ihre Nachricht, ausschließlich um Ihre Anfrage zu beantworten. Diese Daten werden weder verkauft noch zu Werbezwecken genutzt. Sie werden der Künstlerin über einen Nachrichtenversand-Dienstleister (EmailJS) übermittelt und höchstens 12 Monate nach dem letzten Austausch aufbewahrt.\n\nÜber das Kontaktformular können Sie Auskunft, Berichtigung oder Löschung verlangen und sich an die CNIL (cnil.fr) wenden.\n\nDie Website verwendet keine Tracking- oder Werbe-Cookies: Sie speichert lediglich Ihre Anzeigeeinstellungen (Thema, Sprache) auf Ihrem Gerät und kann Seiten zwischenspeichern, um schneller zu laden oder offline zu funktionieren.",
+    "s3Title": "Ein Werk erwerben",
+    "s3Body": "Die Werke sind Originale und Unikate, die von der Künstlerin gelegentlich und als Privatperson direkt verkauft werden. Die Website bietet keine Online-Zahlung: Um ein Werk zu erwerben, schreiben Sie der Künstlerin über das Kontaktformular.\n\nDer Verkauf kommt zustande, sobald Sie Ihr Einverständnis schriftlich zum Werk, zum Preis (in Euro, netto — die Künstlerin ist nicht mehrwertsteuerpflichtig) und zu den Übergabemodalitäten bestätigt haben. Die Zahlung erfolgt per Überweisung oder Scheck vor der Übergabe des Werkes.\n\nDas Werk wird in Montreuil-aux-Lions abgeholt oder von der Künstlerin sorgfältig verpackt versandt, auf Kosten der Käuferin bzw. des Käufers, sofern nichts anderes vereinbart ist. Prüfen Sie bei Erhalt den Zustand und melden Sie Schäden innerhalb von 48 Stunden mit Fotografien.\n\nDer Kauf betrifft den Gegenstand: Die Künstlerin behält ihr Urheberrecht, und jede Reproduktion oder Verbreitung des Werkes bedarf ihrer schriftlichen Zustimmung. Bei Schwierigkeiten suchen wir zunächst eine gütliche Lösung; es gilt französisches Recht."
   }
 }

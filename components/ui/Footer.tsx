@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
+import { headers } from 'next/headers'
 import Logo from '@/components/ui/Logo'
 import InstallLink from '@/components/pwa/InstallLink'
 import { GallerySettings } from '@/lib/types'
@@ -18,6 +19,8 @@ export default async function Footer({
   const tn = await getTranslations('nav')
   const tl = await getTranslations('lang')
   const ti = await getTranslations('install')
+  // /informations-legales : aucun e-mail ni téléphone affiché sur la page.
+  const isLegalPage = headers().get('x-legal-page') === '1'
 
   return (
     <footer className="footer w-full border-t border-[var(--line)] bg-[var(--bg)]">
@@ -53,9 +56,10 @@ export default async function Footer({
             </div>
           </nav>
 
-          {/* Contact */}
-          <div>
-            <p className="eyebrow mb-4">{t('contact')}</p>
+          {/* Contact — masqué sur /informations-legales (aucun e-mail affiché) */}
+          {!isLegalPage && (
+            <div>
+              <p className="eyebrow mb-4">{t('contact')}</p>
             <div className="flex flex-col gap-2">
               {settings.email && (
                 <a
@@ -84,7 +88,8 @@ export default async function Footer({
                 </a>
               )}
             </div>
-          </div>
+            </div>
+          )}
 
           {/* Langues */}
           <nav aria-label={tl('label')}>
@@ -103,9 +108,17 @@ export default async function Footer({
         </div>
 
         <div className="mt-12 pt-6 border-t border-[var(--line)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <p className="font-body text-xs text-[var(--muted)]">
-            &copy; {new Date().getFullYear()} {settings.artistName} — {t('rights')}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <p className="font-body text-xs text-[var(--muted)]">
+              &copy; {new Date().getFullYear()} {settings.artistName} — {t('rights')}
+            </p>
+            <Link
+              href="/informations-legales"
+              className="font-body text-xs text-[var(--muted)] hover:text-[var(--accent)] transition-colors underline-offset-4 hover:underline"
+            >
+              {t('legal')}
+            </Link>
+          </div>
           <p className="font-body text-xs text-[var(--muted)]">
             {t('originals')}
           </p>

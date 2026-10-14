@@ -15,7 +15,13 @@ function entry(path: string): MetadataRoute.Sitemap[number] {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticEntries = ['', '/galerie', '/expositions', '/contact'].map(entry)
+  const staticEntries = [
+    '',
+    '/galerie',
+    '/expositions',
+    '/contact',
+    '/informations-legales',
+  ].map(entry)
 
   // Contenus dynamiques — repli sur les seules pages fixes si la base
   // est injoignable pendant le build.

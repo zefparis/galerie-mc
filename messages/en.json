@@ -169,7 +169,8 @@
     "navigation": "Navigation",
     "contact": "Contact",
     "rights": "All rights reserved",
-    "originals": "Original works — reproduction prohibited without permission"
+    "originals": "Original works — reproduction prohibited without permission",
+    "legal": "Legal information"
   },
   "techniques": {
     "huile-sur-toile": "Oil on canvas",
@@ -219,5 +220,20 @@
     "inAppIos": "To install, open this page in Safari.",
     "copy": "Copy link",
     "copied": "Link copied!"
+  },
+  "legal": {
+    "eyebrow": "The site",
+    "title": "Legal information",
+    "metaTitle": "Legal information",
+    "metaDesc": "Legal notice, privacy and purchase terms — website of Marie-Claire Scandella.",
+    "updated": "Last updated: {date}",
+    "disclaimer": "Translation provided for information only. The French version prevails.",
+    "contactCta": "Write via the contact form",
+    "s1Title": "Legal notice",
+    "s1Body": "Site publisher and publication director: Marie-Claire Scandella, visual artist, acting as a private individual, Montreuil-aux-Lions (Aisne), France.\n\nContact: through the site’s contact form.\n\nHosting: Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, United States.\n\nThe artworks, photographs and texts on this site are protected by copyright: any reproduction without the artist’s written permission is prohibited. The colours in the photographs may differ slightly from the actual artwork depending on your screen.",
+    "s2Title": "Privacy",
+    "s2Body": "The contact form collects your name, your e-mail address and your message, solely to reply to your request. This data is neither sold nor used for advertising. It is passed on to the artist by a message-delivery provider (EmailJS) and kept for no more than 12 months after the last exchange.\n\nYou may request access to, correction or deletion of your data via the contact form, and you may contact the CNIL (cnil.fr).\n\nThis site uses no tracking or advertising cookies: it only stores your display preferences (theme, language) on your device and may cache pages so it loads faster or works offline.",
+    "s3Title": "Buying an artwork",
+    "s3Body": "The artworks are original, one-of-a-kind pieces, sold directly by the artist on an occasional basis, as a private individual. The site offers no online payment: to purchase a work, write to the artist via the contact form.\n\nThe sale is concluded once you have confirmed your agreement in writing on the artwork, the price (in euros, net — the artist is not subject to VAT) and the delivery arrangements. Payment is made by bank transfer or cheque before the artwork is handed over.\n\nThe work is collected in Montreuil-aux-Lions or shipped by the artist, carefully packaged, at the buyer’s expense unless otherwise agreed. On receipt, check its condition and report any damage within 48 hours with photographs.\n\nThe purchase covers the physical object: the artist retains her copyright, and any reproduction or distribution of the artwork requires her written consent. Should any difficulty arise, we first seek an amicable solution; French law applies."
   }
 }

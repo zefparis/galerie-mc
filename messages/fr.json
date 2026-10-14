@@ -169,7 +169,8 @@
     "navigation": "Navigation",
     "contact": "Contact",
     "rights": "Tous droits réservés",
-    "originals": "Œuvres originales — reproduction interdite sans autorisation"
+    "originals": "Œuvres originales — reproduction interdite sans autorisation",
+    "legal": "Informations légales"
   },
   "techniques": {
     "huile-sur-toile": "Huile sur toile",
@@ -219,5 +220,20 @@
     "inAppIos": "Pour installer, ouvrez cette page dans Safari.",
     "copy": "Copier le lien",
     "copied": "Lien copié !"
+  },
+  "legal": {
+    "eyebrow": "Le site",
+    "title": "Informations légales",
+    "metaTitle": "Informations légales",
+    "metaDesc": "Mentions légales, vie privée et conditions d’achat — site de Marie-Claire Scandella.",
+    "updated": "Dernière mise à jour : {date}",
+    "disclaimer": "",
+    "contactCta": "Écrire via le formulaire de contact",
+    "s1Title": "Mentions légales",
+    "s1Body": "Éditrice du site et directrice de la publication : Marie-Claire Scandella, artiste peintre, à titre particulier, Montreuil-aux-Lions (Aisne), France.\n\nContact : via le formulaire de contact du site.\n\nHébergement : Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis.\n\nLes œuvres, photographies et textes de ce site sont protégés par le droit d’auteur : toute reproduction sans l’autorisation écrite de l’artiste est interdite. Les couleurs des photographies peuvent différer légèrement de l’œuvre réelle selon l’écran.",
+    "s2Title": "Vie privée",
+    "s2Body": "Le formulaire de contact recueille votre nom, votre adresse e-mail et votre message, uniquement pour répondre à votre demande. Ces données ne sont ni vendues, ni utilisées à des fins publicitaires. Elles sont transmises à l’artiste par un prestataire d’envoi de messages (EmailJS) et conservées au plus 12 mois après le dernier échange.\n\nVous pouvez demander leur consultation, rectification ou suppression via le formulaire de contact, et saisir la CNIL (cnil.fr).\n\nLe site n’utilise aucun cookie de suivi ni publicitaire : il garde seulement sur votre appareil vos préférences d’affichage (thème, langue) et peut mettre en cache des pages pour fonctionner plus vite ou hors connexion.",
+    "s3Title": "Acheter une œuvre",
+    "s3Body": "Les œuvres sont des pièces originales et uniques, vendues directement par l’artiste à titre occasionnel, en tant que particulière. Le site ne propose pas de paiement en ligne : pour acquérir une œuvre, écrivez à l’artiste via le formulaire de contact.\n\nLa vente est conclue lorsque vous avez confirmé votre accord par écrit sur l’œuvre, le prix (en euros, net, l’artiste n’étant pas assujettie à la TVA) et les modalités de remise. Le paiement se fait par virement ou chèque avant la remise de l’œuvre.\n\nL’œuvre est retirée à Montreuil-aux-Lions ou expédiée par l’artiste, soigneusement emballée, aux frais de l’acheteur sauf arrangement contraire. À réception, vérifiez son état et signalez tout dommage dans les 48 heures avec des photographies.\n\nL’achat porte sur l’objet : l’artiste conserve ses droits d’auteur, et toute reproduction ou diffusion de l’œuvre nécessite son accord écrit. En cas de difficulté, nous cherchons d’abord une solution amiable ; le droit français s’applique."
   }
 }
