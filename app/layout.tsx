@@ -24,6 +24,13 @@ const inter = localFont({
   display: "swap",
 })
 
+// Serif à fort contraste dédiée au logotype « Scandell'Art » (subset latin).
+const fraunces = localFont({
+  src: [{ path: "./fonts/fraunces.woff2", weight: "400", style: "normal" }],
+  variable: "--font-brand",
+  display: "swap",
+})
+
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://galerie-marie-claire.vercel.app"
@@ -62,7 +69,7 @@ export default async function RootLayout({
   // (statique ou dynamique), l'héritage implicite n'étant pas fiable.
   const messages = await getMessages({ locale }).catch(() => undefined)
   return (
-    <html lang={locale} suppressHydrationWarning className={`${cormorant.variable} ${inter.variable}`}>
+    <html lang={locale} suppressHydrationWarning className={`${cormorant.variable} ${inter.variable} ${fraunces.variable}`}>
       <head>
         {/* Applique le thème avant le premier rendu — évite tout flash.
             Choix mémorisé en localStorage ; par défaut : suit l'appareil

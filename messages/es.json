@@ -3,7 +3,7 @@
     "galerie": "Galería",
     "expositions": "Exposiciones",
     "contact": "Contacto",
-    "homeAria": "Inicio — Marie-Claire Scandella",
+    "homeAria": "Marie-Claire Scandella, inicio",
     "openMenu": "Abrir el menú",
     "closeMenu": "Cerrar el menú"
   },
@@ -186,5 +186,8 @@
   "defaults": {
     "bioShort": "Artista pintora abstracta | Montreuil-aux-Lions",
     "bio": "Marie-Claire Scandella es una pintora francesa afincada en Montreuil-aux-Lions. Su obra explora la abstracción a través de una paleta sensible y una pincelada expresiva, desarrollando un lenguaje pictórico personal que combina libertad formal y dominio técnico. Su obra se ha presentado en varias exposiciones colectivas e individuales."
+  },
+  "brand": {
+    "tagline": "Pintora abstracta · Montreuil-aux-Lions"
   }
 }

@@ -6,6 +6,7 @@ import { Link } from '@/i18n/navigation'
 import { useCleanPathname } from '@/i18n/pathname'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
+import Logo from '@/components/ui/Logo'
 import type { Locale } from '@/i18n/routing'
 
 const HREFS = ['/galerie', '/expositions', '/contact'] as const
@@ -50,10 +51,12 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
     <>
       <nav className="navbar fixed top-0 left-0 right-0 z-40 bg-[var(--bg)] text-[var(--ink)] border-b border-[var(--line)]">
         <div className="max-w-7xl mx-auto px-5 md:px-8 h-16 md:h-20 flex items-center justify-between">
-          <Link href="/" className="min-w-0" aria-label={t('homeAria')}>
-            <span className="font-display text-xl md:text-2xl tracking-wide truncate block">
-              {artistName}
-            </span>
+          <Link
+            href="/"
+            className="min-w-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--bg)]"
+            aria-label={t('homeAria')}
+          >
+            <Logo className="text-[27px] md:text-[40px]" />
           </Link>
 
           {/* Desktop nav */}
@@ -117,7 +120,15 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="flex justify-end p-4">
+          <div className="flex items-center justify-between p-4">
+            <Link
+              href="/"
+              onClick={() => setDrawerOpen(false)}
+              aria-label={t('homeAria')}
+              className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--on-night)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--night)]"
+            >
+              <Logo onNight className="text-[26px]" />
+            </Link>
             <button
               onClick={() => setDrawerOpen(false)}
               className="p-3 text-[var(--on-night-muted)] hover:text-[var(--on-night)] transition-colors"

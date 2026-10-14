@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
+import Logo from '@/components/ui/Logo'
 import { GallerySettings } from '@/lib/types'
 import type { Locale } from '@/i18n/routing'
 
@@ -22,9 +23,13 @@ export default async function Footer({
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10">
           {/* Identité */}
           <div className="max-w-xs">
-            <p className="font-display text-2xl text-[var(--ink)]">
-              {settings.artistName}
-            </p>
+            <Link
+              href="/"
+              aria-label={tn('homeAria')}
+              className="inline-block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--bg)]"
+            >
+              <Logo className="text-[30px]" />
+            </Link>
             <p className="font-body text-sm text-[var(--ink-soft)] mt-2 leading-relaxed">
               {settings.bioShort}
             </p>

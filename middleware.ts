@@ -36,6 +36,9 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Tout sauf API, admin, fichiers internes Next et fichiers statiques.
-  matcher: ['/((?!api|admin|_next|_vercel|.*\\..*).*)'],
+  // Tout sauf API, admin, fichiers internes Next, fichiers statiques et
+  // routes de métadonnées générées (icon, apple-icon, opengraph-image…).
+  matcher: [
+    '/((?!api|admin|_next|_vercel|icon\\d*|apple-icon|opengraph-image|twitter-image|manifest|sitemap|robots|.*\\..*).*)',
+  ],
 }

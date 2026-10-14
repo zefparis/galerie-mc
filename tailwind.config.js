@@ -38,6 +38,7 @@ module.exports = {
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],
         body: ["var(--font-body)", "system-ui", "sans-serif"],
+        brand: ["var(--font-brand)", "Georgia", "serif"],
       },
       transitionTimingFunction: {
         gallery: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
