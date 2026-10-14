@@ -42,7 +42,10 @@ function fieldStatus(t, field, locale, french) {
   const hasText = !!t?.[locale]?.[field]
   if (!french.trim()) return 'non_traduit'
   if (!meta) return hasText ? 'corrige' : 'non_traduit'
-  if (meta.statut === 'corrige' && meta.sourceHash !== hashSource(french)) {
+  if (
+    (meta.statut === 'corrige' || meta.statut === 'relu') &&
+    meta.sourceHash !== hashSource(french)
+  ) {
     return 'a_mettre_a_jour'
   }
   return meta.statut
@@ -54,6 +57,7 @@ const STATUS_LABEL = {
   echec: 'échec',
   auto: 'traduit',
   corrige: 'corrigé',
+  relu: 'traduit et relu',
 }
 
 /** Champs français traduisibles des réglages (miroir de settingsFrenchFields). */

@@ -13,6 +13,7 @@ const LOCALE_TABS: { locale: TargetLocale; label: string }[] = [
 const STATUS_LABEL: Record<string, string> = {
   auto: 'Traduit',
   corrige: 'Corrigé par vous',
+  relu: 'Traduit et relu',
   a_mettre_a_jour: 'À mettre à jour',
   echec: 'Échec',
   non_traduit: 'Non traduit',
@@ -209,7 +210,7 @@ export default function TranslationPanel({
                             ? 'border-[var(--line)] text-[var(--muted)]'
                             : status === 'a_mettre_a_jour' || status === 'echec'
                               ? 'border-[var(--warning-line)] text-[var(--warning-ink)]'
-                              : status === 'corrige'
+                              : status === 'corrige' || status === 'relu'
                                 ? 'border-[var(--accent)] text-[var(--accent)]'
                                 : status === 'non_traduit'
                                   ? 'border-[var(--line)] text-[var(--muted)]'
@@ -244,18 +245,24 @@ export default function TranslationPanel({
                         placeholder="Pas encore traduit"
                       />
                     )}
-                    <button
-                      type="button"
-                      onClick={() => retranslate(f.key)}
-                      disabled={busy !== ''}
-                      className="mt-1.5 font-body text-xs text-[var(--ink-soft)] underline min-h-[44px] disabled:opacity-40"
-                    >
-                      {busy === f.key
-                        ? 'Traduction en cours...'
-                        : status === 'echec'
-                          ? '↻ Réessayer ce champ'
-                          : 'Retraduire ce champ'}
-                    </button>
+                    {status === 'relu' ? (
+                      <p className="mt-1.5 font-body text-xs text-[var(--muted)]">
+                        Relue à la main — ne peut pas être retraduite automatiquement.
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => retranslate(f.key)}
+                        disabled={busy !== ''}
+                        className="mt-1.5 font-body text-xs text-[var(--ink-soft)] underline min-h-[44px] disabled:opacity-40"
+                      >
+                        {busy === f.key
+                          ? 'Traduction en cours...'
+                          : status === 'echec'
+                            ? '↻ Réessayer ce champ'
+                            : 'Retraduire ce champ'}
+                      </button>
+                    )}
                   </div>
                 )
               })}

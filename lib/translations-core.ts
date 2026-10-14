@@ -68,9 +68,14 @@ export function planField(
   force = false
 ): FieldPlan {
   if (!french.trim()) return 'skip'
-  if (force) return 'translate'
   const meta = fieldMeta(t, field, locale)
   const hasText = !!t?.[locale]?.[field]
+  // 'relu' (traduit à la main et importé) n'est jamais retraduit, même avec
+  // force : si le français a changé on le signale sans rien effacer.
+  if (meta?.statut === 'relu') {
+    return meta.sourceHash === hashSource(french) ? 'skip' : 'mark-stale'
+  }
+  if (force) return 'translate'
   if (!meta && !hasText) return 'translate'
   if (!meta && hasText) return 'skip' // texte sans méta : origine inconnue, on n'écrase pas
   if (meta!.statut === 'corrige') {
@@ -147,6 +152,25 @@ export function markEchec(
   return next
 }
 
+/** Traduction faite à la main et importée : statut 'relu', jamais écrasée
+ *  par la traduction automatique ni par « Retraduire ». */
+export function markRelu(
+  t: Translations | undefined | null,
+  field: string,
+  locale: TargetLocale,
+  text: string,
+  french: string
+): Translations {
+  const next = clone(t)
+  next[locale] = { ...(next[locale] || {}), [field]: text }
+  next._meta = { ...(next._meta || {}) }
+  next._meta[field] = {
+    ...(next._meta[field] || {}),
+    [locale]: { sourceHash: hashSource(french), statut: 'relu' },
+  }
+  return next
+}
+
 /** Le français a bougé alors que la langue était corrigée : on signale sans rien effacer. */
 export function markStale(
   t: Translations | undefined | null,
@@ -175,7 +199,10 @@ export function withStaleMarks(
     if ((oldFrench[field] || '') === (newFrench[field] || '')) continue
     for (const locale of TARGET_LOCALES) {
       const meta = fieldMeta(next, field, locale)
-      if (meta?.statut === 'corrige' && meta.sourceHash !== hashSource(newFrench[field])) {
+      if (
+        (meta?.statut === 'corrige' || meta?.statut === 'relu') &&
+        meta.sourceHash !== hashSource(newFrench[field])
+      ) {
         next = markStale(next, field, locale)
       }
     }
@@ -193,7 +220,12 @@ export function fieldStatus(
   const hasText = !!t?.[locale]?.[field]
   if (!french.trim()) return 'non_traduit'
   if (!meta) return hasText ? 'corrige' : 'non_traduit'
-  if (meta.statut === 'corrige' && meta.sourceHash !== hashSource(french)) return 'a_mettre_a_jour'
+  if (
+    (meta.statut === 'corrige' || meta.statut === 'relu') &&
+    meta.sourceHash !== hashSource(french)
+  ) {
+    return 'a_mettre_a_jour'
+  }
   return meta.statut
 }
 

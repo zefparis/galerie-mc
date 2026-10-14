@@ -96,6 +96,17 @@ const statements = [
   `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS translations JSONB NOT NULL DEFAULT '{}'::jsonb`,
   `ALTER TABLE events ADD COLUMN IF NOT EXISTS translations JSONB NOT NULL DEFAULT '{}'::jsonb`,
   `ALTER TABLE settings ADD COLUMN IF NOT EXISTS translations JSONB NOT NULL DEFAULT '{}'::jsonb`,
+  // Historique des traductions avant chaque import manuel — permet
+  // « Annuler le dernier import » sans jamais perdre de données.
+  `CREATE TABLE IF NOT EXISTS translation_backups (
+    id BIGSERIAL PRIMARY KEY,
+    batch_id UUID NOT NULL,
+    table_name TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    translations JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_translation_backups_batch ON translation_backups (batch_id)`,
 ]
 
 try {

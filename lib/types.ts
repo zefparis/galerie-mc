@@ -15,7 +15,9 @@ export type PaintingCategory = 'peintures' | 'collages'
 export type PriceStatus = 'visible' | 'sur_demande' | 'vendu' | 'non_a_vendre'
 
 export type TargetLocale = 'en' | 'es' | 'de'
-export type TranslationStatus = 'auto' | 'corrige' | 'a_mettre_a_jour' | 'echec'
+// 'relu' : traduction importée faite à la main (« Traduit et relu ») —
+// jamais écrasée, même par « Retraduire » ; 'corrige' : saisie dans l'admin.
+export type TranslationStatus = 'auto' | 'corrige' | 'a_mettre_a_jour' | 'echec' | 'relu'
 
 export interface FieldTranslationMeta {
   sourceHash: string

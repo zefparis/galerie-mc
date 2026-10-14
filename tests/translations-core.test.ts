@@ -3,6 +3,7 @@ import {
   fieldStatus,
   hashSource,
   markCorrected,
+  markRelu,
   markStale,
   photoCaptionKey,
   planField,
@@ -55,6 +56,13 @@ describe('planField', () => {
     expect(planField(t, 'title', fr, 'en', true)).toBe('translate')
     expect(planField({}, 'title', '', 'en', true)).toBe('skip')
   })
+  it('un texte « relu » n’est jamais retraduit, même avec force', () => {
+    const t = markRelu({}, 'title', 'en', 'Hand-made', fr)
+    expect(planField(t, 'title', fr, 'en')).toBe('skip')
+    expect(planField(t, 'title', fr, 'en', true)).toBe('skip')
+    // Le français a changé → signalé, jamais effacé.
+    expect(planField(t, 'title', 'Autre texte', 'en', true)).toBe('mark-stale')
+  })
 })
 
 describe('setFieldTranslation / markCorrected / markStale', () => {
@@ -81,6 +89,12 @@ describe('setFieldTranslation / markCorrected / markStale', () => {
     expect(t.en?.title).toBe('Fixed')
     expect(t._meta?.title?.en?.statut).toBe('a_mettre_a_jour')
   })
+  it('markRelu enregistre le statut relu avec l’empreinte du français', () => {
+    const t = markRelu({}, 'title', 'de', 'Handgemacht', 'Bonjour')
+    expect(t.de?.title).toBe('Handgemacht')
+    expect(t._meta?.title?.de?.statut).toBe('relu')
+    expect(t._meta?.title?.de?.sourceHash).toBe(hashSource('Bonjour'))
+  })
 })
 
 describe('withStaleMarks', () => {
@@ -100,6 +114,12 @@ describe('withStaleMarks', () => {
     const next = withStaleMarks(t, { title: 'Bonjour' }, { title: 'Autre' })
     expect(next._meta?.title?.en?.statut).toBe('auto')
   })
+  it('marque aussi les traductions relues dont le français a changé', () => {
+    const t = markRelu({}, 'title', 'en', 'Hand-made', 'Bonjour')
+    const next = withStaleMarks(t, { title: 'Bonjour' }, { title: 'Autre' })
+    expect(fieldStatus(next, 'title', 'en', 'Autre')).toBe('a_mettre_a_jour')
+    expect(next.en?.title).toBe('Hand-made')
+  })
 })
 
 describe('fieldStatus', () => {
@@ -112,6 +132,11 @@ describe('fieldStatus', () => {
   })
   it('corrige si un texte existe sans méta', () => {
     expect(fieldStatus({ en: { title: 'X' } }, 'title', 'en', fr)).toBe('corrige')
+  })
+  it('relu → relu si le français n’a pas bougé, a_mettre_a_jour sinon', () => {
+    const t = markRelu({}, 'title', 'en', 'Hand-made', 'Bonjour')
+    expect(fieldStatus(t, 'title', 'en', 'Bonjour')).toBe('relu')
+    expect(fieldStatus(t, 'title', 'en', 'Autre')).toBe('a_mettre_a_jour')
   })
 })
 
@@ -151,6 +176,15 @@ describe('translateFields (idempotence)', () => {
     const t = markCorrected({}, 'title', 'en', 'My version', 'Bonjour')
     const r = await translateFields({ title: 'Bonjour' }, t, ['en'], fakeTranslator('EN:'), { force: true })
     expect(r.translations.en?.title).toBe('EN:Bonjour')
+  })
+
+  it('ne touche jamais un texte « relu », même avec force', async () => {
+    const t = markRelu({}, 'title', 'en', 'Hand-made', 'Bonjour')
+    const r = await translateFields({ title: 'Bonjour' }, t, ['en'], fakeTranslator('EN:'), {
+      force: true,
+    })
+    expect(r.translations.en?.title).toBe('Hand-made')
+    expect(r.translated).toBe(0)
   })
 
   it('compte une erreur et garde le reste si le fournisseur échoue', async () => {
