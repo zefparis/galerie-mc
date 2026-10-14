@@ -74,7 +74,9 @@ export default function TranslateAllButton() {
             return
           }
           const data = await res.json().catch(() => ({}))
-          if (!res.ok) failures++
+          // Un contenu compte en échec dès qu'un champ n'a pas été traduit —
+          // la route renvoie 200 avec errors>0, jamais de faux succès.
+          if (!res.ok || (data.errors || 0) > 0) failures++
           else translated += data.translated || 0
         } catch {
           failures++

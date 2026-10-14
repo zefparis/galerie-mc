@@ -77,6 +77,7 @@ export function planField(
     return meta!.sourceHash === hashSource(french) ? 'skip' : 'mark-stale'
   }
   if (meta!.statut === 'a_mettre_a_jour') return 'skip' // attend un « Retraduire » manuel
+  if (meta!.statut === 'echec') return 'translate' // on retente à la prochaine passe
   return meta!.sourceHash === hashSource(french) ? 'skip' : 'translate'
 }
 
@@ -116,6 +117,32 @@ export function markCorrected(
   next._meta[field] = {
     ...(next._meta[field] || {}),
     [locale]: { sourceHash: hashSource(french), statut: 'corrige' },
+  }
+  return next
+}
+
+/**
+ * Traduction en échec : statut 'echec' + raison courte affichée dans l'admin.
+ * Le texte déjà présent est conservé — mieux vaut une traduction ancienne
+ * qu'une case vide côté public.
+ */
+export function markEchec(
+  t: Translations | undefined | null,
+  field: string,
+  locale: TargetLocale,
+  raison: string,
+  french = ''
+): Translations {
+  const next = clone(t)
+  const meta = fieldMeta(next, field, locale)
+  next._meta = { ...(next._meta || {}) }
+  next._meta[field] = {
+    ...(next._meta[field] || {}),
+    [locale]: {
+      sourceHash: meta?.sourceHash || hashSource(french),
+      statut: 'echec',
+      erreur: raison.slice(0, 160),
+    },
   }
   return next
 }
@@ -172,10 +199,20 @@ export function fieldStatus(
 
 // ─── Orchestration (testable : le traducteur est injecté) ───────────────────
 
+/**
+ * Résultat d'un fournisseur : les champs traduits d'un côté, les champs en
+ * échec de l'autre (raison courte en français, pensée pour l'admin — jamais
+ * de texte source complet).
+ */
+export interface TranslateOutcome {
+  ok: Record<string, string>
+  failed: Record<string, string>
+}
+
 export type TranslateFn = (
   texts: Record<string, string>,
   locale: TargetLocale
-) => Promise<Record<string, string>>
+) => Promise<TranslateOutcome>
 
 export interface TranslateReport {
   translations: Translations
@@ -212,14 +249,22 @@ export async function translateFields(
       } else report.skipped++
     }
     if (Object.keys(toTranslate).length === 0) continue
+    let outcome: TranslateOutcome
     try {
-      const translated = await translate(toTranslate, locale)
-      for (const [field, text] of Object.entries(translated)) {
+      outcome = await translate(toTranslate, locale)
+    } catch {
+      outcome = { ok: {}, failed: {} }
+    }
+    for (const field of Object.keys(toTranslate)) {
+      const text = outcome.ok[field]
+      if (typeof text === 'string' && text.trim()) {
         translations = setFieldTranslation(translations, field, locale, text, toTranslate[field])
         report.translated++
+      } else {
+        const raison = outcome.failed[field] || 'Le service de traduction ne répond pas'
+        translations = markEchec(translations, field, locale, raison, toTranslate[field])
+        report.errors++
       }
-    } catch {
-      report.errors++
     }
   }
   report.translations = translations

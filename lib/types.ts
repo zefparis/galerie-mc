@@ -15,11 +15,13 @@ export type PaintingCategory = 'peintures' | 'collages'
 export type PriceStatus = 'visible' | 'sur_demande' | 'vendu' | 'non_a_vendre'
 
 export type TargetLocale = 'en' | 'es' | 'de'
-export type TranslationStatus = 'auto' | 'corrige' | 'a_mettre_a_jour'
+export type TranslationStatus = 'auto' | 'corrige' | 'a_mettre_a_jour' | 'echec'
 
 export interface FieldTranslationMeta {
   sourceHash: string
   statut: TranslationStatus
+  // Raison courte en français quand statut = 'echec' (affichée dans l'admin).
+  erreur?: string
 }
 
 // Traductions d'un contenu : { en: {champ: texte}, es: {...}, de: {...},

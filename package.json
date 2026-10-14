@@ -10,6 +10,7 @@
     "lint": "next lint",
     "migrate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/migrate.mjs",
     "i18n:check": "node scripts/i18n-check.mjs",
+    "translate:check": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/translate-check.mjs",
     "contrast:check": "node scripts/contrast-check.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",

@@ -14,8 +14,10 @@ import {
 import type { Translations } from '../lib/types'
 
 const fakeTranslator = (prefix: string) =>
-  async (texts: Record<string, string>) =>
-    Object.fromEntries(Object.entries(texts).map(([k, v]) => [k, `${prefix}${v}`]))
+  async (texts: Record<string, string>) => ({
+    ok: Object.fromEntries(Object.entries(texts).map(([k, v]) => [k, `${prefix}${v}`])),
+    failed: {},
+  })
 
 describe('hashSource', () => {
   it('est stable et insensible aux espaces de bord', () => {
@@ -157,6 +159,36 @@ describe('translateFields (idempotence)', () => {
     })
     expect(r.errors).toBe(1)
     expect(r.translations.en?.title).toBeUndefined()
+    // L'échec est marqué : il sera retenté à la prochaine passe.
+    expect(r.translations._meta?.title?.en?.statut).toBe('echec')
+  })
+
+  it('marque Échec chaque champ sans traduction renvoyée', async () => {
+    const r = await translateFields({ title: 'Bonjour', description: 'Une phrase' }, {}, ['en'], async () => ({
+      ok: { title: 'Hello' },
+      failed: { description: 'La réponse du traducteur a été coupée' },
+    }))
+    expect(r.translated).toBe(1)
+    expect(r.errors).toBe(1)
+    expect(r.translations.en?.description).toBeUndefined()
+    expect(r.translations._meta?.description?.en?.statut).toBe('echec')
+    expect(r.translations._meta?.description?.en?.erreur).toBe('La réponse du traducteur a été coupée')
+  })
+
+  it('retente un champ en échec à la passe suivante', async () => {
+    const first = await translateFields({ title: 'Bonjour' }, {}, ['en'], async () => ({
+      ok: {},
+      failed: { title: 'Trop de demandes' },
+    }))
+    expect(fieldStatus(first.translations, 'title', 'en', 'Bonjour')).toBe('echec')
+    const second = await translateFields(
+      { title: 'Bonjour' },
+      first.translations,
+      ['en'],
+      fakeTranslator('EN:')
+    )
+    expect(second.translations.en?.title).toBe('EN:Bonjour')
+    expect(second.errors).toBe(0)
   })
 })
 

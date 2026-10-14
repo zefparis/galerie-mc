@@ -11,9 +11,10 @@ const LOCALE_TABS: { locale: TargetLocale; label: string }[] = [
 ]
 
 const STATUS_LABEL: Record<string, string> = {
-  auto: 'Traduit automatiquement',
+  auto: 'Traduit',
   corrige: 'Corrigé par vous',
   a_mettre_a_jour: 'À mettre à jour',
+  echec: 'Échec',
   non_traduit: 'Non traduit',
 }
 
@@ -122,7 +123,16 @@ export default function TranslationPanel({
       onTranslationsChange(data.translations)
       setDirty({})
       setDrafts({})
-      setNotice(field ? 'Traduction refaite ✓' : 'Tout a été retraduit ✓')
+      // La route renvoie 200 même si certains champs ont échoué — on lit
+      // errors pour ne jamais afficher un succès à tort.
+      if ((data.errors || 0) > 0) {
+        setError(
+          'Certains champs n’ont pas pu être traduits — leur état passe en « Échec », ' +
+            'vous pouvez les réessayer un par un.'
+        )
+      } else {
+        setNotice(field ? 'Traduction refaite ✓' : 'Tout a été retraduit ✓')
+      }
     } catch {
       setError('La traduction a échoué — réessayez dans un instant.')
     } finally {
@@ -185,6 +195,8 @@ export default function TranslationPanel({
             <div className="space-y-5">
               {shownFields.map((f) => {
                 const status = fieldStatus(translations, f.key, tab, french[f.key] || '')
+                const raison = translations?._meta?.[f.key]?.[tab]?.erreur
+                const running = busy === f.key || busy === 'all'
                 return (
                   <div key={f.key}>
                     <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -193,18 +205,25 @@ export default function TranslationPanel({
                       </p>
                       <span
                         className={`font-body text-[11px] uppercase tracking-wide px-2 py-1 border ${
-                          status === 'a_mettre_a_jour'
-                            ? 'border-[var(--warning-line)] text-[var(--warning-ink)]'
-                            : status === 'corrige'
-                              ? 'border-[var(--accent)] text-[var(--accent)]'
-                              : status === 'non_traduit'
-                                ? 'border-[var(--line)] text-[var(--muted)]'
-                                : 'border-[var(--line)] text-[var(--ink-soft)]'
+                          running
+                            ? 'border-[var(--line)] text-[var(--muted)]'
+                            : status === 'a_mettre_a_jour' || status === 'echec'
+                              ? 'border-[var(--warning-line)] text-[var(--warning-ink)]'
+                              : status === 'corrige'
+                                ? 'border-[var(--accent)] text-[var(--accent)]'
+                                : status === 'non_traduit'
+                                  ? 'border-[var(--line)] text-[var(--muted)]'
+                                  : 'border-[var(--line)] text-[var(--ink-soft)]'
                         }`}
                       >
-                        {STATUS_LABEL[status]}
+                        {running ? 'En cours…' : STATUS_LABEL[status]}
                       </span>
                     </div>
+                    {status === 'echec' && raison && (
+                      <p className="font-body text-xs text-[var(--danger)] mb-1.5" role="status">
+                        {raison}
+                      </p>
+                    )}
                     <p className="font-body text-xs text-[var(--muted)] italic mb-2 line-clamp-2">
                       « {french[f.key]} »
                     </p>
@@ -231,7 +250,11 @@ export default function TranslationPanel({
                       disabled={busy !== ''}
                       className="mt-1.5 font-body text-xs text-[var(--ink-soft)] underline min-h-[44px] disabled:opacity-40"
                     >
-                      {busy === f.key ? 'Traduction en cours...' : 'Retraduire ce champ'}
+                      {busy === f.key
+                        ? 'Traduction en cours...'
+                        : status === 'echec'
+                          ? '↻ Réessayer ce champ'
+                          : 'Retraduire ce champ'}
                     </button>
                   </div>
                 )

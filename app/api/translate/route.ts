@@ -16,6 +16,13 @@ import { getTranslator, isTranslationConfigured } from '@/lib/translate'
 import { DEFAULT_SETTINGS } from '@/lib/storage'
 import type { GallerySettings, TargetLocale, Translations } from '@/lib/types'
 
+// La traduction d'un contenu peut prendre plusieurs dizaines de secondes
+// (appels champ par champ + relecture des longs textes). Sans maxDuration,
+// Vercel tue la fonction au bout de ~10 s : le JSONB n'était jamais écrit,
+// d'où des traductions « lancées » qui n'arrivaient jamais.
+export const maxDuration = 60
+export const dynamic = 'force-dynamic'
+
 const bodySchema = z.object({
   entity: z.enum(['painting', 'event', 'settings']),
   id: uuidSchema.optional(),
