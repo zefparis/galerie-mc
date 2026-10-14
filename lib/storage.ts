@@ -8,6 +8,10 @@ export const DEFAULT_SETTINGS: GallerySettings = {
   artistName: 'Marie-Claire Scandella',
   bio: "Marie-Claire Scandella est une artiste peintre française basée à Montreuil-aux-Lions. Son travail explore l'abstraction à travers une palette sensible et une touche expressive, développant un langage pictural personnel qui allie liberté formelle et maîtrise technique. Ses œuvres ont été présentées dans plusieurs expositions collectives et personnelles.",
   bioShort: 'Artiste peintre abstraite | Montreuil-aux-Lions',
+  // Accroche pré-remplie au premier déploiement : courte et neutre
+  // (ni le nom ni le lieu, déjà affichés dans le hero).
+  tagline: 'Peintures et collages — la matière en lumière',
+  presentation: '',
   email: 'contact@marie-claire-scandella.fr',
   phone: '',
   instagram: '',

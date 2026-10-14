@@ -37,6 +37,29 @@ const dateStringSchema = z
   .string()
   .regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Date invalide (format attendu : AAAA-MM-JJ)')
 
+// Photos d'exposition : seules des URLs Cloudinary de notre cloud sont
+// acceptées (le nom du cloud est une variable publique, présente côté
+// serveur aussi ; si elle manque on vérifie au moins le domaine).
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || ''
+const cloudinaryUrl = z
+  .string()
+  .max(2000)
+  .refine(
+    (u) =>
+      CLOUD_NAME
+        ? u.startsWith(`https://res.cloudinary.com/${CLOUD_NAME}/image/upload/`)
+        : /^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\//.test(u),
+    "L'image doit venir de l'espace photo du site"
+  )
+
+const eventImageSchema = z.object({
+  url: cloudinaryUrl,
+  publicId: z.string().max(500).optional(),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+  alt: z.string().max(120).optional(),
+})
+
 export const eventBodySchema = z.object({
   title: z.string().trim().min(1, 'Le titre est obligatoire').max(300),
   description: z.string().max(20000).optional().default(''),
@@ -45,6 +68,8 @@ export const eventBodySchema = z.object({
   coverUrl: z.string().max(2000).optional().default(''),
   coverPublicId: z.string().max(500).optional().default(''),
   media: z.array(mediaSchema).max(200).optional().default([]),
+  // Photos de l'exposition : 10 maximum, la première = couverture.
+  images: z.array(eventImageSchema).max(10, 'Dix photos maximum').optional(),
   published: z.boolean().optional().default(false),
   order: z.number().int().optional().default(0),
   translations: translationsSchema,
@@ -73,6 +98,12 @@ export const settingsBodySchema = z.object({
   phone: z.string().max(50).optional().default(''),
   instagram: z.string().max(200).optional().default(''),
   processText: z.string().max(20000).optional().default(''),
+  tagline: z.string().max(160, "L'accroche fait 160 caractères maximum").optional().default(''),
+  presentation: z
+    .string()
+    .max(3000, 'La présentation fait 3000 caractères maximum')
+    .optional()
+    .default(''),
   photos: z.array(artistPhotoSchema).max(3, 'Trois photos maximum').optional().default([]),
   translations: translationsSchema,
 })

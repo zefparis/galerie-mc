@@ -111,6 +111,13 @@ const statements = [
   // import ») ou 'auto' (traduction automatique — jamais restaurée par
   // le bouton d'annulation d'import).
   `ALTER TABLE translation_backups ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'import'`,
+  // Photos des expositions (≤10, la première = couverture). Les
+  // événements existants gardent cover_url/media — la lecture déduit
+  // `images` de ces colonnes, rien n'est recopié ni perdu.
+  `ALTER TABLE events ADD COLUMN IF NOT EXISTS images JSONB NOT NULL DEFAULT '[]'::jsonb`,
+  // Accroche de la page d'accueil, pré-remplie au premier déploiement
+  // avec un texte neutre — jamais réécrite si l'artiste l'a modifiée.
+  `UPDATE settings SET data = data || '{"tagline":"Peintures et collages — la matière en lumière"}'::jsonb WHERE id = 1 AND COALESCE(NULLIF(TRIM(data->>'tagline'), ''), '') = ''`,
 ]
 
 try {

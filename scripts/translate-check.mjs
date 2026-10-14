@@ -62,9 +62,28 @@ const STATUS_LABEL = {
 
 /** Champs français traduisibles des réglages (miroir de settingsFrenchFields). */
 function settingsFrenchFields(s) {
-  const fields = { bioShort: s.bioShort || '', bio: s.bio || '', processText: s.processText || '' }
+  const fields = {
+    bioShort: s.bioShort || '',
+    bio: s.bio || '',
+    processText: s.processText || '',
+    tagline: s.tagline || '',
+    presentation: s.presentation || '',
+  }
   for (const p of s.photos || []) {
     if (p.publicId) fields[photoCaptionKey(p.publicId)] = p.caption || ''
+  }
+  return fields
+}
+
+/** Champs français traduisibles d'un événement (miroir d'eventFrenchFields). */
+function eventFrenchFields(e) {
+  const fields = {
+    title: e.title || '',
+    description: e.description || '',
+    location: e.location || '',
+  }
+  for (const img of e.images || []) {
+    if (img.publicId) fields[photoCaptionKey(img.publicId)] = img.alt || ''
   }
   return fields
 }
@@ -76,6 +95,8 @@ const FIELD_LABELS = {
   bioShort: 'accroche (ligne sous le nom)',
   bio: 'présentation de l’artiste',
   processText: 'démarche picturale',
+  tagline: 'phrase d’accroche (accueil)',
+  presentation: 'texte de présentation (accueil)',
 }
 
 const fieldLabel = (f) =>
@@ -109,7 +130,7 @@ function report(label, french, translations) {
 try {
   const [{ rows: paintings }, { rows: events }, { rows: settingsRows }] = await Promise.all([
     pool.query('SELECT title, description, translations FROM paintings ORDER BY "order" NULLS LAST'),
-    pool.query('SELECT title, description, location, translations FROM events ORDER BY date DESC'),
+    pool.query('SELECT title, description, location, images, translations FROM events ORDER BY event_date DESC NULLS LAST'),
     pool.query('SELECT data, translations FROM settings WHERE id = 1'),
   ])
 
@@ -124,15 +145,7 @@ try {
   }
   console.log(`\nÉvénements (${events.length})`)
   for (const e of events) {
-    total += report(
-      `« ${e.title} »`,
-      {
-        title: e.title || '',
-        description: e.description || '',
-        location: e.location || '',
-      },
-      e.translations || {}
-    )
+    total += report(`« ${e.title} »`, eventFrenchFields(e), e.translations || {})
   }
   console.log('\nRéglages (accroche, présentation, démarche, légendes)')
   total += report(

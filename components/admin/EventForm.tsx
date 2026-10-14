@@ -1,9 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { GalleryEvent, EventMedia, Translations } from '@/lib/types'
+import { GalleryEvent, EventImage, EventMedia, Translations } from '@/lib/types'
 import { isSessionExpired, redirectToLogin } from '@/lib/storage'
+import { photoCaptionKey } from '@/lib/translations-core'
 import CloudinaryUpload from './CloudinaryUpload'
+import EventPhotosField from './EventPhotosField'
 import HelpTip from './HelpTip'
 import TranslationPanel from './TranslationPanel'
 
@@ -41,6 +43,7 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
   })
 
   const [media, setMedia] = useState<EventMedia[]>(event?.media || [])
+  const [images, setImages] = useState<EventImage[]>(event?.images || [])
   const [videoUrl, setVideoUrl] = useState('')
   const [videoError, setVideoError] = useState('')
   const [draftFound, setDraftFound] = useState(false)
@@ -60,6 +63,7 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
       if (draft?.form?.title || draft?.form?.coverUrl) {
         setForm(draft.form)
         if (Array.isArray(draft.media)) setMedia(draft.media)
+        if (Array.isArray(draft.images)) setImages(draft.images)
         setDraftFound(true)
       }
     } catch { /* brouillon illisible — on l'ignore */ }
@@ -70,11 +74,11 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
     if (isEditing) return
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(draftKey, JSON.stringify({ form, media }))
+        localStorage.setItem(draftKey, JSON.stringify({ form, media, images }))
       } catch { /* stockage plein — non bloquant */ }
     }, 400)
     return () => clearTimeout(t)
-  }, [form, media, draftKey, isEditing])
+  }, [form, media, images, draftKey, isEditing])
 
   const discardDraft = () => {
     localStorage.removeItem(draftKey)
@@ -84,6 +88,7 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
       coverUrl: '', coverPublicId: '', published: false,
     })
     setMedia([])
+    setImages([])
   }
 
   const handleSave = async () => {
@@ -94,7 +99,16 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
     }
     setSaving(true)
     try {
-      const body = { ...form, title: form.title.trim(), media, order: event?.order || 0 }
+      // La première photo devient la couverture (le serveur le garantit aussi).
+      const body = {
+        ...form,
+        title: form.title.trim(),
+        coverUrl: images[0]?.url || form.coverUrl,
+        coverPublicId: images[0]?.publicId || form.coverPublicId,
+        media,
+        images,
+        order: event?.order || 0,
+      }
       const res = isEditing
         ? await fetch(`/api/events/${event.id}`, {
             method: 'PUT',
@@ -284,13 +298,13 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
             Ajoutez des photos de vos œuvres exposées, ou une vidéo YouTube du vernissage.
           </p>
 
-          {/* Ajouter une photo */}
+          {/* Photos de l'exposition — envoi multiple, 10 maximum */}
           <div className="mb-5">
-            <p className="label-field">Ajouter une photo</p>
-            <CloudinaryUpload
-              currentUrl=""
-              onUploaded={(url, publicId) => setMedia([...media, { type: 'photo', url, publicId, caption: '' }])}
-            />
+            <p className="label-field">
+              Photos
+              <HelpTip text="Les photos de l'exposition : œuvres accrochées, vues de la salle, vernissage. La première photo devient la couverture." />
+            </p>
+            <EventPhotosField images={images} onChange={setImages} max={10} />
           </div>
 
           {/* Ajouter une vidéo */}
@@ -322,23 +336,17 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
             )}
           </div>
 
-          {/* Liste des médias */}
-          {media.length > 0 && (
+          {/* Liste des vidéos (les photos vivent dans la section « Photos ») */}
+          {media.some((m) => m.type === 'video') && (
             <div className="space-y-3">
-              {media.map((m, i) => (
+              {media.map((m, i) => m.type === 'video' && (
                 <div key={i} className="border border-[var(--line)] bg-[var(--surface)] p-3 flex flex-col gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 bg-[var(--line)] overflow-hidden flex-shrink-0">
-                      {m.type === 'photo' ? (
-                        <img src={m.url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-black/80 text-white text-lg">
-                          ▶
-                        </div>
-                      )}
+                    <div className="w-16 h-16 bg-black/80 overflow-hidden flex-shrink-0 flex items-center justify-center text-white text-lg">
+                      ▶
                     </div>
                     <span className="font-body text-sm font-medium text-[var(--ink)] flex-1">
-                      {m.type === 'photo' ? '📷 Photo' : '🎬 Vidéo YouTube'}
+                      🎬 Vidéo YouTube
                     </span>
                     <div className="flex gap-1.5">
                       <button
@@ -396,11 +404,20 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
               { key: 'title', label: 'Titre de l’événement' },
               { key: 'description', label: 'Description', multiline: true },
               { key: 'location', label: 'Lieu' },
+              ...images
+                .filter((img) => img.publicId)
+                .map((img, i) => ({
+                  key: photoCaptionKey(img.publicId!),
+                  label: `Description de la photo ${i + 1}`,
+                })),
             ]}
             french={{
               title: form.title,
               description: form.description,
               location: form.location,
+              ...Object.fromEntries(
+                images.filter((img) => img.publicId).map((img) => [photoCaptionKey(img.publicId!), img.alt || ''])
+              ),
             }}
             translations={translations}
             onTranslationsChange={setTranslations}

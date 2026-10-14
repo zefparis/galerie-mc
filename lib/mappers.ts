@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // Mappe une ligne snake_case PostgreSQL vers l'objet camelCase attendu par le frontend.
+import type { EventImage } from './types'
 
 export function mapPaintingRow(r: any) {
   return {
@@ -24,7 +25,35 @@ export function mapPaintingRow(r: any) {
   }
 }
 
+function sanitizeEventImage(m: any): EventImage | null {
+  if (!m || typeof m.url !== 'string' || !m.url) return null
+  return {
+    url: m.url,
+    publicId: typeof m.publicId === 'string' ? m.publicId : undefined,
+    width: Number.isInteger(m.width) && m.width > 0 ? m.width : undefined,
+    height: Number.isInteger(m.height) && m.height > 0 ? m.height : undefined,
+    alt: typeof m.alt === 'string' ? m.alt : undefined,
+  }
+}
+
 export function mapEventRow(r: any) {
+  const media = Array.isArray(r.media) ? r.media : []
+  const images = ((Array.isArray(r.images) ? r.images : []) as any[])
+    .map(sanitizeEventImage)
+    .filter((i: EventImage | null): i is EventImage => i !== null)
+  // Repli de lecture (rien n'est recopié ni perdu) : pour les événements
+  // sans colonne `images` remplie, la photo unique devient la première
+  // photo, puis suivent les photos déjà présentes dans `media`.
+  if (images.length === 0) {
+    if (r.cover_url) {
+      images.push({ url: r.cover_url, publicId: r.cover_public_id || undefined })
+    }
+    for (const m of media) {
+      if (m?.type === 'photo' && m.url && !images.some((i) => i.url === m.url)) {
+        images.push({ url: m.url, publicId: m.publicId || undefined, alt: m.caption || undefined })
+      }
+    }
+  }
   return {
     id: r.id,
     title: r.title,
@@ -33,7 +62,8 @@ export function mapEventRow(r: any) {
     eventDate: r.event_date ? r.event_date.toISOString().split('T')[0] : '',
     coverUrl: r.cover_url || '',
     coverPublicId: r.cover_public_id || '',
-    media: r.media || [],
+    media,
+    images,
     published: r.published,
     order: r.order,
     createdAt: r.created_at,

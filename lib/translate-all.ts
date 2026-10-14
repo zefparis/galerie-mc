@@ -34,6 +34,8 @@ export const FIELD_LABEL: Record<string, string> = {
   bioShort: 'accroche',
   bio: 'présentation',
   processText: 'démarche picturale',
+  tagline: 'phrase d’accroche (accueil)',
+  presentation: 'présentation (accueil)',
 }
 
 export const fieldLabel = (f: string) =>

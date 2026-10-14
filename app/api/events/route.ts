@@ -5,6 +5,15 @@ import { handleRouteError } from '@/lib/api'
 import { mapEventRow } from '@/lib/mappers'
 import { eventBodySchema } from '@/lib/validation'
 
+// La première photo sert de couverture — synchronisé ici pour que la
+// règle tienne quel que soit le client.
+function coverFor(b: { coverUrl: string; coverPublicId: string; images?: { url: string; publicId?: string }[] }) {
+  if (b.images && b.images.length > 0) {
+    return { url: b.images[0].url, publicId: b.images[0].publicId || '' }
+  }
+  return { url: b.coverUrl, publicId: b.coverPublicId }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -27,19 +36,22 @@ export async function POST(req: NextRequest) {
 
   try {
     const b = eventBodySchema.parse(await req.json())
+    const cover = coverFor(b)
+    const images = b.images ?? []
     let rows
     try {
       ;({ rows } = await pool.query(
-        `INSERT INTO events (title, description, location, event_date, cover_url, cover_public_id, media, published, "order", translations)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+        `INSERT INTO events (title, description, location, event_date, cover_url, cover_public_id, media, images, published, "order", translations)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
         [
           b.title,
           b.description,
           b.location,
           b.eventDate || null,
-          b.coverUrl,
-          b.coverPublicId,
+          cover.url,
+          cover.publicId,
           JSON.stringify(b.media),
+          JSON.stringify(images),
           b.published,
           b.order,
           JSON.stringify(b.translations || {}),
@@ -55,8 +67,8 @@ export async function POST(req: NextRequest) {
           b.description,
           b.location,
           b.eventDate || null,
-          b.coverUrl,
-          b.coverPublicId,
+          cover.url,
+          cover.publicId,
           JSON.stringify(b.media),
           b.published,
           b.order,

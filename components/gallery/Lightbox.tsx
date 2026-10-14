@@ -11,11 +11,13 @@ interface Props {
   onClose: () => void
   onPrev?: () => void
   onNext?: () => void
+  // Compteur « 2 / 7 » affiché dans le coin supérieur gauche.
+  counter?: string
 }
 
 // Lightbox plein écran : double-clic / double-tap = zoom ×2,5 ancré au point
 // touché, glisser pour déplacer quand zoomé, swipe latéral pour naviguer.
-export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
+export default function Lightbox({ src, alt, onClose, onPrev, onNext, counter }: Props) {
   const t = useTranslations('lightbox')
   const [zoomed, setZoomed] = useState(false)
   const [origin, setOrigin] = useState('50% 50%')
@@ -156,6 +158,13 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext }: Props) {
           <path d="M18 6L6 18M6 6l12 12" />
         </svg>
       </button>
+
+      {/* Compteur */}
+      {counter && (
+        <p className="absolute top-5 left-5 z-10 font-body text-sm text-[var(--on-night-muted)] tabular-nums">
+          {counter}
+        </p>
+      )}
 
       {/* Flèches desktop */}
       {hasNav && onPrev && (
