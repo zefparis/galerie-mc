@@ -139,8 +139,12 @@ const PAIRS = [
   ['#FFFFFF', { blend: ['#000000', 0.6, '#FFFFFF'] }, 4.5, 'voile du tiroir mobile'],
   // États non textuels (3:1)
   ['accent', 'bg', 3.0, 'icônes / outline focus'],
-  ['muted', 'mat', 3.0, 'point inactif du carrousel hero'],
+  [{ blend: ['ink', 0.6, 'bg'] }, 'bg', 3.0, 'point inactif du carrousel hero (60 % encre)'],
   ['line', 'bg', 1.0, 'filets décoratifs (informatif — non exigé WCAG)'],
+  // Barre nav translucide au scroll — dessous le plus défavorable
+  ['ink-soft', { blend: ['var(--bg)', 0.88, '#000000'] }, 4.5, 'barre nav verre dépoli (dessous noir)'],
+  ['ink-soft', { blend: ['var(--bg)', 0.88, '#FFFFFF'] }, 4.5, 'barre nav verre dépoli (dessous blanc)'],
+  ['on-night', { blend: ['var(--night)', 0.88, '#FFFFFF'] }, 4.5, 'tiroir verre dépoli (dessous clair)'],
 ]
 
 // ── Calcul ─────────────────────────────────────────────────────────────
@@ -152,13 +156,19 @@ for (const [themeName, tokens] of [['clair', light], ['sombre', dark]]) {
   for (const [fgTok, bgSpec, min, note] of PAIRS) {
     let fg, bg
     try {
-      fg = parseColor(String(fgTok.startsWith('#') ? fgTok : tokens[fgTok]), tokens)
-      bg = Array.isArray(bgSpec) || typeof bgSpec === 'object'
-        ? composite(
-            parseColor(String(bgSpec.blend[0]), tokens),
-            parseColor(String(bgSpec.blend[2].startsWith?.('#') ? bgSpec.blend[2] : tokens[bgSpec.blend[2]]), tokens)
-          )
-        : parseColor(String(bgSpec.startsWith?.('#') ? bgSpec : tokens[bgSpec]), tokens)
+      // v : nom de token, hex, rgba() ou var(--token).
+      const col = (v) => {
+        const s = String(v)
+        return parseColor(tokens[s] !== undefined ? tokens[s] : s, tokens)
+      }
+      // blend: [couche, alpha (appliqué si la couche est opaque), dessous]
+      const layer = (blend) => {
+        const c = col(blend[0])
+        if (typeof blend[1] === 'number' && c.a === 1) c.a = blend[1]
+        return composite(c, col(blend[2]))
+      }
+      fg = typeof fgTok === 'object' && fgTok !== null ? layer(fgTok.blend) : col(fgTok)
+      bg = typeof bgSpec === 'object' && bgSpec !== null ? layer(bgSpec.blend) : col(bgSpec)
     } catch (e) {
       console.error(`✗ [${themeName}] ${fgTok} / ${JSON.stringify(bgSpec)} : ${e.message}`)
       failures++
@@ -179,7 +189,7 @@ for (const [themeName, tokens] of [['clair', light], ['sombre', dark]]) {
     const mark = r >= min ? '✓' : '✗'
     if (r < min) failures++
     console.log(
-      `${mark} [${themeName}] ${String(fgTok).padEnd(18)} sur ${String(typeof bgSpec === 'object' ? 'blend' : bgSpec).padEnd(18)} = ${r.toFixed(2)}:1 (min ${min})${tag} — ${note}`
+      `${mark} [${themeName}] ${String(typeof fgTok === 'object' ? 'blend' : fgTok).padEnd(18)} sur ${String(typeof bgSpec === 'object' ? 'blend' : bgSpec).padEnd(18)} = ${r.toFixed(2)}:1 (min ${min})${tag} — ${note}`
     )
   }
 }

@@ -27,7 +27,8 @@
     "zoomAria": "Enlarge “{title}”",
     "chooseArtwork": "Choose the artwork shown",
     "artworkN": "Artwork {n}: {title}",
-    "photoAlt": "{title}, {technique}, {year}, by {artist}"
+    "photoAlt": "{title}, {technique}, {year}, by {artist}",
+    "defaultTagline": "Paintings and collages — matter in light"
   },
   "home": {
     "worksEyebrow": "Works",

@@ -27,7 +27,8 @@
     "zoomAria": "Agrandir « {title} »",
     "chooseArtwork": "Choisir l'œuvre affichée",
     "artworkN": "Œuvre {n} : {title}",
-    "photoAlt": "{title}, {technique}, {year}, par {artist}"
+    "photoAlt": "{title}, {technique}, {year}, par {artist}",
+    "defaultTagline": "Peintures et collages — la matière en lumière"
   },
   "home": {
     "worksEyebrow": "Œuvres",

@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { useLocale } from 'next-intl'
 import { Painting } from '@/lib/types'
 import { blurDataUrl, cloudinaryUrl } from '@/lib/images'
-import { useTechniqueLabel, type Locale } from '@/lib/i18n'
+import { formatDimensions, useTechniqueLabel, type Locale } from '@/lib/i18n'
 
 interface Props {
   painting: Painting
@@ -104,7 +104,8 @@ export default function WallArtwork({
   const year = p.year
     ? new Intl.NumberFormat(locale, { useGrouping: false }).format(p.year)
     : ''
-  const meta = [technique, year, p.dimensions].filter(Boolean).join(' · ')
+  const dims = p.dimensions ? formatDimensions(p.dimensions) : ''
+  const meta = [technique, year, dims].filter(Boolean).join(' · ')
 
   return (
     <figure className={className}>
@@ -116,7 +117,7 @@ export default function WallArtwork({
           {p.title}
         </p>
         {meta && (
-          <p className="mt-1 font-body text-[11px] md:text-xs text-[var(--muted)]">
+          <p className="mt-1 font-body text-[13px] text-[var(--muted)]">
             {meta}
           </p>
         )}

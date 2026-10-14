@@ -157,7 +157,7 @@ export default function HeroArtwork({ paintings, artistName }: Props) {
 
       {len > 1 && (
         <div
-          className="mt-4 flex items-center justify-center gap-1"
+          className="mt-[22px] flex items-center justify-center gap-1"
           role="tablist"
           aria-label={t('chooseArtwork')}
         >
@@ -172,13 +172,13 @@ export default function HeroArtwork({ paintings, artistName }: Props) {
                 setActive(i)
                 pauseBriefly()
               }}
-              className={`h-11 w-11 flex items-center justify-center transition-opacity duration-200 ${
-                i === active ? 'opacity-100' : 'opacity-35 hover:opacity-70'
-              }`}
+              className="h-11 w-11 flex items-center justify-center"
             >
               <span
-                className={`block h-[5px] w-[5px] rounded-full ${
-                  i === active ? 'bg-[var(--accent)]' : 'bg-[var(--ink-soft)]'
+                className={`block rounded-full transition-all duration-200 ${
+                  i === active
+                    ? 'h-[10px] w-[10px] bg-[var(--accent)]'
+                    : 'h-2 w-2 bg-[var(--ink)] opacity-60 hover:opacity-80'
                 }`}
               />
             </button>

@@ -27,7 +27,8 @@
     "zoomAria": "„{title}“ vergrößern",
     "chooseArtwork": "Gezeigtes Werk wählen",
     "artworkN": "Werk {n}: {title}",
-    "photoAlt": "{title}, {technique}, {year}, von {artist}"
+    "photoAlt": "{title}, {technique}, {year}, von {artist}",
+    "defaultTagline": "Malerei und Collagen — Materie im Licht"
   },
   "home": {
     "worksEyebrow": "Werke",
