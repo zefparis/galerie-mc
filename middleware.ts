@@ -7,18 +7,38 @@ const intl = createMiddleware(routing, {
 })
 
 const LOCALE_SET = new Set<string>(routing.locales)
+const CANONICAL_HOST = 'scandellart.fr'
+
+// Hors périmètre i18n : atelier, API et routes de métadonnées générées
+// (icon1, apple-icon, opengraph-image — celles sans extension de fichier).
+const PASSTHROUGH = /^\/(api|admin|icon\d*|apple-icon|opengraph-image|twitter-image|manifest|sitemap|robots)(\/|$)/
 
 /**
- * Nettoie les adresses cassées produites par l'ancien sélecteur de langue
- * (préfixes empilés : /en/en, /es/de/es/es) et le préfixe /fr interdit :
- *  - /fr/...            → sans préfixe (le français n'en a pas)
- *  - /es/de/es/es       → garde la DERNIÈRE langue valide : /es
- *  - /en/en/galerie     → /en/galerie
- * Query string et reste du chemin conservés. Pas de boucle : la cible n'a
- * qu'un seul préfixe, jamais /fr.
+ * 1. Canonisation d'hôte (production uniquement) : tout accès à
+ *    *.vercel.app (hors previews « -git- ») et à www.scandellart.fr
+ *    redirige en 308 vers https://scandellart.fr, chemin et langue
+ *    conservés. /api n'est pas redirigé.
+ * 2. Nettoie les adresses cassées (préfixes empilés /en/en, /es/de/es/es)
+ *    et le préfixe /fr interdit. Query string conservée, cible à un seul
+ *    préfixe jamais /fr — pas de boucle.
  */
 export default function middleware(req: NextRequest) {
-  const segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const host = (req.headers.get('host') || '').split(':')[0]
+  const { pathname, search } = req.nextUrl
+
+  const isPreview = host.includes('-git-')
+  const needsCanonical =
+    host === `www.${CANONICAL_HOST}` || (host.endsWith('.vercel.app') && !isPreview)
+  if (needsCanonical && !pathname.startsWith('/api')) {
+    return NextResponse.redirect(
+      `https://${CANONICAL_HOST}${pathname}${search}`,
+      308
+    )
+  }
+
+  if (PASSTHROUGH.test(pathname)) return NextResponse.next()
+
+  const segments = pathname.split('/').filter(Boolean)
   let i = 0
   while (i < segments.length && LOCALE_SET.has(segments[i])) i++
 
@@ -36,9 +56,8 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Tout sauf API, admin, fichiers internes Next, fichiers statiques et
-  // routes de métadonnées générées (icon, apple-icon, opengraph-image…).
-  matcher: [
-    '/((?!api|admin|_next|_vercel|icon\\d*|apple-icon|opengraph-image|twitter-image|manifest|sitemap|robots|.*\\..*).*)',
-  ],
+  // Tout sauf API (jamais redirigée ni localisée), fichiers internes Next
+  // et fichiers statiques (avec extension). /admin passe pour la
+  // canonisation d'hôte, puis sort avant la localisation.
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
 }

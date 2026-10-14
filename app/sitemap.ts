@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { getPaintings, getPublishedEvents } from '@/lib/data'
 import { routing, type Locale } from '@/i18n/routing'
 
-const BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://galerie-marie-claire.vercel.app'
+const BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://scandellart.fr'
 
 const url = (path: string, locale: Locale) =>
   `${BASE}${locale === 'fr' ? path : `/${locale}${path}`}`

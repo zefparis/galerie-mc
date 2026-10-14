@@ -35,6 +35,20 @@ const nextConfig = {
       beforeFiles: [{ source: '/sw.js', destination: '/sw-kill.js' }],
     }
   },
+  async headers() {
+    // HSTS : le site est en HTTPS-only sur scandellart.fr.
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+        ],
+      },
+    ]
+  },
   images: {
     remotePatterns: [
       {

@@ -34,7 +34,7 @@ const fraunces = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://galerie-marie-claire.vercel.app"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://scandellart.fr"
   ),
   title: {
     // Nom propre seul : valable dans les 4 langues (utilisé par la 404
