@@ -54,8 +54,39 @@ export default async function Home({ params }: Props) {
   if (featuredList.length === 0 && localized.length > 0) featuredList.push(localized[0])
   const selection = localized.slice(0, 6)
 
-  // Première phrase de la présentation comme accroche du hero.
-  const accroche = (settings.bio || '').split(/(?<=[.!?])\s/)[0] || ''
+  // Ligne d'accroche au-dessus du titre : séparateur « · ».
+  const eyebrowText = (settings.bioShort || th('defaultEyebrow')).replace(/\s*\|\s*/g, ' · ')
+
+  // Accroche courte sous le titre : bioShort si elle apporte autre chose
+  // que la ligne d'accroche (sinon ce serait une redite), sinon la
+  // première phrase de la bio qui ne répète pas le nom de l'artiste,
+  // sinon le texte par défaut localisé. Tout vide → rien.
+  const normTxt = (s: string) =>
+    s.toLowerCase().replace(/[|·]/g, ' ').replace(/\s+/g, ' ').trim()
+  const TAILLE_STOP = new Set(
+    'qui que quand où et ou de du des la le les un une en au aux à a sur dans par pour avec sans the and or of a an in on with for der die das den dem und oder mit el los las una un por'.split(' ')
+  )
+  const cap140 = (s: string) => {
+    if (s.length <= 140) return s
+    let t = s.slice(0, 140).replace(/\s+\S*$/, '')
+    // Pas de mot-outil pendu avant les points de suspension.
+    while (TAILLE_STOP.has(t.split(' ').pop()!.toLowerCase().replace(/[.,;:]/g, ''))) {
+      t = t.replace(/\s+\S*$/, '')
+    }
+    return `${t}…`
+  }
+  let accroche = ''
+  if (settings.bioShort && normTxt(settings.bioShort) !== normTxt(eyebrowText)) {
+    accroche = settings.bioShort
+  }
+  if (!accroche && settings.bio) {
+    accroche =
+      settings.bio
+        .split(/(?<=[.!?])\s/)
+        .find((s) => !normTxt(s).includes(normTxt(settings.artistName))) || ''
+  }
+  if (!accroche) accroche = th('defaultTagline')
+  accroche = accroche ? cap140(accroche) : ''
 
   const today = new Date().toISOString().slice(0, 10)
   const upcoming = events
@@ -70,9 +101,7 @@ export default async function Home({ params }: Props) {
         <div className="max-w-7xl mx-auto gutter-x py-14 sm:py-16 md:py-24 lg:py-32 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 lg:gap-20 items-center">
           {/* Texte */}
           <div className="hero-fade">
-            <p className="eyebrow">
-              {settings.bioShort || th('defaultEyebrow')}
-            </p>
+            <p className="eyebrow">{eyebrowText}</p>
             <h1 className="font-display title-page mt-4 md:mt-5 leading-[0.98] text-balance text-[var(--ink)]">
               {settings.artistName}
             </h1>
@@ -82,10 +111,10 @@ export default async function Home({ params }: Props) {
               </p>
             )}
             <div className="mt-8 md:mt-10 flex flex-wrap gap-4">
-              <Link href="/galerie" className="btn-primary">
+              <Link href="/galerie" className="btn-primary min-h-[44px]">
                 {th('ctaGallery')}
               </Link>
-              <Link href="/contact" className="btn-outline">
+              <Link href="/contact" className="btn-outline min-h-[44px]">
                 {th('ctaContact')}
               </Link>
             </div>

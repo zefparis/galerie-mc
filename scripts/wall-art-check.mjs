@@ -235,8 +235,10 @@ async function shots(page, width, tag) {
     await setTheme(page, dark)
     await page.waitForTimeout(150)
     for (let i = 0; i < n; i++) {
-      await page.locator('main figure button[role="tab"]').nth(i).click()
-      await page.waitForTimeout(500)
+      if (n > 1) {
+        await page.locator('main figure button[role="tab"]').nth(i).click()
+        await page.waitForTimeout(500)
+      }
       await page.screenshot({ path: `${SHOTS}-${tag}-s${i + 1}-${dark ? 'dark' : 'light'}.png` })
     }
   }

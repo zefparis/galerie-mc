@@ -31,6 +31,18 @@ export function formatPrice(amount: number, locale: Locale): string {
   }).format(amount)
 }
 
+/**
+ * Normalise les dimensions d'une œuvre : « 100 × 120 cm », toujours avec
+ * espaces et unité (unité du texte source si présente, cm par défaut).
+ * Texte non déchiffrable → retourné tel quel.
+ */
+export function formatDimensions(raw: string): string {
+  const nums = raw.match(/\d+(?:[.,]\d+)?/g)
+  if (!nums || nums.length < 2) return raw
+  const unit = raw.match(/[a-zA-Z]+\s*$/)?.[0].trim() || 'cm'
+  return `${nums.join(' × ')} ${unit}`
+}
+
 /** Normalise une valeur saisie en français (« Huile sur toile ») en clé de dictionnaire (« huile-sur-toile »). */
 export function techniqueKey(value: string): string {
   return value

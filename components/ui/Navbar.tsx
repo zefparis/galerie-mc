@@ -20,7 +20,16 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
   const ti = useTranslations('install')
   const pathname = useCleanPathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const touchStartX = useRef(0)
+
+  // Fond transparent en haut de page → verre dépoli dès qu'on défile.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? 'hidden' : ''
@@ -51,7 +60,11 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
 
   return (
     <>
-      <nav className="navbar fixed top-0 left-0 right-0 z-40 bg-[var(--bg)] text-[var(--ink)] border-b border-[var(--line)]">
+      <nav
+        className={`navbar fixed top-0 left-0 right-0 z-40 text-[var(--ink)] ${
+          scrolled ? 'navbar--scrolled' : ''
+        }`}
+      >
         <div className="max-w-7xl mx-auto gutter-x h-16 md:h-20 flex items-center justify-between">
           <Link
             href="/"
@@ -116,7 +129,7 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
           onClick={() => setDrawerOpen(false)}
         />
         <div
-          className={`mobile-drawer absolute top-0 right-0 h-full w-[300px] max-w-[85vw] bg-[var(--night)] text-[var(--on-night)] flex flex-col transition-transform duration-300 ease-gallery ${
+          className={`mobile-drawer absolute top-0 right-0 h-full w-[300px] max-w-[85vw] text-[var(--on-night)] flex flex-col transition-transform duration-300 ease-gallery ${
             drawerOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
           onTouchStart={handleTouchStart}
