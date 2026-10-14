@@ -94,6 +94,40 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
   const toggleRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
+  // ── Fondu de bord de la rangée de pilules : présent seulement du côté
+  // où il reste du contenu à défiler. ──
+  const rowRef = useRef<HTMLUListElement>(null)
+  const [canLeft, setCanLeft] = useState(false)
+  const [canRight, setCanRight] = useState(false)
+  const updateFade = useCallback(() => {
+    const ul = rowRef.current
+    if (!ul) return
+    const max = ul.scrollWidth - ul.clientWidth
+    setCanLeft(ul.scrollLeft > 2)
+    setCanRight(ul.scrollLeft < max - 2)
+  }, [])
+  useEffect(() => {
+    const ul = rowRef.current
+    if (!ul) return
+    updateFade()
+    ul.addEventListener('scroll', updateFade, { passive: true })
+    window.addEventListener('resize', updateFade)
+    return () => {
+      ul.removeEventListener('scroll', updateFade)
+      window.removeEventListener('resize', updateFade)
+    }
+  }, [updateFade])
+
+  // La pilule active est amenée dans la vue au chargement et au clic.
+  const activePillRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    activePillRef.current?.scrollIntoView({
+      inline: 'center',
+      block: 'nearest',
+      behavior: 'smooth',
+    })
+  }, [category])
+
   useEffect(() => {
     if (!panelOpen) return
     const onKey = (e: KeyboardEvent) => {
@@ -129,7 +163,6 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
     pills[(i + (e.key === 'ArrowRight' ? 1 : pills.length - 1)) % pills.length]?.focus()
   }
 
-  const hasSecondary = filter !== 'toutes' || !!technique
   const chips: { key: string; label: string; clear: () => void }[] = []
   if (filter !== 'toutes')
     chips.push({
@@ -147,20 +180,28 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
   const emptyKey =
     category === 'collages' ? 'emptyCollages' : category === 'peintures' ? 'emptyPeintures' : 'emptyAll'
 
+  const nActive = (filter !== 'toutes' ? 1 : 0) + (technique ? 1 : 0)
+
   return (
     <>
-      {/* Rangée unique : pilules des galeries + compteur + « Filtrer » */}
-      <div className="relative flex items-center gap-3">
+      {/* Deux lignes sur mobile (pilules défilables / compteur + Filtrer),
+          une seule ligne sur desktop. Le compteur n'est JAMAIS dans la
+          rangée qui défile. */}
+      <div className="relative flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
         <nav
           aria-label={t('filters.aria')}
           onKeyDown={onPillKeys}
-          className="-mx-1 flex-1 min-w-0 overflow-x-auto scrollbar-hide scroll-fade-x"
+          className={`pill-row md:flex-1 md:min-w-0 ${canLeft ? 'can-left' : ''} ${canRight ? 'can-right' : ''}`}
         >
-          <ul className="flex items-center gap-2 md:gap-3 px-1 snap-x">
+          <ul
+            ref={rowRef}
+            className="flex items-center gap-2 md:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+          >
             {categoryOptions.map((o) => (
-              <li key={o.value} className="shrink-0">
+              <li key={o.value} className="shrink-0 snap-start">
                 <button
                   type="button"
+                  ref={category === o.value ? activePillRef : undefined}
                   className={`filter-pill ${category === o.value ? 'is-active' : ''}`}
                   aria-pressed={category === o.value}
                   onClick={() => setParams({ categorie: o.value, technique: '' })}
@@ -172,7 +213,7 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
           </ul>
         </nav>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center justify-between gap-3 md:justify-end md:shrink-0">
           <p
             className="font-body text-xs text-[var(--muted)] whitespace-nowrap"
             aria-live="polite"
@@ -185,11 +226,11 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
             onClick={() => setPanelOpen((o) => !o)}
             aria-expanded={panelOpen}
             aria-haspopup="dialog"
-            className={`filter-toggle ${hasSecondary ? 'is-active' : ''}`}
+            className="filter-toggle"
           >
             <svg
-              width="14"
-              height="14"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -199,6 +240,11 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
               <path d="M4 6h16M7 12h10M10 18h4" strokeLinecap="round" />
             </svg>
             {t('filters.toggle')}
+            {nActive > 0 && (
+              <span className="filter-count" aria-hidden="true">
+                {nActive}
+              </span>
+            )}
           </button>
         </div>
 

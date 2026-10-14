@@ -67,13 +67,13 @@ export default async function Home({ params }: Props) {
     <div>
       {/* ─── Hero : texte + toile encadrée ────────────────────────────── */}
       <section className="pt-16 md:pt-20">
-        <div className="max-w-7xl mx-auto px-5 md:px-8 py-14 sm:py-16 md:py-24 lg:py-32 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 lg:gap-20 items-center">
+        <div className="max-w-7xl mx-auto gutter-x py-14 sm:py-16 md:py-24 lg:py-32 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 lg:gap-20 items-center">
           {/* Texte */}
           <div className="hero-fade">
             <p className="eyebrow">
               {settings.bioShort || th('defaultEyebrow')}
             </p>
-            <h1 className="font-display text-5xl sm:text-6xl md:text-7xl mt-4 md:mt-5 leading-[0.98] text-balance text-[var(--ink)]">
+            <h1 className="font-display title-page mt-4 md:mt-5 leading-[0.98] text-balance text-[var(--ink)]">
               {settings.artistName}
             </h1>
             {accroche && (
@@ -102,7 +102,7 @@ export default async function Home({ params }: Props) {
 
       {/* ─── Sélection d'œuvres ───────────────────────────────────────── */}
       {selection.length > 0 && (
-        <section className="max-w-7xl mx-auto px-5 md:px-8 py-16 md:py-28">
+        <section className="max-w-7xl mx-auto gutter-x py-16 md:py-28">
           <Reveal>
             <div className="flex items-end justify-between gap-6 mb-10 md:mb-14">
               <div>
@@ -160,7 +160,7 @@ export default async function Home({ params }: Props) {
       {/* ─── Prochaines expositions ───────────────────────────────────── */}
       {homeEvents.length > 0 && (
         <section className="border-t border-[var(--line)]">
-          <div className="max-w-7xl mx-auto px-5 md:px-8 py-16 md:py-28">
+          <div className="max-w-7xl mx-auto gutter-x py-16 md:py-28">
             <Reveal>
               <div className="flex items-end justify-between gap-6 mb-10 md:mb-14">
                 <div>
@@ -190,7 +190,7 @@ export default async function Home({ params }: Props) {
 
       {/* ─── Présentation ─────────────────────────────────────────────── */}
       <section className="border-t border-[var(--line)] bg-[var(--surface)]">
-        <div className="max-w-5xl mx-auto px-5 md:px-8 py-16 md:py-28">
+        <div className="max-w-5xl mx-auto gutter-x py-16 md:py-28">
           <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-10 md:gap-16 items-start">
             {/* Photos de l'artiste */}
             {(settings.photos?.length ?? 0) > 0 && (

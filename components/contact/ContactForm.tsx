@@ -67,10 +67,10 @@ export default function ContactForm({ artistEmail }: { artistEmail: string }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-5 md:px-8 pt-10 md:pt-20 pb-20 md:pb-32">
+    <div className="max-w-2xl mx-auto gutter-x pt-10 md:pt-20 pb-20 md:pb-32">
       <Reveal>
         <p className="eyebrow">{t('eyebrow')}</p>
-        <h1 className="font-display text-5xl md:text-7xl text-[var(--ink)] mt-3">
+        <h1 className="font-display title-page text-[var(--ink)] mt-3">
           {t('title')}
         </h1>
         <p className="font-body text-sm md:text-base text-[var(--ink-soft)] mt-5 mb-10 md:mb-14">

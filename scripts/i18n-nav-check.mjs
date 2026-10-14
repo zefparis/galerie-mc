@@ -304,6 +304,65 @@ async function run() {
     console.log('\n— Rechargement direct (toutes pages × 4 langues) —')
     await scenarioReload(page)
 
+    // ── Débordement horizontal mobile : 360/390/430, fr + de ──
+    console.log('\n— Débordement mobile (360/390/430, fr + de) —')
+    for (const w of [360, 390, 430]) {
+      const octx = await browser.newContext({
+        viewport: { width: w, height: 800 },
+        isMobile: true,
+        hasTouch: true,
+      })
+      const opage = await octx.newPage()
+      for (const path of ['/', '/galerie?categorie=peintures', '/de/', '/de/galerie']) {
+        await opage.goto(`${BASE}${path}`, { waitUntil: 'networkidle' })
+        const r = await opage.evaluate(() => ({
+          sw: document.documentElement.scrollWidth,
+          iw: window.innerWidth,
+          overflow: [...document.querySelectorAll('body *')]
+            .filter((e) => {
+              const rr = e.getBoundingClientRect()
+              // Le tiroir mobile fermé est volontairement hors écran.
+              if (e.closest('[aria-hidden="true"]') || rr.width === 0) return false
+              // Contenu d'un conteneur à défilement horizontal : normal.
+              let n = e.parentElement
+              while (n) {
+                const o = getComputedStyle(n).overflowX
+                if (o === 'auto' || o === 'scroll') return false
+                n = n.parentElement
+              }
+              return rr.right > window.innerWidth + 1 || rr.left < -1
+            })
+            .slice(0, 4)
+            .map((e) => `${e.tagName}.${String(e.className).slice(0, 40)}`),
+        }))
+        if (r.sw <= r.iw && !r.overflow.length) ok(`${w}px ${path} : pas de débordement`)
+        else fail(`${w}px ${path} : scrollWidth=${r.sw} vs ${r.iw} — ${r.overflow.join(' | ') || 'page trop large'}`)
+      }
+      // Pastille active entièrement visible + compteur hors de la rangée.
+      await opage.goto(`${BASE}/galerie?categorie=peintures`, { waitUntil: 'networkidle' })
+      await opage.waitForTimeout(500) // laisse scrollIntoView finir
+      const geo = await opage.evaluate(() => {
+        const ul = document.querySelector('.pill-row ul')
+        const pill = document.querySelector('.filter-pill.is-active')
+        const count = document.querySelector('p[aria-live="polite"]')
+        const u = ul.getBoundingClientRect()
+        const b = pill.getBoundingClientRect()
+        const c = count.getBoundingClientRect()
+        const pills = [...document.querySelectorAll('.filter-pill')].map((e) => e.getBoundingClientRect())
+        return {
+          pillInRow: b.left >= u.left - 1 && b.right <= u.right + 1,
+          countClears: pills.every(
+            (r) => c.right < r.left - 1 || c.left > r.right + 1 || c.bottom < r.top || c.top > r.bottom
+          ),
+        }
+      })
+      if (geo.pillInRow) ok(`${w}px : pilule active entièrement visible`)
+      else fail(`${w}px : pilule active hors de la zone visible`)
+      if (geo.countClears) ok(`${w}px : compteur sans chevauchement`)
+      else fail(`${w}px : compteur chevauche une pastille`)
+      await octx.close()
+    }
+
     await ctx.close()
     await mctx.close()
   } finally {

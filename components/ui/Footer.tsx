@@ -19,7 +19,7 @@ export default async function Footer({
 
   return (
     <footer className="footer w-full border-t border-[var(--line)] bg-[var(--bg)]">
-      <div className="max-w-7xl mx-auto px-5 md:px-8 py-12 md:py-16">
+      <div className="max-w-7xl mx-auto gutter-x py-12 md:py-16">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10">
           {/* Identité */}
           <div className="max-w-xs">

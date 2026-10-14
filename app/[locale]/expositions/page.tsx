@@ -37,16 +37,16 @@ export default async function ExpositionsPage({ params }: Props) {
 
   return (
     <div className="pt-16 md:pt-20">
-      <header className="max-w-7xl mx-auto px-5 md:px-8 pt-10 md:pt-20 pb-10 md:pb-16">
+      <header className="max-w-7xl mx-auto gutter-x pt-10 md:pt-20 pb-10 md:pb-16">
         <Reveal>
           <p className="eyebrow">{t('eyebrow')}</p>
-          <h1 className="font-display text-5xl md:text-7xl text-[var(--ink)] mt-3">
+          <h1 className="font-display title-page text-[var(--ink)] mt-3">
             {t('title')}
           </h1>
         </Reveal>
       </header>
 
-      <section className="max-w-7xl mx-auto px-5 md:px-8 pb-20 md:pb-32">
+      <section className="max-w-7xl mx-auto gutter-x pb-20 md:pb-32">
         {events.length === 0 ? (
           <p className="font-body text-[var(--muted)] py-16 text-center">
             {t('empty')}

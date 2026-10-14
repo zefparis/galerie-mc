@@ -51,10 +51,10 @@ export default async function GaleriePage({ params, searchParams }: Props) {
 
   return (
     <div className="pt-16 md:pt-20">
-      <header className="max-w-7xl mx-auto px-5 md:px-8 pt-10 md:pt-20 pb-8 md:pb-12">
+      <header className="max-w-7xl mx-auto gutter-x pt-10 md:pt-20 pb-8 md:pb-12">
         <Reveal>
           <p className="eyebrow">{t('galerie.eyebrow')}</p>
-          <h1 className="font-display text-5xl md:text-7xl text-[var(--ink)] mt-3">
+          <h1 className="font-display title-page text-[var(--ink)] mt-3">
             {title}
           </h1>
           <p className="font-body text-sm md:text-base text-[var(--ink-soft)] mt-4 max-w-lg">
@@ -63,7 +63,7 @@ export default async function GaleriePage({ params, searchParams }: Props) {
         </Reveal>
       </header>
 
-      <section className="max-w-7xl mx-auto px-5 md:px-8 pb-20 md:pb-32">
+      <section className="max-w-7xl mx-auto gutter-x pb-20 md:pb-32">
         <Suspense>
           <GalleryClient paintings={paintings} />
         </Suspense>

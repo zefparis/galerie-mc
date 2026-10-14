@@ -38,7 +38,7 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
 
   return (
     <div className="pt-16 md:pt-20">
-      <div className="max-w-7xl mx-auto px-5 md:px-8 pt-6 md:pt-10">
+      <div className="max-w-7xl mx-auto gutter-x pt-6 md:pt-10">
         <Link
           href={`/galerie${qs}`}
           className="inline-flex items-center min-h-[44px] font-body text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)] hover:text-[var(--ink)] transition-colors duration-200"
@@ -47,7 +47,7 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
         </Link>
       </div>
 
-      <div className="max-w-7xl mx-auto px-5 md:px-8 md:flex md:gap-12 lg:gap-20 pb-10">
+      <div className="max-w-7xl mx-auto gutter-x md:flex md:gap-12 lg:gap-20 pb-10">
         {/* Image — cliquable vers la lightbox */}
         <Reveal className="md:w-[58%] md:flex-shrink-0 mt-4 md:mt-0">
           <button
@@ -135,7 +135,7 @@ export default function PaintingDetail({ painting, prevId, nextId, category }: P
       </div>
 
       {/* Navigation précédente / suivante */}
-      <div className="max-w-7xl mx-auto px-5 md:px-8 pb-16 md:pb-24">
+      <div className="max-w-7xl mx-auto gutter-x pb-16 md:pb-24">
         <div className="flex gap-3 justify-between pt-8 border-t border-[var(--line)]">
           {prevId ? (
             <Link

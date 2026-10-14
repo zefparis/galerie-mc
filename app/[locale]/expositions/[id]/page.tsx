@@ -111,7 +111,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
 
   return (
     <div className="pt-16 md:pt-20">
-      <div className="max-w-4xl mx-auto px-5 md:px-8 pt-6 md:pt-10">
+      <div className="max-w-4xl mx-auto gutter-x pt-6 md:pt-10">
         <Link
           href="/expositions"
           className="inline-flex items-center min-h-[44px] font-body text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)] hover:text-[var(--ink)] transition-colors duration-200"
@@ -120,7 +120,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
         </Link>
       </div>
 
-      <header className="max-w-4xl mx-auto px-5 md:px-8 pt-6 md:pt-10 pb-10">
+      <header className="max-w-4xl mx-auto gutter-x pt-6 md:pt-10 pb-10">
         <Reveal>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {event.eventDate && (
@@ -132,7 +132,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
               </p>
             )}
           </div>
-          <h1 className="font-display text-4xl md:text-6xl text-[var(--ink)] mt-3 leading-[1.05] text-balance">
+          <h1 className="font-display title-page text-[var(--ink)] mt-3 leading-[1.05] text-balance">
             {le.title}
           </h1>
           {le.titleOriginal && (
@@ -142,7 +142,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
       </header>
 
       {event.coverUrl && (
-        <Reveal className="max-w-5xl mx-auto px-5 md:px-8 pb-10 md:pb-14">
+        <Reveal className="max-w-5xl mx-auto gutter-x pb-10 md:pb-14">
           <div className="relative aspect-[16/9] overflow-hidden bg-[var(--line)]">
             <Image
               src={event.coverUrl}
@@ -159,7 +159,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
       )}
 
       {le.description && (
-        <Reveal className="max-w-3xl mx-auto px-5 md:px-8 pb-12 md:pb-16">
+        <Reveal className="max-w-3xl mx-auto gutter-x pb-12 md:pb-16">
           <p className="font-body text-base md:text-lg text-[var(--ink-soft)] leading-relaxed whitespace-pre-line">
             {le.description}
           </p>
@@ -167,7 +167,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
       )}
 
       {photos.length > 0 && (
-        <section className="max-w-5xl mx-auto px-5 md:px-8 pb-12 md:pb-16">
+        <section className="max-w-5xl mx-auto gutter-x pb-12 md:pb-16">
           <Reveal>
             <h2 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-8">
               {t('photos')}
@@ -182,7 +182,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
       )}
 
       {videos.length > 0 && (
-        <section className="max-w-4xl mx-auto px-5 md:px-8 pb-12 md:pb-16">
+        <section className="max-w-4xl mx-auto gutter-x pb-12 md:pb-16">
           <Reveal>
             <h2 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-8">
               {t('videos')}

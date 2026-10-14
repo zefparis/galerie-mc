@@ -50,7 +50,7 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
   return (
     <>
       <nav className="navbar fixed top-0 left-0 right-0 z-40 bg-[var(--bg)] text-[var(--ink)] border-b border-[var(--line)]">
-        <div className="max-w-7xl mx-auto px-5 md:px-8 h-16 md:h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto gutter-x h-16 md:h-20 flex items-center justify-between">
           <Link
             href="/"
             className="min-w-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--bg)]"

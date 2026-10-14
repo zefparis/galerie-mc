@@ -51,6 +51,12 @@
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Inter', system-ui, sans-serif;
 
+  /* Gouttière horizontale unique — 16 à 20 px, tenue compte des zones de
+     sécurité (encoche iPhone). Toute marge latérale publique passe par là. */
+  --gutter: clamp(16px, 4.5vw, 20px);
+  --gutter-l: calc(var(--gutter) + env(safe-area-inset-left, 0px));
+  --gutter-r: calc(var(--gutter) + env(safe-area-inset-right, 0px));
+
   /* Alias historiques — utilisés par les composants admin existants */
   --cream: var(--bg);
   --white: var(--surface);
@@ -102,6 +108,13 @@ html.dark {
 html {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Ceinture de sécurité : aucun débordement horizontal visible, même si un
+   élément ponctuel déborde (le scrollWidth le révèle toujours en test). */
+html,
+body {
+  overflow-x: clip;
 }
 
 body {
@@ -229,6 +242,46 @@ button, a {
       transparent 100%
     );
   }
+
+  /* Rangée de pilules défilable : fondu uniquement sur le bord où il
+     reste du contenu (classes posées par le JS en lisant scrollLeft). */
+  .pill-row ul {
+    --fade-l: 0px;
+    --fade-r: 0px;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--fade-l),
+      #000 calc(100% - var(--fade-r)),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 var(--fade-l),
+      #000 calc(100% - var(--fade-r)),
+      transparent
+    );
+  }
+  .pill-row.can-left ul {
+    --fade-l: 36px;
+  }
+  .pill-row.can-right ul {
+    --fade-r: 36px;
+  }
+
+  /* Sur mobile, la rangée défile de bord à bord (marges négatives) et
+     son propre padding intérieur = la gouttière. */
+  @media (max-width: 767px) {
+    .pill-row {
+      margin-left: calc(-1 * var(--gutter-l));
+      margin-right: calc(-1 * var(--gutter-r));
+    }
+    .pill-row ul {
+      padding-left: var(--gutter-l);
+      padding-right: var(--gutter-r);
+    }
+  }
 }
 
 /* Les placeholders suivent le token « muted » relevé — jamais de gris
@@ -316,16 +369,17 @@ textarea::placeholder {
     outline-offset: 2px;
   }
 
-  /* Bouton « Filtrer » — discret, souligné par l'accent quand des
-     filtres secondaires sont actifs. */
+  /* Bouton « Filtrer » — visuellement une pastille inactive avec icône ;
+     les filtres actifs se signalent par un compteur accent, pas par un
+     état plein. */
   .filter-toggle {
-    @apply inline-flex items-center gap-2 font-body text-xs font-medium uppercase tracking-[0.14em] px-4 py-2.5 min-h-[44px] rounded-full border border-[var(--line)] text-[var(--ink-soft)] transition-colors duration-200 whitespace-nowrap;
+    @apply inline-flex items-center gap-2 font-body text-sm font-medium px-5 py-2.5 min-h-[44px] rounded-full border border-[var(--line)] text-[var(--ink-soft)] bg-transparent whitespace-nowrap transition-colors duration-200;
   }
   .filter-toggle:hover {
     @apply border-[var(--ink-soft)] text-[var(--ink)];
   }
-  .filter-toggle.is-active {
-    @apply text-[var(--accent)] border-[var(--accent)];
+  .filter-count {
+    @apply inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--accent)] font-body text-[11px] font-semibold text-[var(--on-accent)];
   }
 
   /* Pastille de filtre actif — retirable d'un clic. */
@@ -362,4 +416,23 @@ textarea::placeholder {
 }
 .gallery-fade {
   animation: galleryFade 0.2s ease-out both;
+}
+
+/* Gouttière horizontale unique : header, contenu, grille, pied de page. */
+.gutter-x {
+  padding-left: var(--gutter-l);
+  padding-right: var(--gutter-r);
+}
+@media (min-width: 768px) {
+  .gutter-x {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Titres de page : ne débordent jamais — taille fluide + césure. */
+.title-page {
+  font-size: clamp(2rem, 3.2vw + 1.3rem, 4.5rem);
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
