@@ -8,6 +8,8 @@ import CloudinaryUpload from './CloudinaryUpload'
 import EventPhotosField from './EventPhotosField'
 import HelpTip from './HelpTip'
 import TranslationPanel from './TranslationPanel'
+import FormWithPreview from './PreviewShell'
+import EventPreview from './EventPreview'
 
 function translateInBackground(entity: 'painting' | 'event' | 'settings', id?: string) {
   fetch('/api/translate', {
@@ -50,6 +52,8 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [translations, setTranslations] = useState<Translations>(event?.translations || {})
+  // Aperçu local de la couverture pendant l'envoi Cloudinary (blob:).
+  const [localCover, setLocalCover] = useState('')
   const restored = useRef(false)
 
   // Récupération du brouillon automatique
@@ -164,6 +168,16 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
   }
 
   return (
+    <FormWithPreview
+      preview={
+        <EventPreview
+          form={form}
+          images={images}
+          translations={translations}
+          localCover={localCover}
+        />
+      }
+    >
     <div className="w-full max-w-2xl">
       {draftFound && (
         <div className="mb-6 p-4 bg-[var(--accent-soft)] border border-[var(--accent)]/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -195,6 +209,7 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
           <CloudinaryUpload
             currentUrl={form.coverUrl}
             onUploaded={(url, publicId) => setForm({ ...form, coverUrl: url, coverPublicId: publicId })}
+            onLocalPreview={setLocalCover}
           />
         </div>
 
@@ -439,5 +454,6 @@ export default function EventForm({ event, onDone, onCancel }: Props) {
         </div>
       </div>
     </div>
+    </FormWithPreview>
   )
 }

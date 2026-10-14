@@ -13,6 +13,25 @@ export const BCP47: Record<Locale, string> = {
   de: 'de-DE',
 }
 
+// Date d'exposition formatée (« 30 novembre 2025 » ou « novembre 2025 ») —
+// partagée entre la carte publique et l'aperçu admin.
+export function formatEventDate(
+  dateStr: string,
+  style: 'short' | 'long' = 'long',
+  locale: Locale = 'fr'
+): string {
+  if (!dateStr) return ''
+  const d = new Date(dateStr + 'T00:00:00')
+  const formatted = formatDate(
+    d,
+    locale,
+    style === 'long'
+      ? { day: 'numeric', month: 'long', year: 'numeric' }
+      : { month: 'long', year: 'numeric' }
+  )
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
+}
+
 export function formatDate(date: Date, locale: Locale, opts?: Intl.DateTimeFormatOptions): string {
   return new Intl.DateTimeFormat(BCP47[locale] || 'fr-FR', {
     day: 'numeric',

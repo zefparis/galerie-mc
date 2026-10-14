@@ -11,8 +11,12 @@ const root = new URL('..', import.meta.url).pathname
 const css = readFileSync(join(root, 'app/globals.css'), 'utf8')
 
 // ── Extraction des tokens ──────────────────────────────────────────────
+// Le sélecteur peut être une liste groupée (« html.dark,\n.pv-dark { ») —
+// on tolère tout ce qui précède l'accolade, mais sans traverser de « } »
+// (sinon une mention du sélecteur dans un commentaire absorberait le bloc
+// suivant).
 function block(name) {
-  const m = css.match(new RegExp(`${name}\\s*\\{([^}]*)\\}`))
+  const m = css.match(new RegExp(`${name}[^{}]*\\{([^}]*)\\}`))
   return m ? m[1] : ''
 }
 
@@ -34,7 +38,7 @@ function parseTokens(source) {
 // scopés au site public — body:has(.site-texture) — sont fusionnés aussi :
 // l'audit porte sur le rendu public réel, l'admin garde les valeurs de base.
 const light = parseTokens(
-  [...css.matchAll(/:root\s*\{([^}]*)\}/g)]
+  [...css.matchAll(/:root[^{}]*\{([^}]*)\}/g)]
     .map((m) => m[1])
     .concat(block('html:not\\(\\.dark\\) body:has\\(\\.site-texture\\)'))
     .join('\n')

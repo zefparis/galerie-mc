@@ -21,6 +21,10 @@ interface Props {
   cartel?: boolean
   /** 'hero' : hauteur max min(68vh,560px) ; 'detail' : 80vh (fiche œuvre). */
   variant?: 'hero' | 'detail'
+  /** next/image sans optimisation (aperçu admin sur fichiers locaux blob:). */
+  unoptimized?: boolean
+  /** Le titre affiché est un exemple grisé (champ vide dans le formulaire). */
+  titlePlaceholder?: boolean
   className?: string
 }
 
@@ -37,6 +41,8 @@ export default function WallArtwork({
   focusable = true,
   cartel = false,
   variant = 'hero',
+  unoptimized,
+  titlePlaceholder,
   className,
 }: Props) {
   const techLabel = useTechniqueLabel()
@@ -62,6 +68,7 @@ export default function WallArtwork({
         fill
         sizes={sizes}
         priority={priority}
+        unoptimized={unoptimized}
         placeholder="blur"
         blurDataURL={blurDataUrl(p.imageUrl)}
         className="wall-art-img"
@@ -73,6 +80,7 @@ export default function WallArtwork({
       alt={alt}
       width={0}
       height={0}
+      unoptimized={unoptimized}
       onLoadingComplete={(el) => {
         if (el.naturalWidth > 0) setSize([el.naturalWidth, el.naturalHeight])
       }}
@@ -113,7 +121,11 @@ export default function WallArtwork({
       {/* Hauteur fixe : la ligne de base commune des tableaux ne bouge
           pas quand le cartel change de contenu. */}
       <figcaption className="mt-3 h-[54px] md:h-[58px] text-center">
-        <p className="font-display italic text-[15px] md:text-[17px] leading-snug text-[var(--ink)]">
+        <p
+          className={`font-display italic text-[15px] md:text-[17px] leading-snug ${
+            titlePlaceholder ? 'text-[var(--muted)]' : 'text-[var(--ink)]'
+          }`}
+        >
           {p.title}
         </p>
         {meta && (

@@ -6,13 +6,16 @@ import { uploadToCloudinaryProgress, compressImage, isTooBig, getCloudinarySetti
 interface Props {
   currentUrl: string
   onUploaded: (url: string, publicId: string, width?: number, height?: number) => void
+  /** URL locale (blob:) du fichier choisi, avant la fin de l'envoi —
+      utilisée par l'aperçu en direct. '' quand elle n'est plus d'actualité. */
+  onLocalPreview?: (url: string) => void
 }
 
 type Status = 'idle' | 'preparing' | 'uploading' | 'success' | 'error'
 
 // Grande zone tactile : choix de photo, réduction automatique des grosses
 // photos de téléphone, barre de progression réelle.
-export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
+export default function CloudinaryUpload({ currentUrl, onUploaded, onLocalPreview }: Props) {
   const [status, setStatus] = useState<Status>('idle')
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
@@ -45,6 +48,7 @@ export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
 
     const objectUrl = URL.createObjectURL(file)
     setPreview(objectUrl)
+    onLocalPreview?.(objectUrl)
     setError('')
     setStatus('preparing')
 
@@ -55,6 +59,7 @@ export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
         setStatus('error')
         setError('La photo est vraiment trop lourde. Essayez de la recadrer dans votre galerie photo, puis renvoyez-la.')
         setPreview('')
+        onLocalPreview?.('')
         return
       }
 
@@ -68,6 +73,7 @@ export default function CloudinaryUpload({ currentUrl, onUploaded }: Props) {
       )
       onUploaded(result.url, result.publicId, result.width, result.height)
       setPreview(result.url)
+      onLocalPreview?.('')
       setStatus('success')
     } catch {
       setStatus('error')

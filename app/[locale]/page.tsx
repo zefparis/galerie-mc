@@ -9,6 +9,8 @@ import MasonryGrid from '@/components/gallery/MasonryGrid'
 import EventCard from '@/components/gallery/EventCard'
 import ArtistPhotos from '@/components/gallery/ArtistPhotos'
 import HeroArtwork from '@/components/gallery/HeroArtwork'
+import HeroHeading from '@/components/gallery/HeroHeading'
+import PresentationParagraphs from '@/components/gallery/PresentationParagraphs'
 import Reveal from '@/components/ui/Reveal'
 
 export const dynamic = 'force-dynamic'
@@ -85,15 +87,11 @@ export default async function Home({ params }: Props) {
         <div className="max-w-7xl mx-auto gutter-x py-14 sm:py-16 md:py-24 lg:py-32 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 lg:gap-20 items-center">
           {/* Texte */}
           <div className="hero-fade">
-            <p className="eyebrow">{eyebrowText}</p>
-            <h1 className="font-display title-page mt-4 md:mt-5 leading-[0.98] text-balance text-[var(--ink)]">
-              {settings.artistName}
-            </h1>
-            {accroche && (
-              <p className="font-body text-base md:text-lg text-[var(--ink-soft)] leading-relaxed mt-6 max-w-md">
-                {accroche}
-              </p>
-            )}
+            <HeroHeading
+              eyebrow={eyebrowText}
+              name={settings.artistName}
+              tagline={accroche}
+            />
             <div className="mt-8 md:mt-10 flex flex-wrap gap-4">
               <Link href="/galerie" className="btn-primary min-h-[44px]">
                 {th('ctaGallery')}
@@ -218,18 +216,7 @@ export default async function Home({ params }: Props) {
               <h2 className="font-display text-4xl md:text-5xl text-[var(--ink)] mt-2">
                 {settings.artistName}
               </h2>
-              {presentationParas.length > 0 && (
-                <div className="mt-6 md:mt-8 max-w-[65ch] space-y-5">
-                  {presentationParas.map((para, i) => (
-                    <p
-                      key={i}
-                      className="font-display text-lg md:text-xl text-[var(--ink-soft)] leading-[1.85]"
-                    >
-                      {para}
-                    </p>
-                  ))}
-                </div>
-              )}
+              <PresentationParagraphs paragraphs={presentationParas} />
               <p className="font-body text-base md:text-lg text-[var(--ink-soft)] leading-relaxed mt-6 md:mt-8 whitespace-pre-line">
                 {settings.bio}
               </p>

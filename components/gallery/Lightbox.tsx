@@ -13,11 +13,13 @@ interface Props {
   onNext?: () => void
   // Compteur « 2 / 7 » affiché dans le coin supérieur gauche.
   counter?: string
+  /** next/image sans optimisation (aperçu admin sur fichiers locaux blob:). */
+  unoptimized?: boolean
 }
 
 // Lightbox plein écran : double-clic / double-tap = zoom ×2,5 ancré au point
 // touché, glisser pour déplacer quand zoomé, swipe latéral pour naviguer.
-export default function Lightbox({ src, alt, onClose, onPrev, onNext, counter }: Props) {
+export default function Lightbox({ src, alt, onClose, onPrev, onNext, counter, unoptimized }: Props) {
   const t = useTranslations('lightbox')
   const [zoomed, setZoomed] = useState(false)
   const [origin, setOrigin] = useState('50% 50%')
@@ -217,6 +219,7 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext, counter }:
             width={0}
             height={0}
             sizes="100vw"
+            unoptimized={unoptimized}
             placeholder="blur"
             blurDataURL={blurDataUrl(src)}
             draggable={false}
