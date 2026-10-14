@@ -36,6 +36,10 @@ export const FIELD_LABEL: Record<string, string> = {
   processText: 'démarche picturale',
   tagline: 'phrase d’accroche (accueil)',
   presentation: 'présentation (accueil)',
+  notice_accroche: 'accroche de la fiche',
+  notice_texte: 'texte de la fiche',
+  notice_ambiance: 'ambiance de la fiche',
+  notice_matiere: 'matière et technique de la fiche',
 }
 
 export const fieldLabel = (f: string) =>

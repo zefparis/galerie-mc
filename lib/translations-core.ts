@@ -1,6 +1,7 @@
 import type {
   FieldTranslationMeta,
   GallerySettings,
+  PaintingNotice,
   TargetLocale,
   Translations,
   TranslationStatus,
@@ -45,6 +46,33 @@ export function eventFrenchFields(e: {
     if (img.publicId) fields[photoCaptionKey(img.publicId)] = img.alt || ''
   }
   return fields
+}
+
+// Clés de traduction de la notice publiée : les puces voyagent jointes
+// par « \n » (une ligne = une puce).
+export const NOTICE_KEYS = {
+  accroche: 'notice_accroche',
+  texte_client: 'notice_texte',
+  ambiance: 'notice_ambiance',
+  matiere_technique: 'notice_matiere',
+} as const
+
+/** Champs français traduisibles d'une toile : titre, description et les
+ *  4 champs de la notice publiée (vides tant que rien n'est publié). */
+export function paintingFrenchFields(p: {
+  title?: string
+  description?: string
+  notice?: PaintingNotice | null
+}): Record<string, string> {
+  const n = p.notice
+  return {
+    title: p.title || '',
+    description: p.description || '',
+    [NOTICE_KEYS.accroche]: n?.accroche || '',
+    [NOTICE_KEYS.texte_client]: n?.texte_client || '',
+    [NOTICE_KEYS.ambiance]: n?.ambiance || '',
+    [NOTICE_KEYS.matiere_technique]: (n?.matiere_technique || []).join('\n'),
+  }
 }
 
 // Hash stable et sans dépendance (FNV-1a) : sert uniquement à détecter que

@@ -9,6 +9,7 @@ import {
   eventFrenchFields,
   fieldStatus,
   markCorrected,
+  paintingFrenchFields,
   planField,
   settingsFrenchFields,
   translateFields,
@@ -97,14 +98,14 @@ async function loadEntity(
   if (entity === 'painting') {
     if (!id) return null
     const { rows } = await pool.query(
-      'SELECT title, description, translations FROM paintings WHERE id=$1',
+      'SELECT title, description, notice, translations FROM paintings WHERE id=$1',
       [id]
     )
     if (!rows.length) return null
     return {
       table: 'paintings',
       id,
-      french: { title: rows[0].title || '', description: rows[0].description || '' },
+      french: paintingFrenchFields(rows[0]),
       translations: rows[0].translations || {},
     }
   }
@@ -152,20 +153,14 @@ export async function GET(req: NextRequest) {
 
     const [{ rows: paintings }, { rows: events }, { rows: settingsRows }] =
       await Promise.all([
-        pool.query('SELECT title, description, translations FROM paintings'),
+        pool.query('SELECT title, description, notice, translations FROM paintings'),
         pool.query('SELECT title, description, location, images, translations FROM events'),
         pool.query('SELECT data, translations FROM settings WHERE id = 1'),
       ])
 
     let pending = 0
     for (const p of paintings)
-      if (
-        needsWork(
-          { title: p.title || '', description: p.description || '' },
-          p.translations || {}
-        )
-      )
-        pending++
+      if (needsWork(paintingFrenchFields(p), p.translations || {})) pending++
     for (const e of events)
       if (needsWork(eventFrenchFields(e), e.translations || {})) pending++
     const settings = {

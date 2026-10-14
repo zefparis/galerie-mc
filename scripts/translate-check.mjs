@@ -88,6 +88,19 @@ function eventFrenchFields(e) {
   return fields
 }
 
+/** Champs français traduisibles d'une toile (miroir de paintingFrenchFields). */
+function paintingFrenchFields(p) {
+  const n = p.notice
+  return {
+    title: p.title || '',
+    description: p.description || '',
+    notice_accroche: n?.accroche || '',
+    notice_texte: n?.texte_client || '',
+    notice_ambiance: n?.ambiance || '',
+    notice_matiere: (n?.matiere_technique || []).join('\n'),
+  }
+}
+
 const FIELD_LABELS = {
   title: 'titre',
   description: 'description',
@@ -97,6 +110,10 @@ const FIELD_LABELS = {
   processText: 'démarche picturale',
   tagline: 'phrase d’accroche (accueil)',
   presentation: 'texte de présentation (accueil)',
+  notice_accroche: 'accroche de la fiche',
+  notice_texte: 'texte de la fiche',
+  notice_ambiance: 'ambiance de la fiche',
+  notice_matiere: 'matière et technique de la fiche',
 }
 
 const fieldLabel = (f) =>
@@ -129,7 +146,7 @@ function report(label, french, translations) {
 
 try {
   const [{ rows: paintings }, { rows: events }, { rows: settingsRows }] = await Promise.all([
-    pool.query('SELECT title, description, translations FROM paintings ORDER BY "order" NULLS LAST'),
+    pool.query('SELECT title, description, notice, translations FROM paintings ORDER BY "order" NULLS LAST'),
     pool.query('SELECT title, description, location, images, translations FROM events ORDER BY event_date DESC NULLS LAST'),
     pool.query('SELECT data, translations FROM settings WHERE id = 1'),
   ])
@@ -137,11 +154,7 @@ try {
   let total = 0
   console.log(`\nToiles (${paintings.length})`)
   for (const p of paintings) {
-    total += report(
-      `« ${p.title} »`,
-      { title: p.title || '', description: p.description || '' },
-      p.translations || {}
-    )
+    total += report(`« ${p.title} »`, paintingFrenchFields(p), p.translations || {})
   }
   console.log(`\nÉvénements (${events.length})`)
   for (const e of events) {

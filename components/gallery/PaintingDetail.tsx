@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Link, useRouter } from '@/i18n/navigation'
 import { Painting } from '@/lib/types'
-import { formatPrice, useTechniqueLabel, type Locale } from '@/lib/i18n'
+import { formatPrice, formatDimensions, useTechniqueLabel, type Locale } from '@/lib/i18n'
 import Reveal from '@/components/ui/Reveal'
 import Lightbox from './Lightbox'
 import WallArtwork from './WallArtwork'
+import NoticeView from './NoticeView'
 
 interface Props {
   painting: Painting
@@ -81,6 +82,11 @@ export default function PaintingDetail({ painting, artistName, prevId, nextId, c
               {t('originalTitle', { title: painting.titleOriginal })}
             </p>
           )}
+          {painting.notice?.accroche && (
+            <p className="font-display text-xl md:text-2xl text-[var(--ink-soft)] leading-snug italic mt-4 max-w-[65ch]">
+              {painting.notice.accroche}
+            </p>
+          )}
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-4 md:mt-6">
             <span className="font-body text-sm text-[var(--ink-soft)]">{painting.year}</span>
@@ -132,6 +138,33 @@ export default function PaintingDetail({ painting, artistName, prevId, nextId, c
           )}
         </Reveal>
       </div>
+
+      {/* Notice publiée par l'artiste (relue avant publication) — absente
+          tant que rien n'est publié : rien ne s'affiche. */}
+      {painting.notice && (
+        <div className="max-w-7xl mx-auto gutter-x pb-14">
+          <Reveal className="border-t border-[var(--line)] pt-10 md:pt-14">
+            <NoticeView
+              notice={{ ...painting.notice, accroche: '' }}
+              labels={{
+                ambiance: t('noticeAmbiance'),
+                matiere: t('noticeMatiere'),
+                fiche: t('ficheTechnique'),
+                dimensionsLabel: t('dimensionsLabel'),
+                techniqueLabel: t('techniqueLabel'),
+                yearLabel: t('yearLabel'),
+                signatureLabel: t('signatureLabel'),
+                notTranslated: t('notTranslated'),
+              }}
+              dimensions={formatDimensions(painting.dimensions) || undefined}
+              technique={technique || undefined}
+              year={painting.year || undefined}
+              signature={painting.signature}
+              untranslated={painting.noticeUntranslated}
+            />
+          </Reveal>
+        </div>
+      )}
 
       {/* Navigation précédente / suivante */}
       <div className="max-w-7xl mx-auto gutter-x pb-16 md:pb-24">

@@ -35,6 +35,24 @@ export interface Translations {
   _meta?: Record<string, Partial<Record<TargetLocale, FieldTranslationMeta>>>
 }
 
+// Présentation publique d'une toile, publiée explicitement par l'artiste
+// (colonne `notice`). Seuls ces 4 champs partent côté public — jamais les
+// notes privées ni le repère de prix de l'analyse.
+export interface PaintingNotice {
+  accroche: string
+  texte_client: string
+  ambiance: string
+  matiere_technique: string[]
+}
+
+// Analyse IA privée (colonne `analysis`, serveur/admin uniquement) : les
+// champs de la notice + pistes pour l'artiste + repère de prix éventuel.
+// Interdiction stricte : jamais renvoyée par une route ou requête publique.
+export interface PaintingAnalysis extends PaintingNotice {
+  notes_artiste?: string[]
+  repere_prix?: string
+}
+
 export interface Painting {
   id: string
   title: string
@@ -56,6 +74,14 @@ export interface Painting {
   // Renseigné côté public quand le titre affiché est traduit (pour montrer
   // l'original français en petit sur la fiche œuvre).
   titleOriginal?: string
+  // Signature de l'œuvre (ex. « signée en bas à droite ») — affichée dans
+  // la fiche technique uniquement si renseignée.
+  signature?: string
+  // Notice publiée par l'artiste — vide/absente → rien ne s'affiche.
+  notice?: PaintingNotice
+  // Vrai côté public quand la langue courante n'a pas de traduction de la
+  // notice : le français s'affiche avec une mention discrète.
+  noticeUntranslated?: boolean
 }
 
 export interface ArtistPhoto {

@@ -101,7 +101,15 @@
     "next": "Siguiente →",
     "notFound": "Obra no encontrada",
     "originalTitle": "Título original: {title}",
-    "photoAlt": "{title}, {technique}, {year}, de {artist}"
+    "photoAlt": "{title}, {technique}, {year}, de {artist}",
+    "noticeAmbiance": "Ambiente e interior",
+    "noticeMatiere": "Materia y técnica",
+    "ficheTechnique": "Ficha técnica",
+    "dimensionsLabel": "Dimensiones",
+    "techniqueLabel": "Técnica",
+    "yearLabel": "Año",
+    "signatureLabel": "Firma",
+    "notTranslated": "Aún no traducido — se muestra el texto original"
   },
   "lightbox": {
     "aria": "Visor — {alt}",

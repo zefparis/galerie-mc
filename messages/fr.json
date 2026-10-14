@@ -101,7 +101,15 @@
     "next": "Suivante →",
     "notFound": "Œuvre introuvable",
     "originalTitle": "Titre original : {title}",
-    "photoAlt": "{title}, {technique}, {year}, par {artist}"
+    "photoAlt": "{title}, {technique}, {year}, par {artist}",
+    "noticeAmbiance": "Ambiance et intérieur",
+    "noticeMatiere": "Matière et technique",
+    "ficheTechnique": "Fiche technique",
+    "dimensionsLabel": "Dimensions",
+    "techniqueLabel": "Technique",
+    "yearLabel": "Année",
+    "signatureLabel": "Signature",
+    "notTranslated": "Pas encore traduit — texte original affiché"
   },
   "lightbox": {
     "aria": "Visionneuse — {alt}",

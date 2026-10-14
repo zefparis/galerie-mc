@@ -6,24 +6,65 @@ import { mapPaintingRow, mapEventRow } from './mappers'
 import { Painting, GalleryEvent, GallerySettings } from './types'
 import { DEFAULT_SETTINGS } from './storage'
 
+// Projection publique des toiles : colonnes listées explicitement — la
+// colonne privée `analysis` (notes_artiste, repère de prix) ne doit
+// JAMAIS être lue ici, ni sérialisée vers les composants clients.
+const PAINTING_PUBLIC_COLS = `id, title, year, technique, dimensions, description, image_url,
+  image_public_id, price, price_status, featured, "order", created_at,
+  image_width, image_height, category, signature, notice, translations`
+
 export async function getPaintings(): Promise<Painting[]> {
   try {
     const { rows } = await pool.query(
-      'SELECT * FROM paintings ORDER BY featured DESC, "order" ASC'
+      `SELECT ${PAINTING_PUBLIC_COLS} FROM paintings ORDER BY featured DESC, "order" ASC`
     )
     return rows.map(mapPaintingRow)
   } catch (err) {
+    if ((err as { code?: string })?.code === '42703') return getPaintingsLegacy()
     console.error('[data] getPaintings', err)
+    return []
+  }
+}
+
+// Schéma antérieur aux colonnes signature/notice : lecture sans elles.
+async function getPaintingsLegacy(): Promise<Painting[]> {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, title, year, technique, dimensions, description, image_url,
+        image_public_id, price, price_status, featured, "order", created_at,
+        image_width, image_height, category, translations
+       FROM paintings ORDER BY featured DESC, "order" ASC`
+    )
+    return rows.map(mapPaintingRow)
+  } catch (err) {
+    console.error('[data] getPaintingsLegacy', err)
     return []
   }
 }
 
 export async function getPaintingById(id: string): Promise<Painting | null> {
   try {
-    const { rows } = await pool.query('SELECT * FROM paintings WHERE id=$1', [id])
+    const { rows } = await pool.query(`SELECT ${PAINTING_PUBLIC_COLS} FROM paintings WHERE id=$1`, [id])
     return rows.length ? mapPaintingRow(rows[0]) : null
   } catch (err) {
+    if ((err as { code?: string })?.code === '42703') return getPaintingByIdLegacy(id)
     console.error('[data] getPaintingById', err)
+    return null
+  }
+}
+
+async function getPaintingByIdLegacy(id: string): Promise<Painting | null> {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, title, year, technique, dimensions, description, image_url,
+        image_public_id, price, price_status, featured, "order", created_at,
+        image_width, image_height, category, translations
+       FROM paintings WHERE id=$1`,
+      [id]
+    )
+    return rows.length ? mapPaintingRow(rows[0]) : null
+  } catch (err) {
+    console.error('[data] getPaintingByIdLegacy', err)
     return null
   }
 }

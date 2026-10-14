@@ -8,6 +8,7 @@ import {
   eventFrenchFields,
   fieldMeta,
   markRelu,
+  paintingFrenchFields,
   settingsFrenchFields,
 } from '@/lib/translations-core'
 import { DEFAULT_SETTINGS } from '@/lib/storage'
@@ -28,6 +29,10 @@ const FIELD_LABELS: Record<string, string> = {
   processText: 'Démarche picturale',
   tagline: 'Phrase d’accroche (accueil)',
   presentation: 'Texte de présentation (accueil)',
+  notice_accroche: 'Accroche de la fiche œuvre',
+  notice_texte: 'Texte de la fiche œuvre',
+  notice_ambiance: 'Ambiance et intérieur',
+  notice_matiere: 'Matière et technique',
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -54,7 +59,7 @@ async function loadCatalog(): Promise<Map<string, EntityRow>> {
   const [{ rows: paintings }, { rows: events }, { rows: settingsRows }] =
     await Promise.all([
       pool.query(
-        'SELECT id, title, description, translations FROM paintings ORDER BY "order" ASC, created_at ASC'
+        'SELECT id, title, description, notice, translations FROM paintings ORDER BY "order" ASC, created_at ASC'
       ),
       pool.query(
         'SELECT id, title, description, location, images, translations FROM events ORDER BY event_date DESC NULLS LAST, "order" ASC'
@@ -69,7 +74,7 @@ async function loadCatalog(): Promise<Map<string, EntityRow>> {
       table: 'paintings',
       id: p.id,
       label: p.title || '(sans titre)',
-      french: { title: p.title || '', description: p.description || '' },
+      french: paintingFrenchFields(p),
       translations: p.translations || {},
     })
   }

@@ -10,6 +10,7 @@ import HelpTip from './HelpTip'
 import TranslationPanel from './TranslationPanel'
 import FormWithPreview from './PreviewShell'
 import PaintingPreview from './PaintingPreview'
+import AnalysePanel from './AnalysePanel'
 
 // La traduction part en arrière-plan : l'enregistrement n'attend jamais
 // le service de traduction, et un échec est silencieux (le texte est déjà
@@ -60,6 +61,7 @@ interface Draft {
     price: number
     priceStatus: PriceStatus
     featured: boolean
+    signature: string
   }
 }
 
@@ -82,6 +84,7 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
     price: painting?.price || 0,
     priceStatus: painting?.priceStatus || ('sur_demande' as PriceStatus),
     featured: painting?.featured || false,
+    signature: painting?.signature || '',
   })
   const [draftFound, setDraftFound] = useState(false)
   const [error, setError] = useState('')
@@ -137,6 +140,7 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
       price: 0,
       priceStatus: 'sur_demande',
       featured: false,
+      signature: '',
     })
     setStep(1)
   }
@@ -163,6 +167,7 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
         price: form.priceStatus === 'visible' ? form.price : undefined,
         priceStatus: form.priceStatus,
         featured: form.featured,
+        signature: form.signature.trim() || undefined,
         order,
         createdAt: painting?.createdAt || new Date().toISOString(),
       }
@@ -356,6 +361,22 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
           </div>
 
           <div>
+            <label htmlFor="wiz-signature" className="label-field">
+              Signature <span className="label-optional">— facultatif</span>
+              <HelpTip text="Exemple : « signée en bas à droite ». Affichée dans la fiche technique de la toile." />
+            </label>
+            <input
+              id="wiz-signature"
+              type="text"
+              value={form.signature}
+              onChange={(e) => setForm({ ...form, signature: e.target.value })}
+              className="input-field"
+              placeholder="ex : signée en bas à droite"
+              maxLength={200}
+            />
+          </div>
+
+          <div>
             <label htmlFor="wiz-description" className="label-field">
               Description <span className="label-optional">— facultatif</span>
               <HelpTip text="Quelques phrases sur cette toile : ce qui vous a inspirée, les couleurs, l'histoire. Visible sur la page de l'œuvre." />
@@ -463,6 +484,21 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
             </ul>
           </div>
 
+          {/* Présentation de la fiche (IA, relue puis publiée à la main) —
+              toujours sous les informations de l'étape Vérification. */}
+          <div className="mt-6">
+            <AnalysePanel
+              paintingId={painting?.id}
+              imageUrl={form.imageUrl}
+              title={form.title}
+              technique={form.technique}
+              year={form.year}
+              dimensions={form.dimensions}
+              signature={form.signature}
+              publishedNotice={painting?.notice}
+            />
+          </div>
+
           {error && (
             <div className="mt-5 p-4 bg-[var(--danger-bg)] border border-[var(--danger-line)]" role="alert">
               <p className="font-body text-base text-[var(--danger)]">{error}</p>
@@ -480,8 +516,24 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
             fields={[
               { key: 'title', label: 'Titre de la toile' },
               { key: 'description', label: 'Description', multiline: true },
+              // Notice publiée : ses 4 champs suivent le même pipeline.
+              { key: 'notice_accroche', label: 'Accroche de la fiche' },
+              { key: 'notice_texte', label: 'Texte de la fiche', multiline: true },
+              { key: 'notice_ambiance', label: 'Ambiance et intérieur', multiline: true },
+              {
+                key: 'notice_matiere',
+                label: 'Matière et technique (une puce par ligne)',
+                multiline: true,
+              },
             ]}
-            french={{ title: form.title, description: form.description }}
+            french={{
+              title: form.title,
+              description: form.description,
+              notice_accroche: painting.notice?.accroche || '',
+              notice_texte: painting.notice?.texte_client || '',
+              notice_ambiance: painting.notice?.ambiance || '',
+              notice_matiere: (painting.notice?.matiere_technique || []).join('\n'),
+            }}
             translations={translations}
             onTranslationsChange={setTranslations}
           />

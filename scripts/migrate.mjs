@@ -118,6 +118,15 @@ const statements = [
   // Accroche de la page d'accueil, pré-remplie au premier déploiement
   // avec un texte neutre — jamais réécrite si l'artiste l'a modifiée.
   `UPDATE settings SET data = data || '{"tagline":"Peintures et collages — la matière en lumière"}'::jsonb WHERE id = 1 AND COALESCE(NULLIF(TRIM(data->>'tagline'), ''), '') = ''`,
+  // Analyse IA d'une toile : `analysis` garde la sortie complète du modèle
+  // (dont les notes privées) et n'est JAMAIS renvoyée par les requêtes
+  // publiques ; `notice` ne contient que les 4 champs publiés par l'artiste.
+  `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS analysis JSONB`,
+  `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS analysed_at TIMESTAMPTZ`,
+  `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS notice JSONB`,
+  // Signature de l'œuvre (ex. « signée en bas à droite ») — affichée dans
+  // la fiche technique uniquement quand elle est renseignée.
+  `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS signature TEXT`,
 ]
 
 try {

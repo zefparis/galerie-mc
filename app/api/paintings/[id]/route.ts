@@ -55,14 +55,19 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       b.category,
       parsedId.data,
     ]
-    const valuesT = [...values.slice(0, 14), JSON.stringify(mergedTranslations || {}), parsedId.data]
+    const valuesT = [
+      ...values.slice(0, 14),
+      JSON.stringify(mergedTranslations || {}),
+      b.signature,
+      parsedId.data,
+    ]
     let rows
     try {
       ;({ rows } = await pool.query(
         `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
          image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10, "order"=$11,
-         image_width=$12, image_height=$13, category=$14, translations=$15
-         WHERE id=$16 RETURNING *`,
+         image_width=$12, image_height=$13, category=$14, translations=$15, signature=$16
+         WHERE id=$17 RETURNING *`,
         valuesT
       ))
     } catch (err) {

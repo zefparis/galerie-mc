@@ -5,14 +5,32 @@ import { handleRouteError } from '@/lib/api'
 import { mapPaintingRow } from '@/lib/mappers'
 import { paintingBodySchema } from '@/lib/validation'
 
+// Projection publique : colonnes explicites — la colonne privée
+// `analysis` n'est JAMAIS lue ni renvoyée par l'API.
+const PUBLIC_COLS = `id, title, year, technique, dimensions, description, image_url,
+  image_public_id, price, price_status, featured, "order", created_at,
+  image_width, image_height, category, signature, notice, translations`
+
 export async function GET() {
   try {
     const { rows } = await pool.query(
-      'SELECT * FROM paintings ORDER BY featured DESC, "order" ASC'
+      `SELECT ${PUBLIC_COLS} FROM paintings ORDER BY featured DESC, "order" ASC`
     )
     return NextResponse.json(rows.map(mapPaintingRow))
   } catch (err) {
-    return handleRouteError(err)
+    // Colonnes signature/notice pas encore créées : repli sans elles.
+    if ((err as { code?: string })?.code !== '42703') return handleRouteError(err)
+    try {
+      const { rows } = await pool.query(
+        `SELECT id, title, year, technique, dimensions, description, image_url,
+          image_public_id, price, price_status, featured, "order", created_at,
+          image_width, image_height, category, translations
+         FROM paintings ORDER BY featured DESC, "order" ASC`
+      )
+      return NextResponse.json(rows.map(mapPaintingRow))
+    } catch (err2) {
+      return handleRouteError(err2)
+    }
   }
 }
 
@@ -39,11 +57,12 @@ export async function POST(req: NextRequest) {
       b.imageHeight ?? null,
       b.category,
       JSON.stringify(b.translations || {}),
+      b.signature,
     ]
     try {
       const { rows } = await pool.query(
-        `INSERT INTO paintings (id, title, year, technique, dimensions, description, image_url, image_public_id, price, price_status, featured, "order", image_width, image_height, category, translations)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
+        `INSERT INTO paintings (id, title, year, technique, dimensions, description, image_url, image_public_id, price, price_status, featured, "order", image_width, image_height, category, translations, signature)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING *`,
         values
       )
       return NextResponse.json(mapPaintingRow(rows[0]))

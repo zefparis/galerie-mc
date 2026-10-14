@@ -23,7 +23,25 @@ export const paintingBodySchema = z.object({
   category: z.enum(['peintures', 'collages']).optional().default('peintures'),
   featured: z.boolean().optional().default(false),
   order: z.number().int().optional().default(0),
+  signature: z.string().max(200).optional().default(''),
   translations: translationsSchema,
+})
+
+// Notice publique d'une toile : seuls ces 4 champs sont acceptés —
+// jamais notes_artiste ni repère de prix (privés, colonne `analysis`).
+export const noticeBodySchema = z.object({
+  accroche: z.string().max(300, "L'accroche fait 300 caractères maximum").optional().default(''),
+  texte_client: z
+    .string()
+    .max(4000, 'Le texte fait 4000 caractères maximum')
+    .optional()
+    .default(''),
+  ambiance: z.string().max(1500, "L'ambiance fait 1500 caractères maximum").optional().default(''),
+  matiere_technique: z
+    .array(z.string().max(200))
+    .max(8, 'Huit puces maximum')
+    .optional()
+    .default([]),
 })
 
 const mediaSchema = z.object({
@@ -41,7 +59,9 @@ const dateStringSchema = z
 // acceptées (le nom du cloud est une variable publique, présente côté
 // serveur aussi ; si elle manque on vérifie au moins le domaine).
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || ''
-const cloudinaryUrl = z
+// Exporté : réutilisé par la route d'analyse IA (seules des images de
+// notre espace Cloudinary sont envoyées au modèle).
+export const cloudinaryUrl = z
   .string()
   .max(2000)
   .refine(

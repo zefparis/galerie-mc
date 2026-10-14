@@ -119,15 +119,50 @@ export function getLocalizedField<T extends WithTranslations>(
   return typeof base === 'string' ? base : ''
 }
 
-/** Titre + description d'une toile dans la langue, repli français. */
+/** Titre + description + notice publiée d'une toile dans la langue,
+ *  repli français (mention discrète « pas encore traduit » signalée par
+ *  noticeUntranslated). */
 export function localizePainting(p: Painting, locale: Locale): Painting {
   if (locale === 'fr' || !p.translations) return p
+  const t = p.translations[locale] || {}
   const title = getLocalizedField(p, 'title', locale)
   const description = getLocalizedField(p, 'description', locale)
+
+  let notice = p.notice
+  let noticeUntranslated = false
+  if (notice) {
+    const pick = (key: string, fr: string) => t[key]?.trim() || fr
+    // Mention « pas encore traduit » quand le texte affiché est le
+    // français : le texte client est le corps principal — s'il existe et
+    // n'est pas traduit, on le signale ; sinon on regarde l'accroche.
+    const anyTranslated = !!(
+      t.notice_accroche?.trim() ||
+      t.notice_texte?.trim() ||
+      t.notice_ambiance?.trim() ||
+      t.notice_matiere?.trim()
+    )
+    const mainShown =
+      (notice.texte_client && !t.notice_texte?.trim()) ||
+      (!notice.texte_client && notice.accroche && !t.notice_accroche?.trim()) ||
+      (!notice.texte_client && !notice.accroche && !anyTranslated)
+    notice = {
+      accroche: pick('notice_accroche', notice.accroche),
+      texte_client: pick('notice_texte', notice.texte_client),
+      ambiance: pick('notice_ambiance', notice.ambiance),
+      matiere_technique: pick('notice_matiere', notice.matiere_technique.join('\n'))
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    }
+    noticeUntranslated = !!mainShown
+  }
+
   return {
     ...p,
     title,
     description,
+    notice,
+    noticeUntranslated,
     titleOriginal: title !== p.title ? p.title : undefined,
   }
 }

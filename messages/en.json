@@ -101,7 +101,15 @@
     "next": "Next →",
     "notFound": "Artwork not found",
     "originalTitle": "Original title: {title}",
-    "photoAlt": "{title}, {technique}, {year}, by {artist}"
+    "photoAlt": "{title}, {technique}, {year}, by {artist}",
+    "noticeAmbiance": "Ambiance & interior",
+    "noticeMatiere": "Texture & technique",
+    "ficheTechnique": "Details",
+    "dimensionsLabel": "Dimensions",
+    "techniqueLabel": "Technique",
+    "yearLabel": "Year",
+    "signatureLabel": "Signature",
+    "notTranslated": "Not yet translated — original French text shown"
   },
   "lightbox": {
     "aria": "Viewer — {alt}",

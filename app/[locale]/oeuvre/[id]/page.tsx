@@ -22,13 +22,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!painting) return { title: t('detail.notFound') }
   const lp = localizePainting(painting, locale)
 
-  const description = [
-    `${techniqueLabel(messages.techniques, painting.technique || '')}, ${painting.year}`,
-    painting.dimensions,
-    lp.description?.slice(0, 140),
-  ]
-    .filter(Boolean)
-    .join(' — ')
+  // L'accroche publiée par l'artiste devient la meta description ; repli
+  // sur la description composite habituelle sinon.
+  const description =
+    lp.notice?.accroche ||
+    [
+      `${techniqueLabel(messages.techniques, painting.technique || '')}, ${painting.year}`,
+      painting.dimensions,
+      lp.description?.slice(0, 140),
+    ]
+      .filter(Boolean)
+      .join(' — ')
 
   return {
     title: lp.title,

@@ -1,7 +1,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // Mappe une ligne snake_case PostgreSQL vers l'objet camelCase attendu par le frontend.
-import type { EventImage } from './types'
+import type { EventImage, PaintingNotice } from './types'
+
+/** La notice publiée ne contient que 4 clés — tout le reste (notes
+ *  privées, repère de prix) reste dans `analysis`, jamais sélectionné
+ *  par les requêtes publiques ni mappé ici. */
+function cleanNotice(raw: unknown): PaintingNotice | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const r = raw as Record<string, unknown>
+  const str = (v: unknown) => (typeof v === 'string' ? v : '')
+  const puces = Array.isArray(r.matiere_technique)
+    ? r.matiere_technique.map((p) => str(p).trim()).filter(Boolean)
+    : []
+  const notice: PaintingNotice = {
+    accroche: str(r.accroche).trim(),
+    texte_client: str(r.texte_client).trim(),
+    ambiance: str(r.ambiance).trim(),
+    matiere_technique: puces,
+  }
+  return notice.accroche || notice.texte_client || notice.ambiance || puces.length
+    ? notice
+    : undefined
+}
 
 export function mapPaintingRow(r: any) {
   return {
@@ -22,6 +43,8 @@ export function mapPaintingRow(r: any) {
     order: r.order,
     createdAt: r.created_at,
     translations: r.translations || {},
+    signature: typeof r.signature === 'string' && r.signature.trim() ? r.signature.trim() : undefined,
+    notice: cleanNotice(r.notice),
   }
 }
 
