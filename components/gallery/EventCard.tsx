@@ -24,17 +24,18 @@ export function formatEventDate(
 
 export default async function EventCard({ event }: { event: GalleryEvent }) {
   const locale = (await getLocale()) as Locale
+  const cover = event.coverUrl || event.images?.[0]?.url || ''
   return (
     <Link href={`/expositions/${event.id}`} className="group block">
       <div className="relative aspect-[16/10] overflow-hidden bg-[var(--line)]">
-        {event.coverUrl ? (
+        {cover ? (
           <Image
-            src={event.coverUrl}
+            src={cover}
             alt={event.title}
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             placeholder="blur"
-            blurDataURL={blurDataUrl(event.coverUrl)}
+            blurDataURL={blurDataUrl(cover)}
             className="object-cover transition-transform duration-500 ease-gallery group-hover:scale-[1.03]"
           />
         ) : (

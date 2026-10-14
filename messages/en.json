@@ -27,8 +27,7 @@
     "zoomAria": "Enlarge “{title}”",
     "chooseArtwork": "Choose the artwork shown",
     "artworkN": "Artwork {n}: {title}",
-    "photoAlt": "{title}, {technique}, {year}, by {artist}",
-    "defaultTagline": "Paintings and collages — matter in light"
+    "photoAlt": "{title}, {technique}, {year}, by {artist}"
   },
   "home": {
     "worksEyebrow": "Works",
@@ -123,9 +122,10 @@
     "backList": "← Exhibitions",
     "photos": "Photos",
     "videos": "Videos",
-    "photoAlt": "Event photo",
     "videoTitle": "Video",
-    "notFound": "Event not found"
+    "notFound": "Event not found",
+    "photoN": "{title}, photo {n}",
+    "zoomAria": "Enlarge: {alt}"
   },
   "contact": {
     "eyebrow": "Write",

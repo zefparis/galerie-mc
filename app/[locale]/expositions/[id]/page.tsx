@@ -10,6 +10,7 @@ import { blurDataUrl } from '@/lib/images'
 import { alternatesFor, OG_LOCALE } from '@/lib/seo'
 import { routing, type Locale } from '@/i18n/routing'
 import { formatEventDate } from '@/components/gallery/EventCard'
+import EventGallery from '@/components/gallery/EventGallery'
 import Reveal from '@/components/ui/Reveal'
 
 export const dynamic = 'force-dynamic'
@@ -50,7 +51,7 @@ function getYouTubeId(url: string): string | null {
   return match ? match[1] : null
 }
 
-function MediaItem({ media, photoAlt, videoTitle }: { media: EventMedia; photoAlt: string; videoTitle: string }) {
+function MediaItem({ media, videoTitle }: { media: EventMedia; videoTitle: string }) {
   if (media.type === 'video') {
     const ytId = getYouTubeId(media.url)
     if (!ytId) return null
@@ -79,7 +80,7 @@ function MediaItem({ media, photoAlt, videoTitle }: { media: EventMedia; photoAl
     <figure className="break-inside-avoid mb-5">
       <Image
         src={media.url}
-        alt={media.caption || photoAlt}
+        alt={media.caption || ''}
         width={0}
         height={0}
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -104,9 +105,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
   if (!event) notFound()
   const le = localizeEvent(event, locale)
 
-  const photos = event.media.filter((m) => m.type === 'photo')
   const videos = event.media.filter((m) => m.type === 'video')
-  const photoAlt = t('photoAlt')
   const videoTitle = t('videoTitle')
 
   return (
@@ -141,7 +140,9 @@ export default async function ExpositionDetailPage({ params }: Props) {
         </Reveal>
       </header>
 
-      {event.coverUrl && (
+      {/* Bandeau 16/9 seulement sans photos (la 1re photo joue le rôle de
+          couverture et s'affiche dans la galerie ci-dessous). */}
+      {event.coverUrl && le.images.length === 0 && (
         <Reveal className="max-w-5xl mx-auto gutter-x pb-10 md:pb-14">
           <div className="relative aspect-[16/9] overflow-hidden bg-[var(--line)]">
             <Image
@@ -166,18 +167,14 @@ export default async function ExpositionDetailPage({ params }: Props) {
         </Reveal>
       )}
 
-      {photos.length > 0 && (
+      {le.images.length > 0 && (
         <section className="max-w-5xl mx-auto gutter-x pb-12 md:pb-16">
           <Reveal>
             <h2 className="font-display text-3xl md:text-4xl text-[var(--ink)] mb-8">
               {t('photos')}
             </h2>
           </Reveal>
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-5">
-            {photos.map((m, i) => (
-              <MediaItem key={i} media={m} photoAlt={photoAlt} videoTitle={videoTitle} />
-            ))}
-          </div>
+          <EventGallery images={le.images} title={le.title} />
         </section>
       )}
 
@@ -190,7 +187,7 @@ export default async function ExpositionDetailPage({ params }: Props) {
           </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {videos.map((m, i) => (
-              <MediaItem key={i} media={m} photoAlt={photoAlt} videoTitle={videoTitle} />
+              <MediaItem key={i} media={m} videoTitle={videoTitle} />
             ))}
           </div>
         </section>

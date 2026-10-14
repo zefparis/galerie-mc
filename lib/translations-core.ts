@@ -19,9 +19,30 @@ export function settingsFrenchFields(s: GallerySettings): Record<string, string>
     bioShort: s.bioShort || '',
     bio: s.bio || '',
     processText: s.processText || '',
+    tagline: s.tagline || '',
+    presentation: s.presentation || '',
   }
   for (const p of s.photos || []) {
     if (p.publicId) fields[photoCaptionKey(p.publicId)] = p.caption || ''
+  }
+  return fields
+}
+
+/** Champs français traduisibles d'un événement (titre, description, lieu
+ *  et description des photos — clé stable par publicId Cloudinary). */
+export function eventFrenchFields(e: {
+  title?: string
+  description?: string
+  location?: string
+  images?: { publicId?: string; alt?: string }[]
+}): Record<string, string> {
+  const fields: Record<string, string> = {
+    title: e.title || '',
+    description: e.description || '',
+    location: e.location || '',
+  }
+  for (const img of e.images || []) {
+    if (img.publicId) fields[photoCaptionKey(img.publicId)] = img.alt || ''
   }
   return fields
 }

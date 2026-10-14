@@ -68,6 +68,10 @@ export interface GallerySettings {
   artistName: string
   bio: string
   bioShort: string
+  // Phrase affichée sous le titre du hero (éditable, ≤160 caractères).
+  tagline?: string
+  // Texte de présentation de la page d'accueil (paragraphes, ≤3000).
+  presentation?: string
   email: string
   phone?: string
   instagram?: string
@@ -92,6 +96,16 @@ export interface EventMedia {
   caption?: string
 }
 
+// Photo d'une exposition : la première sert de couverture.
+// width/height évitent tout saut de mise en page côté public.
+export interface EventImage {
+  url: string
+  publicId?: string
+  width?: number
+  height?: number
+  alt?: string
+}
+
 export interface GalleryEvent {
   id: string
   title: string
@@ -101,6 +115,9 @@ export interface GalleryEvent {
   coverUrl?: string
   coverPublicId?: string
   media: EventMedia[]
+  // Photos de l'exposition (≤10). En l'absence de données, déduit à la
+  // lecture de cover_url puis des photos de `media` — rien n'est perdu.
+  images: EventImage[]
   published: boolean
   order: number
   createdAt: string

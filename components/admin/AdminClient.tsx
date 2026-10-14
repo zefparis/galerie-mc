@@ -9,12 +9,13 @@ import PaintingWizard from '@/components/admin/PaintingWizard'
 import EventList from '@/components/admin/EventList'
 import EventForm from '@/components/admin/EventForm'
 import AdminSettings from '@/components/admin/AdminSettings'
+import AdminPresentation from '@/components/admin/AdminPresentation'
 import AdminInstallCard from '@/components/admin/AdminInstallCard'
 import AdminInstallLink from '@/components/admin/AdminInstallLink'
 import { getPaintings } from '@/lib/storage'
 import { Painting, GalleryEvent } from '@/lib/types'
 
-type View = 'home' | 'painting-new' | 'paintings' | 'events' | 'settings'
+type View = 'home' | 'painting-new' | 'paintings' | 'events' | 'settings' | 'presentation'
 
 const VIEW_TITLES: Record<View, string> = {
   home: 'Bonjour 👋',
@@ -22,6 +23,7 @@ const VIEW_TITLES: Record<View, string> = {
   paintings: 'Mes toiles',
   events: 'Mes événements',
   settings: 'Ma présentation',
+  presentation: 'Présentation — page d’accueil',
 }
 
 export default function AdminClient() {
@@ -90,7 +92,7 @@ export default function AdminClient() {
     setEventFormOpen(true)
   }
 
-  const handleNavigate = (v: 'painting-new' | 'paintings' | 'events' | 'settings') => {
+  const handleNavigate = (v: 'painting-new' | 'paintings' | 'events' | 'settings' | 'presentation') => {
     if (v === 'painting-new') {
       setEditingPainting(null)
       setWizardOpen(true)
@@ -199,6 +201,7 @@ export default function AdminClient() {
         )}
 
         {view === 'settings' && <AdminSettings />}
+        {view === 'presentation' && <AdminPresentation />}
       </div>
     </div>
   )

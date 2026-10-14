@@ -20,13 +20,17 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = params.locale as Locale
   const t = await getTranslations({ locale, namespace: 'home' })
+  // L'accroche éditable nourrit la meta description quand elle existe.
+  const raw = await getGallerySettings()
+  const tagline = localizeSettings(raw, locale).tagline || ''
+  const description = tagline.trim() || t('metaDesc')
   return {
     title: { absolute: t('metaTitle') },
-    description: t('metaDesc'),
+    description,
     alternates: alternatesFor('', locale),
     openGraph: {
       title: t('metaTitle'),
-      description: t('metaDesc'),
+      description,
       locale: OG_LOCALE[locale],
       alternateLocale: routing.locales.filter((l) => l !== locale).map((l) => OG_LOCALE[l]),
     },
@@ -57,36 +61,16 @@ export default async function Home({ params }: Props) {
   // Ligne d'accroche au-dessus du titre : séparateur « · ».
   const eyebrowText = (settings.bioShort || th('defaultEyebrow')).replace(/\s*\|\s*/g, ' · ')
 
-  // Accroche courte sous le titre : bioShort si elle apporte autre chose
-  // que la ligne d'accroche (sinon ce serait une redite), sinon la
-  // première phrase de la bio qui ne répète pas le nom de l'artiste,
-  // sinon le texte par défaut localisé. Tout vide → rien.
-  const normTxt = (s: string) =>
-    s.toLowerCase().replace(/[|·]/g, ' ').replace(/\s+/g, ' ').trim()
-  const TAILLE_STOP = new Set(
-    'qui que quand où et ou de du des la le les un une en au aux à a sur dans par pour avec sans the and or of a an in on with for der die das den dem und oder mit el los las una un por'.split(' ')
-  )
-  const cap140 = (s: string) => {
-    if (s.length <= 140) return s
-    let t = s.slice(0, 140).replace(/\s+\S*$/, '')
-    // Pas de mot-outil pendu avant les points de suspension.
-    while (TAILLE_STOP.has(t.split(' ').pop()!.toLowerCase().replace(/[.,;:]/g, ''))) {
-      t = t.replace(/\s+\S*$/, '')
-    }
-    return `${t}…`
-  }
-  let accroche = ''
-  if (settings.bioShort && normTxt(settings.bioShort) !== normTxt(eyebrowText)) {
-    accroche = settings.bioShort
-  }
-  if (!accroche && settings.bio) {
-    accroche =
-      settings.bio
-        .split(/(?<=[.!?])\s/)
-        .find((s) => !normTxt(s).includes(normTxt(settings.artistName))) || ''
-  }
-  if (!accroche) accroche = th('defaultTagline')
-  accroche = accroche ? cap140(accroche) : ''
+  // Accroche du hero : texte éditable (carte « Présentation » de l'admin),
+  // localisé par le pipeline ; vide → rien n'est affiché.
+  const accroche = (settings.tagline || '').trim().slice(0, 160)
+
+  // Présentation de l'accueil : texte brut, un saut de ligne = un
+  // paragraphe ; vide → la section garde seulement son contenu habituel.
+  const presentationParas = (settings.presentation || '')
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean)
 
   const today = new Date().toISOString().slice(0, 10)
   const upcoming = events
@@ -234,6 +218,18 @@ export default async function Home({ params }: Props) {
               <h2 className="font-display text-4xl md:text-5xl text-[var(--ink)] mt-2">
                 {settings.artistName}
               </h2>
+              {presentationParas.length > 0 && (
+                <div className="mt-6 md:mt-8 max-w-[65ch] space-y-5">
+                  {presentationParas.map((para, i) => (
+                    <p
+                      key={i}
+                      className="font-display text-lg md:text-xl text-[var(--ink-soft)] leading-[1.85]"
+                    >
+                      {para}
+                    </p>
+                  ))}
+                </div>
+              )}
               <p className="font-body text-base md:text-lg text-[var(--ink-soft)] leading-relaxed mt-6 md:mt-8 whitespace-pre-line">
                 {settings.bio}
               </p>

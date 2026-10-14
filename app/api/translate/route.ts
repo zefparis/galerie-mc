@@ -6,6 +6,7 @@ import { handleRouteError, notFound } from '@/lib/api'
 import { uuidSchema } from '@/lib/validation'
 import {
   TARGET_LOCALES,
+  eventFrenchFields,
   fieldStatus,
   markCorrected,
   planField,
@@ -110,18 +111,14 @@ async function loadEntity(
   if (entity === 'event') {
     if (!id) return null
     const { rows } = await pool.query(
-      'SELECT title, description, location, translations FROM events WHERE id=$1',
+      'SELECT title, description, location, images, translations FROM events WHERE id=$1',
       [id]
     )
     if (!rows.length) return null
     return {
       table: 'events',
       id,
-      french: {
-        title: rows[0].title || '',
-        description: rows[0].description || '',
-        location: rows[0].location || '',
-      },
+      french: eventFrenchFields(rows[0]),
       translations: rows[0].translations || {},
     }
   }
@@ -156,7 +153,7 @@ export async function GET(req: NextRequest) {
     const [{ rows: paintings }, { rows: events }, { rows: settingsRows }] =
       await Promise.all([
         pool.query('SELECT title, description, translations FROM paintings'),
-        pool.query('SELECT title, description, location, translations FROM events'),
+        pool.query('SELECT title, description, location, images, translations FROM events'),
         pool.query('SELECT data, translations FROM settings WHERE id = 1'),
       ])
 
@@ -170,17 +167,7 @@ export async function GET(req: NextRequest) {
       )
         pending++
     for (const e of events)
-      if (
-        needsWork(
-          {
-            title: e.title || '',
-            description: e.description || '',
-            location: e.location || '',
-          },
-          e.translations || {}
-        )
-      )
-        pending++
+      if (needsWork(eventFrenchFields(e), e.translations || {})) pending++
     const settings = {
       ...DEFAULT_SETTINGS,
       ...((settingsRows[0]?.data || {}) as Partial<GallerySettings>),

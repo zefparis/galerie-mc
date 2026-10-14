@@ -6,7 +6,7 @@ import TranslationImportExport from './TranslationImportExport'
 interface Props {
   paintingsCount: number
   eventsCount: number
-  onNavigate: (view: 'painting-new' | 'paintings' | 'events' | 'settings') => void
+  onNavigate: (view: 'painting-new' | 'paintings' | 'events' | 'settings' | 'presentation') => void
 }
 
 // Accueil de l'admin : 4 grosses cartes, une action principale par carte.
@@ -38,6 +38,13 @@ export default function AdminHome({ paintingsCount, eventsCount, onNavigate }: P
       title: 'Ma présentation',
       desc: 'Votre nom, votre présentation, vos photos et coordonnées.',
       icon: '✎',
+      primary: false,
+    },
+    {
+      view: 'presentation' as const,
+      title: 'Présentation',
+      desc: 'Phrase d’accroche et texte affichés sur la page d’accueil.',
+      icon: '🏠',
       primary: false,
     },
   ]

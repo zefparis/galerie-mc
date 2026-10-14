@@ -121,6 +121,16 @@ export function localizeEvent(e: GalleryEvent, locale: Locale): GalleryEvent {
     title,
     description: getLocalizedField(e, 'description', locale),
     location: getLocalizedField(e, 'location', locale),
+    images: (e.images || []).map((img) =>
+      img.publicId && img.alt
+        ? {
+            ...img,
+            alt:
+              e.translations?.[locale]?.[photoCaptionKey(img.publicId)]?.trim() ||
+              img.alt,
+          }
+        : img
+    ),
     titleOriginal: title !== e.title ? e.title : undefined,
   }
 }
@@ -156,6 +166,10 @@ export function localizeSettings(
     bio: resolveField('bio'),
     bioShort: resolveField('bioShort'),
     processText: resolveField('processText'),
+    // Accroche et présentation de l'accueil : éditables, traduits via le
+    // pipeline ; vides → rien n'est affiché (pas de défaut forcé).
+    tagline: getLocalizedField(s, 'tagline', locale),
+    presentation: getLocalizedField(s, 'presentation', locale),
     photos:
       locale === 'fr' || !s.translations
         ? s.photos

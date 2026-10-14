@@ -27,8 +27,7 @@
     "zoomAria": "Agrandir « {title} »",
     "chooseArtwork": "Choisir l'œuvre affichée",
     "artworkN": "Œuvre {n} : {title}",
-    "photoAlt": "{title}, {technique}, {year}, par {artist}",
-    "defaultTagline": "Peintures et collages — la matière en lumière"
+    "photoAlt": "{title}, {technique}, {year}, par {artist}"
   },
   "home": {
     "worksEyebrow": "Œuvres",
@@ -123,9 +122,10 @@
     "backList": "← Expositions",
     "photos": "Photos",
     "videos": "Vidéos",
-    "photoAlt": "Photo de l'événement",
     "videoTitle": "Vidéo",
-    "notFound": "Événement introuvable"
+    "notFound": "Événement introuvable",
+    "photoN": "{title}, photo {n}",
+    "zoomAria": "Agrandir : {alt}"
   },
   "contact": {
     "eyebrow": "Écrire",

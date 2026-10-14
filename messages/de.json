@@ -27,8 +27,7 @@
     "zoomAria": "„{title}“ vergrößern",
     "chooseArtwork": "Gezeigtes Werk wählen",
     "artworkN": "Werk {n}: {title}",
-    "photoAlt": "{title}, {technique}, {year}, von {artist}",
-    "defaultTagline": "Malerei und Collagen — Materie im Licht"
+    "photoAlt": "{title}, {technique}, {year}, von {artist}"
   },
   "home": {
     "worksEyebrow": "Werke",
@@ -123,9 +122,10 @@
     "backList": "← Ausstellungen",
     "photos": "Fotos",
     "videos": "Videos",
-    "photoAlt": "Foto der Veranstaltung",
     "videoTitle": "Video",
-    "notFound": "Veranstaltung nicht gefunden"
+    "notFound": "Veranstaltung nicht gefunden",
+    "photoN": "{title}, Foto {n}",
+    "zoomAria": "Vergrößern: {alt}"
   },
   "contact": {
     "eyebrow": "Schreiben",

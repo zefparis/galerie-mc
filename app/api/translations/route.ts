@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/auth'
 import { handleRouteError } from '@/lib/api'
 import {
   TARGET_LOCALES,
+  eventFrenchFields,
   fieldMeta,
   markRelu,
   settingsFrenchFields,
@@ -25,6 +26,8 @@ const FIELD_LABELS: Record<string, string> = {
   bioShort: 'Accroche (ligne sous le nom)',
   bio: 'Présentation de l’artiste',
   processText: 'Démarche picturale',
+  tagline: 'Phrase d’accroche (accueil)',
+  presentation: 'Texte de présentation (accueil)',
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -54,7 +57,7 @@ async function loadCatalog(): Promise<Map<string, EntityRow>> {
         'SELECT id, title, description, translations FROM paintings ORDER BY "order" ASC, created_at ASC'
       ),
       pool.query(
-        'SELECT id, title, description, location, translations FROM events ORDER BY event_date DESC NULLS LAST, "order" ASC'
+        'SELECT id, title, description, location, images, translations FROM events ORDER BY event_date DESC NULLS LAST, "order" ASC'
       ),
       pool.query('SELECT data, translations FROM settings WHERE id = 1'),
     ])
@@ -76,11 +79,7 @@ async function loadCatalog(): Promise<Map<string, EntityRow>> {
       table: 'events',
       id: e.id,
       label: e.title || '(sans titre)',
-      french: {
-        title: e.title || '',
-        description: e.description || '',
-        location: e.location || '',
-      },
+      french: eventFrenchFields(e),
       translations: e.translations || {},
     })
   }
