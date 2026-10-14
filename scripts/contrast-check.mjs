@@ -110,7 +110,7 @@ const PAIRS = [
   ['on-night', 'night', 3.0, 'outline focus dans le tiroir'],
   // Texte blanc sur voiles posés sur les images (pire cas : toile claire)
   ['#FFFFFF', { blend: ['#000000', 0.7, '#FFFFFF'] }, 4.5, 'légende de carte (voile 70 %)'],
-  ['#FFFFFF', { blend: ['#000000', 0.55, '#FFFFFF'] }, 4.5, 'badge « Vendue » sur toile claire'],
+  ['on-night', 'night', 4.5, 'badge « Vendue » (fond opaque)'],
   ['#FFFFFF', { blend: ['#000000', 0.6, '#FFFFFF'] }, 4.5, 'voile du tiroir mobile'],
   // États non textuels (3:1)
   ['accent', 'bg', 3.0, 'icônes / outline focus'],

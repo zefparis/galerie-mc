@@ -65,7 +65,14 @@
     "ariaTechnique": "Nach Technik filtern",
     "all": "Alle",
     "available": "Erhältlich",
-    "sold": "Verkauft"
+    "sold": "Verkauft",
+    "toggle": "Filtern",
+    "panelTitle": "Filter",
+    "availability": "Verfügbarkeit",
+    "techniqueTitle": "Technik",
+    "clearAll": "Alle löschen",
+    "remove": "Filter {name} entfernen",
+    "close": "Schließen"
   },
   "categories": {
     "peintures": "Zeitgenössische Malerei",

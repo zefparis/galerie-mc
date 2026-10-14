@@ -49,7 +49,7 @@
   "galerie": {
     "eyebrow": "Œuvres originales",
     "title": "Galerie",
-    "introAll": "Chaque toile est une pièce unique.",
+    "introAll": "Chaque œuvre est une pièce unique.",
     "introPeintures": "Toiles originales — chaque œuvre est une pièce unique.",
     "introCollages": "Collages et techniques mixtes sur papier — chaque œuvre est une pièce unique.",
     "metaDescAll": "Toutes les œuvres originales de Marie-Claire Scandella : peintures contemporaines et collages sur papier.",
@@ -65,12 +65,19 @@
     "ariaTechnique": "Filtrer par technique",
     "all": "Toutes",
     "available": "Disponibles",
-    "sold": "Vendues"
+    "sold": "Vendues",
+    "toggle": "Filtrer",
+    "panelTitle": "Filtres",
+    "availability": "Disponibilité",
+    "techniqueTitle": "Technique",
+    "clearAll": "Tout effacer",
+    "remove": "Retirer le filtre {name}",
+    "close": "Fermer"
   },
   "categories": {
     "peintures": "Peintures contemporaines",
     "collages": "Collages sur papier",
-    "toutes": "Toutes"
+    "toutes": "Tout"
   },
   "status": {
     "visible": "Prix affiché",

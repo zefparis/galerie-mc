@@ -65,7 +65,14 @@
     "ariaTechnique": "Filtrar por técnica",
     "all": "Todas",
     "available": "Disponibles",
-    "sold": "Vendidas"
+    "sold": "Vendidas",
+    "toggle": "Filtrar",
+    "panelTitle": "Filtros",
+    "availability": "Disponibilidad",
+    "techniqueTitle": "Técnica",
+    "clearAll": "Borrar todo",
+    "remove": "Quitar el filtro {name}",
+    "close": "Cerrar"
   },
   "categories": {
     "peintures": "Pinturas contemporáneas",

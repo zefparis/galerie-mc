@@ -288,51 +288,68 @@ textarea::placeholder {
     @apply font-body text-[11px] font-medium uppercase tracking-[0.22em] text-[var(--accent)];
   }
 
-  /* Badge verre (Vendue / Réservée) — lisible sur n'importe quelle toile,
-     y compris très claire : fond noir renforcé + flou. */
+  /* Badge (Vendue / Réservée) — fond opaque sombre + texte clair, lisible
+     sur n'importe quelle toile dans les deux thèmes. */
   .glass-badge {
-    @apply inline-flex items-center font-body text-[10px] font-medium uppercase tracking-[0.18em] px-3 py-1.5 rounded-full text-white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    background-color: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    @apply inline-flex items-center font-body text-[10px] font-medium uppercase tracking-[0.18em] px-3 py-1.5 rounded-full;
+    background-color: var(--night);
+    color: var(--on-night);
+    border: 1px solid rgba(255, 255, 255, 0.22);
   }
 
-  /* Lien de filtre : soulignement qui se dessine */
-  .filter-link {
-    @apply relative font-body text-sm font-medium uppercase tracking-[0.14em] text-[var(--ink-soft)] px-1 py-2 min-h-[44px] transition-colors duration-300 whitespace-nowrap;
+  /* Pilule de galerie : contour discret au repos, accent plein quand
+     active. Cible 44 px, focus visible, snap dans la rangée mobile. */
+  .filter-pill {
+    @apply inline-flex items-center font-body text-sm font-medium px-5 py-2.5 min-h-[44px] rounded-full border border-[var(--line)] text-[var(--ink-soft)] bg-transparent whitespace-nowrap snap-start transition-colors duration-200;
   }
-  .filter-link::after {
-    content: '';
-    position: absolute;
-    left: 4px;
-    right: 4px;
-    bottom: 8px;
-    height: 1.5px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  .filter-pill:hover {
+    @apply border-[var(--ink-soft)] text-[var(--ink)];
   }
-  .filter-link:hover {
-    @apply text-[var(--ink)];
+  .filter-pill.is-active {
+    @apply bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)];
   }
-  .filter-link:hover::after,
-  .filter-link.is-active::after {
-    transform: scaleX(1);
+  .filter-pill:focus-visible,
+  .filter-toggle:focus-visible,
+  .filter-chip:focus-visible,
+  .filter-option:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
-  .filter-link.is-active {
-    @apply text-[var(--accent)];
+
+  /* Bouton « Filtrer » — discret, souligné par l'accent quand des
+     filtres secondaires sont actifs. */
+  .filter-toggle {
+    @apply inline-flex items-center gap-2 font-body text-xs font-medium uppercase tracking-[0.14em] px-4 py-2.5 min-h-[44px] rounded-full border border-[var(--line)] text-[var(--ink-soft)] transition-colors duration-200 whitespace-nowrap;
+  }
+  .filter-toggle:hover {
+    @apply border-[var(--ink-soft)] text-[var(--ink)];
+  }
+  .filter-toggle.is-active {
+    @apply text-[var(--accent)] border-[var(--accent)];
+  }
+
+  /* Pastille de filtre actif — retirable d'un clic. */
+  .filter-chip {
+    @apply inline-flex items-center gap-1.5 font-body text-xs font-medium px-3.5 py-2 min-h-[44px] md:min-h-[36px] rounded-full bg-[var(--accent-soft)] text-[var(--accent)] transition-colors duration-200;
+  }
+  .filter-chip:hover {
+    @apply text-[var(--accent-hover)];
+  }
+
+  /* Option dans le panneau de filtres (popover / tiroir bas). */
+  .filter-option {
+    @apply w-full flex items-center justify-between gap-3 font-body text-sm px-3 py-3 min-h-[44px] text-left rounded-md text-[var(--ink-soft)] transition-colors duration-150;
+  }
+  .filter-option:hover {
+    @apply bg-[var(--bg)] text-[var(--ink)];
+  }
+  .filter-option.is-active {
+    @apply text-[var(--accent)] font-medium;
   }
 }
 
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass-badge {
-    background-color: rgba(0, 0, 0, 0.75);
-  }
-}
-
-/* Fondu des cartes au changement de filtre */
+/* Fondu des cartes au changement de filtre (200 ms — la media query
+   prefers-reduced-motion ci-dessus le réduit à quasi zéro). */
 @keyframes galleryFade {
   from {
     opacity: 0;
@@ -344,5 +361,5 @@ textarea::placeholder {
   }
 }
 .gallery-fade {
-  animation: galleryFade 0.35s ease-out both;
+  animation: galleryFade 0.2s ease-out both;
 }
