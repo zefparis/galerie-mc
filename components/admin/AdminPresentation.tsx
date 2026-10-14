@@ -5,6 +5,8 @@ import { isSessionExpired, redirectToLogin } from '@/lib/storage'
 import { GallerySettings, Translations } from '@/lib/types'
 import HelpTip from './HelpTip'
 import TranslationPanel from './TranslationPanel'
+import FormWithPreview from './PreviewShell'
+import PresentationPreview from './PresentationPreview'
 
 const TAGLINE_MAX = 160
 const PRESENTATION_MAX = 3000
@@ -140,6 +142,19 @@ export default function AdminPresentation() {
   }
 
   return (
+    <FormWithPreview
+      preview={
+        <PresentationPreview
+          tagline={tagline}
+          presentation={presentation}
+          artistName={settings.artistName}
+          // Même sur-titre que l'accueil : bioShort, « | » → « · » ;
+          // vide → le défaut localisé des messages (dans l'aperçu).
+          eyebrow={(settings.bioShort || '').replace(/\s*\|\s*/g, ' · ')}
+          translations={settings.translations}
+        />
+      }
+    >
     <div className="w-full max-w-2xl">
       <p className="font-body text-base text-[var(--ink-soft)] mb-8">
         Les textes affichés sur votre page d&apos;accueil, sous votre nom. Laissez
@@ -256,5 +271,6 @@ export default function AdminPresentation() {
         </p>
       </div>
     </div>
+    </FormWithPreview>
   )
 }

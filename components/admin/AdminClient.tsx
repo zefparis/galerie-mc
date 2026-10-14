@@ -152,7 +152,12 @@ export default function AdminClient() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      {/* Plus large quand un formulaire a son aperçu en direct à droite. */}
+      <div
+        className={`${
+          inForm || view === 'presentation' ? 'max-w-6xl' : 'max-w-3xl'
+        } mx-auto px-4 sm:px-6 py-6 sm:py-10`}
+      >
         {flash && (
           <div className="mb-6 p-4 bg-[var(--accent-soft)] border border-[var(--accent)]/30" role="status">
             <p className="font-body text-base text-[var(--ink)] font-medium">{flash}</p>

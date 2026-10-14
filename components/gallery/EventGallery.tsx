@@ -11,12 +11,14 @@ interface Props {
   images: EventImage[]
   // Titre de l'exposition, utilisé pour les alt par défaut.
   title: string
+  /** next/image sans optimisation (aperçu admin sur fichiers locaux blob:). */
+  unoptimized?: boolean
 }
 
 // Galerie de miniatures : chaque vignette réserve son ratio exact (pas de
 // décalage de mise en page), le clic ouvre la visionneuse plein écran
 // (flèches, Échap, balayage tactile, compteur « n / total »).
-export default function EventGallery({ images, title }: Props) {
+export default function EventGallery({ images, title, unoptimized }: Props) {
   const t = useTranslations('events')
   const [open, setOpen] = useState<number | null>(null)
 
@@ -46,6 +48,7 @@ export default function EventGallery({ images, title }: Props) {
               alt={altAt(0)}
               fill
               sizes="(max-width: 1024px) 100vw, 768px"
+              unoptimized={unoptimized}
               placeholder="blur"
               blurDataURL={blurDataUrl(images[0].url)}
               className="object-cover"
@@ -72,6 +75,7 @@ export default function EventGallery({ images, title }: Props) {
                     alt={altAt(i)}
                     fill
                     sizes="(max-width: 640px) 50vw, 33vw"
+                    unoptimized={unoptimized}
                     placeholder="blur"
                     blurDataURL={blurDataUrl(img.url)}
                     className="object-cover transition-transform duration-500 ease-gallery group-hover:scale-[1.03]"
@@ -88,6 +92,7 @@ export default function EventGallery({ images, title }: Props) {
         <Lightbox
           src={current.url}
           alt={altAt(open)}
+          unoptimized={unoptimized}
           counter={`${open + 1} / ${images.length}`}
           onClose={() => setOpen(null)}
           onPrev={() => setOpen((open + images.length - 1) % images.length)}

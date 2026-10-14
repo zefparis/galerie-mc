@@ -2,7 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/* `.pv-light` : mêmes valeurs que :root, posées sur un conteneur — sert
+   à l'aperçu admin « comme sur le site » en clair même quand l'admin
+   est en sombre (les variables posées sur l'élément priment sur
+   l'héritage, quel que soit le poids des sélecteurs). */
+:root,
+.pv-light {
   color-scheme: light;
 
   /* Fond blanc cassé chaleureux, encre presque noire, un seul accent. */
@@ -69,7 +74,9 @@
 }
 
 /* ─── Mode sombre : gris très foncé légèrement chaud, jamais de noir pur ── */
-html.dark {
+/* `.pv-dark` : mêmes valeurs scopées pour l'aperçu admin en sombre. */
+html.dark,
+.pv-dark {
   color-scheme: dark;
 
   --bg: #1C1915;
@@ -516,13 +523,15 @@ html.dark {
    les valeurs d'origine) : la texture assombrit/éclaircit localement le
    fond — ces crans préservent WCAG AA au pire cas mesuré. Teinte et
    saturation identiques, seule la luminance bouge de quelques points. */
-html:not(.dark) body:has(.site-texture) {
+html:not(.dark) body:has(.site-texture),
+.pv-light {
   --muted: #615A50;    /* était #6E665A */
   --accent: #7E5129;   /* était #8C5A2E */
   --danger: #9F392A;   /* était #B3402F */
   --success: #2B664C;  /* était #2D6A4F */
 }
-html.dark body:has(.site-texture) {
+html.dark body:has(.site-texture),
+.pv-dark {
   --muted: #B2AC9E;    /* était #A29A8A */
   --accent: #D2A773;   /* était #D0A26C */
   --danger: #E49A87;   /* était #E08A74 */
@@ -556,14 +565,16 @@ body:has(.site-texture)::before {
    une ombre portée en 3 couches + un liseré 1 px (visible sur fond
    sombre pour les tableaux foncés). Rectangulaire : ni coins arrondis,
    ni dégradé, ni bordure épaisse. */
-:root {
+:root,
+.pv-light {
   --art-shadow:
     0 1px 2px rgba(60, 40, 20, 0.25),
     0 12px 24px rgba(60, 40, 20, 0.18),
     0 34px 60px rgba(60, 40, 20, 0.14);
   --art-hairline: rgba(60, 40, 20, 0.12);
 }
-html.dark {
+html.dark,
+.pv-dark {
   --art-shadow:
     0 1px 2px rgba(0, 0, 0, 0.6),
     0 14px 28px rgba(0, 0, 0, 0.5),

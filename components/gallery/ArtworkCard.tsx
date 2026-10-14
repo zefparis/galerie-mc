@@ -12,9 +12,15 @@ import StatusBadge from './StatusBadge'
 export default function ArtworkCard({
   painting: p,
   category,
+  unoptimized,
+  titlePlaceholder,
 }: {
   painting: Painting
   category?: string
+  /** next/image sans optimisation (aperçu admin sur fichiers locaux blob:). */
+  unoptimized?: boolean
+  /** Le titre affiché est un exemple grisé (champ vide dans le formulaire). */
+  titlePlaceholder?: boolean
 }) {
   const t = useTranslations('artwork')
   const ts = useTranslations('status')
@@ -54,6 +60,7 @@ export default function ArtworkCard({
           : 'w-full h-auto transition-transform duration-700 ease-out group-hover:scale-105 group-focus-visible:scale-105'
       }
       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
+      unoptimized={unoptimized}
       placeholder="blur"
       blurDataURL={blurDataUrl(p.imageUrl)}
     />
@@ -85,7 +92,11 @@ export default function ArtworkCard({
       </div>
       {/* Légende toujours visible sur tactile (pas de survol) */}
       <div className="mt-3 md:hidden">
-        <p className="font-serif text-base leading-snug text-[var(--ink)]">
+        <p
+          className={`font-serif text-base leading-snug ${
+            titlePlaceholder ? 'text-[var(--muted)] italic' : 'text-[var(--ink)]'
+          }`}
+        >
           {p.title}
           {p.year && <span className="text-[var(--muted)]"> · {p.year}</span>}
         </p>

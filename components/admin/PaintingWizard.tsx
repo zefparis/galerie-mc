@@ -8,6 +8,8 @@ import { CATEGORIES, CATEGORY_LABEL, TECHNIQUES_BY_CATEGORY } from '@/lib/catalo
 import CloudinaryUpload from './CloudinaryUpload'
 import HelpTip from './HelpTip'
 import TranslationPanel from './TranslationPanel'
+import FormWithPreview from './PreviewShell'
+import PaintingPreview from './PaintingPreview'
 
 // La traduction part en arrière-plan : l'enregistrement n'attend jamais
 // le service de traduction, et un échec est silencieux (le texte est déjà
@@ -85,6 +87,8 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [translations, setTranslations] = useState<Translations>(painting?.translations || {})
+  // Aperçu local du fichier pendant l'envoi Cloudinary (blob:).
+  const [localImage, setLocalImage] = useState('')
   const restored = useRef(false)
 
   // Récupération du brouillon automatique
@@ -185,6 +189,15 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
   }
 
   return (
+    <FormWithPreview
+      preview={
+        <PaintingPreview
+          form={form}
+          translations={translations}
+          localImage={localImage}
+        />
+      }
+    >
     <div>
       {/* Barre de progression */}
       <div className="mb-8">
@@ -239,6 +252,7 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
           <CloudinaryUpload
             currentUrl={form.imageUrl}
             onUploaded={(url, publicId, width, height) => setForm({ ...form, imageUrl: url, imagePublicId: publicId, imageWidth: width, imageHeight: height })}
+            onLocalPreview={setLocalImage}
           />
         </div>
       )}
@@ -424,38 +438,29 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
             Vérifiez que tout vous convient. Vous pourrez encore modifier ensuite.
           </p>
 
-          {/* Aperçu façon fiche visiteur */}
+          {/* Récapitulatif — le rendu exact est dans l'aperçu en direct
+              (à droite sur ordinateur, bouton « Aperçu » sur téléphone). */}
           <div className="border border-[var(--line)] bg-[var(--surface)] p-4 sm:p-6">
-            <div className="bg-[var(--line)] overflow-hidden">
-              <img
-                src={form.imageUrl}
-                alt={`Aperçu — ${form.title}`}
-                className="w-full h-auto max-h-[45vh] object-contain bg-[var(--surface)]"
-              />
-            </div>
-            <h3 className="font-display text-3xl sm:text-4xl text-[var(--ink)] mt-5 leading-tight">
-              {form.title || 'Sans titre'}
-            </h3>
-            <p className="font-body text-sm text-[var(--ink-soft)] mt-2">
-              {form.year} · {form.technique}
-              {form.dimensions ? ` · ${form.dimensions}` : ''}
+            <p className="font-body text-base text-[var(--ink-soft)]">
+              👁 Regardez l&apos;aperçu : c&apos;est exactement ce que les
+              visiteurs verront, sur l&apos;accueil et dans la galerie.
             </p>
-            <p className="font-body text-lg text-[var(--ink)] font-medium mt-4">
-              {PRICE_PREVIEW[form.priceStatus](form.price)}
-            </p>
-            {form.description && (
-              <p className="font-body text-sm text-[var(--ink-soft)] leading-relaxed mt-4 whitespace-pre-line">
-                {form.description}
-              </p>
-            )}
-            {form.featured && (
-              <p className="font-body text-xs text-[var(--accent)] mt-4 uppercase tracking-[0.14em]">
-                ⭐ Affichée en grand sur l&apos;accueil
-              </p>
-            )}
-            <p className="font-body text-xs text-[var(--muted)] mt-3 uppercase tracking-[0.14em]">
-              📁 Rangée dans : {CATEGORY_LABEL[form.category]}
-            </p>
+            <ul className="mt-4 space-y-1.5 font-body text-sm text-[var(--ink-soft)]">
+              <li>
+                <span className="text-[var(--muted)]">Prix :</span>{' '}
+                {PRICE_PREVIEW[form.priceStatus](form.price) || 'Aucun prix affiché'}
+              </li>
+              <li>
+                <span className="text-[var(--muted)]">Galerie :</span>{' '}
+                {CATEGORY_LABEL[form.category]}
+              </li>
+              <li>
+                <span className="text-[var(--muted)]">Accueil :</span>{' '}
+                {form.featured
+                  ? 'Affichée en grand sur la page d’accueil'
+                  : 'Dans la galerie seulement'}
+              </li>
+            </ul>
           </div>
 
           {error && (
@@ -527,5 +532,6 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
         </p>
       )}
     </div>
+    </FormWithPreview>
   )
 }
