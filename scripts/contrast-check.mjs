@@ -30,11 +30,20 @@ function parseTokens(source) {
 }
 
 // Tous les blocs :root sont fusionnés (les variables de texture vivent
-// dans un second bloc, plus bas dans le fichier).
+// dans un second bloc, plus bas dans le fichier). Les overrides de texte
+// scopés au site public — body:has(.site-texture) — sont fusionnés aussi :
+// l'audit porte sur le rendu public réel, l'admin garde les valeurs de base.
 const light = parseTokens(
-  [...css.matchAll(/:root\s*\{([^}]*)\}/g)].map((m) => m[1]).join('\n')
+  [...css.matchAll(/:root\s*\{([^}]*)\}/g)]
+    .map((m) => m[1])
+    .concat(block('html:not\\(\\.dark\\) body:has\\(\\.site-texture\\)'))
+    .join('\n')
 )
-const dark = { ...light, ...parseTokens(block('html\\.dark')) }
+const dark = {
+  ...light,
+  ...parseTokens(block('html\\.dark')),
+  ...parseTokens(block('html\\.dark body:has\\(\\.site-texture\\)')),
+}
 
 // ── Texture « lin » : pire cas local ───────────────────────────────────
 // La texture composite des 3 couches, mesurée sur les tuiles réelles
@@ -45,7 +54,7 @@ const dark = { ...light, ...parseTokens(block('html\\.dark')) }
 const TEX_PEAK_PER_OPACITY = 0.72
 const TEX_FIBER = {
   light: { r: 0.235 * 255, g: 0.176 * 255, b: 0.118 * 255 }, // fils bruns
-  dark: { r: 0.055 * 255, g: 0.043 * 255, b: 0.032 * 255 },  // fils foncés
+  dark: { r: 1 * 255, g: 0.957 * 255, b: 0.902 * 255 },      // fils crème
 }
 
 // ── Couleurs ───────────────────────────────────────────────────────────

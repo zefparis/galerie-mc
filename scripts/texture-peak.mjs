@@ -13,7 +13,7 @@ function tile(S, fx, fy, seed, R, G, B, K, OFF) {
 }
 const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome' })
 const page = await browser.newPage()
-for (const [theme, RGB, K12, OFF12, P] of [['clair', [0.235,0.176,0.118], 1, -0.22, 0.10], ['sombre', [0.055,0.043,0.032], 0.9, -0.2, 0.3]]) {
+for (const [theme, RGB, K12, OFF12, P] of [['clair', [0.235,0.176,0.118], 1, -0.22, 0.24], ['sombre', [1,0.957,0.902], 0.9, -0.2, 0.24]]) {
   const uris = [tile(300,'0.9','0.025',2,...RGB,K12,OFF12), tile(300,'0.025','0.9',9,...RGB,K12,OFF12), tile(900,'0.01','0.01',3,...RGB,0.45,-0.06)]
   const out = await page.evaluate(async ({ uris, P }) => {
     const S = 900, layers = []
