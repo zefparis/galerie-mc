@@ -43,6 +43,36 @@ const PUBLIC_DIRS = [
   'components/contact',
 ]
 
+// ── 2b. Préfixes de langue concaténés à la main (bug des /en/en) ────────
+// Tout chemin public doit passer par i18n/navigation (Link/useRouter/
+// usePathname localisés) ou i18n/pathname. Interdits : imports nus de
+// next/link & des hooks de navigation, et les gabarits `/xx` manuels.
+const FORBIDDEN_IMPORT =
+  /import\s+[^;]*(?:\bLink\b|\busePathname\b|\buseRouter\b|\bredirect\b|\bpermanentRedirect\b)[^;]*from\s+['"]next\/(?:link|navigation)['"]/
+const MANUAL_PREFIX =
+  /`\/\$\{[^}]*(?:locale|l)\b[^}]*\}|\$\{?locale\}?\s*\+\s*['"]\/|['"]\/['"]\s*\+\s*\b(?:locale|l)\b/
+
+for (const dir of PUBLIC_DIRS) {
+  for (const file of walk(join(root, dir))) {
+    const src = readFileSync(file, 'utf8')
+    if (FORBIDDEN_IMPORT.test(src)) {
+      console.error(
+        `✗ ${relative(root, file)} : import de navigation non localisé — ` +
+          `utiliser @/i18n/navigation ou @/i18n/pathname`
+      )
+      errors++
+    }
+    src.split('\n').forEach((line, i) => {
+      if (!line.trim().startsWith('//') && MANUAL_PREFIX.test(line)) {
+        console.error(
+          `✗ ${relative(root, file)}:${i + 1} : préfixe de langue concaténé à la main « ${line.trim().slice(0, 80)} »`
+        )
+        errors++
+      }
+    })
+  }
+}
+
 // Mots/chaînes typiquement français, assez distinctifs pour éviter les
 // faux positifs sur les chemins et identifiants techniques.
 const FRENCH_RE =

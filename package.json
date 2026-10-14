@@ -14,7 +14,8 @@
     "contrast:check": "node scripts/contrast-check.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "i18n:render-check": "node scripts/i18n-render-check.mjs"
+    "i18n:render-check": "node scripts/i18n-render-check.mjs",
+    "test:i18n-nav": "node scripts/i18n-nav-check.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
@@ -45,6 +46,7 @@
   "devDependencies": {
     "@types/pg": "^8.20.0",
     "node-html-parser": "^9.0.4",
+    "playwright": "^1.64.0",
     "vitest": "^3.2.7"
   }
 }

@@ -6,14 +6,14 @@ import { Link } from '@/i18n/navigation'
 // catch-all renvoie au /_not-found global). La langue vient de la requête —
 // le middleware pose X-NEXT-INTL-LOCALE avant le routage ; repli français
 // hors site public (admin, api).
-export default async function NotFoundContent() {
+export default async function NotFoundContent({ eyebrow, body }: { eyebrow?: string; body?: string }) {
   const t = await getTranslations('notFound')
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center px-6 pt-16 text-center">
-      <p className="eyebrow">{t('eyebrow')}</p>
+      <p className="eyebrow">{eyebrow ?? t('eyebrow')}</p>
       <h1 className="font-display text-6xl md:text-8xl text-[var(--ink)] mt-4">404</h1>
       <p className="font-body text-sm md:text-base text-[var(--ink-soft)] mt-4 max-w-md">
-        {t('body')}
+        {body ?? t('body')}
       </p>
       <Link href="/galerie" className="btn-accent mt-8">
         {t('cta')}

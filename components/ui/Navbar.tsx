@@ -1,9 +1,9 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
+import { useCleanPathname } from '@/i18n/pathname'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 
@@ -11,7 +11,7 @@ const HREFS = ['/galerie', '/expositions', '/contact'] as const
 
 export default function Navbar({ artistName }: { artistName: string }) {
   const t = useTranslations('nav')
-  const pathname = usePathname()
+  const pathname = useCleanPathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const touchStartX = useRef(0)
 
@@ -29,9 +29,8 @@ export default function Navbar({ artistName }: { artistName: string }) {
     '/expositions': t('expositions'),
     '/contact': t('contact'),
   }
-  // Retire le préfixe de langue pour repérer la page active.
-  const barePath = pathname.replace(/^\/(en|es|de)(?=\/|$)/, '')
-  const isActive = (href: string) => barePath.startsWith(href)
+  // pathname est déjà dépréfixé (useCleanPathname lit l'URL réelle).
+  const isActive = (href: string) => pathname.startsWith(href)
 
   // L'admin a son propre header — pas de nav publique.
   if (pathname.startsWith('/admin')) return null

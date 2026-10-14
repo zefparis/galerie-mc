@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useLocale } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
-import { Link, usePathname } from '@/i18n/navigation'
+import { Link } from '@/i18n/navigation'
+import { useCleanPathname, useUrlLocale } from '@/i18n/pathname'
 import type { Locale } from '@/i18n/routing'
 
 const COOKIE = 'mc_lang_choice'
@@ -30,8 +31,11 @@ function writeChoice(value: string) {
 // langue affichée. Aucune redirection forcée — le choix (oui ou non) est
 // mémorisé dans un cookie et toujours prioritaire.
 export default function LocaleBanner() {
-  const locale = useLocale() as Locale
-  const pathname = usePathname()
+  // Langue réelle d'après l'URL (repli : provider) — évite toute erreur si
+  // le provider racine est périmé après une navigation client.
+  const providerLocale = useLocale() as Locale
+  const locale = useUrlLocale() ?? providerLocale
+  const pathname = useCleanPathname()
   const searchParams = useSearchParams()
   const [suggested, setSuggested] = useState<Exclude<Locale, 'fr'> | null>(null)
 

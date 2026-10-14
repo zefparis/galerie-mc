@@ -144,7 +144,7 @@
   },
   "notFound": {
     "eyebrow": "Page not found",
-    "body": "This artwork does not exist or has been moved.",
+    "body": "This page does not exist or has been moved.",
     "cta": "Back to the gallery"
   },
   "footer": {

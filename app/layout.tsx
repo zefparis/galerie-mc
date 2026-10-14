@@ -1,13 +1,8 @@
 import type { Metadata } from "next"
 import localFont from "next/font/local"
 import { NextIntlClientProvider } from "next-intl"
-import { getLocale, getMessages, getTranslations } from "next-intl/server"
+import { getLocale, getMessages } from "next-intl/server"
 import "./globals.css"
-import Navbar from "@/components/ui/Navbar"
-import Footer from "@/components/ui/Footer"
-import LocaleBanner from "@/components/ui/LocaleBanner"
-import { getGallerySettings } from "@/lib/data"
-import { localizeSettings } from "@/lib/i18n"
 import { routing, type Locale } from "@/i18n/routing"
 
 // Fonts auto-hébergées : aucun appel réseau au build, rendu instantané.
@@ -63,14 +58,9 @@ export default async function RootLayout({
   const locale: Locale = routing.locales.includes(requestLocale as Locale)
     ? (requestLocale as Locale)
     : routing.defaultLocale
-  const [settings, messages] = await Promise.all([
-    Promise.all([getGallerySettings(), getTranslations({ locale, namespace: 'defaults' })]).then(
-      ([s, td]) => localizeSettings(s, locale, { bio: td('bio'), bioShort: td('bioShort') })
-    ),
-    // Messages explicites : garantis quelle que soit la stratégie de rendu
-    // (statique ou dynamique), l'héritage implicite n'étant pas fiable.
-    getMessages({ locale }).catch(() => undefined),
-  ])
+  // Messages explicites : garantis quelle que soit la stratégie de rendu
+  // (statique ou dynamique), l'héritage implicite n'étant pas fiable.
+  const messages = await getMessages({ locale }).catch(() => undefined)
   return (
     <html lang={locale} suppressHydrationWarning className={`${cormorant.variable} ${inter.variable}`}>
       <head>
@@ -84,11 +74,14 @@ export default async function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen flex flex-col">
+        {/* Provider de secours pour les routes hors [locale] (404 globale,
+            admin). La navigation publique (Navbar/Footer) et le provider
+            réel vivent dans app/[locale]/layout.tsx : ce segment re-rend à
+            chaque changement de langue en navigation client — poser le
+            provider ici figerait la locale (préfixes empilés, textes
+            fr restants). */}
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Navbar artistName={settings.artistName} />
-          <main className="flex-1">{children}</main>
-          <Footer settings={settings} />
-          <LocaleBanner />
+          {children}
         </NextIntlClientProvider>
       </body>
     </html>

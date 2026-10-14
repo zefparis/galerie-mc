@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
-import { Link, usePathname } from '@/i18n/navigation'
+import { Link } from '@/i18n/navigation'
+import { useCleanPathname, useUrlLocale } from '@/i18n/pathname'
 import { routing, type Locale } from '@/i18n/routing'
 
 // Sélecteur de langue : menu déroulant dans la navbar, liste pleine largeur
@@ -11,8 +12,13 @@ import { routing, type Locale } from '@/i18n/routing'
 // propre langue et le lien conserve la page et les filtres courants.
 export default function LanguageSwitcher({ variant = 'light' }: { variant?: 'light' | 'dark' | 'list' }) {
   const t = useTranslations('lang')
-  const locale = useLocale() as Locale
-  const pathname = usePathname()
+  const providerLocale = useLocale() as Locale
+  // La langue affichée vient de l'URL (fiable même si le provider est périmé
+  // après une navigation client, et sur les 404) ; repli sur le provider.
+  const locale = useUrlLocale() ?? providerLocale
+  // Chemin sans AUCUN préfixe de langue : Link locale={l} ne peut plus
+  // empiler les préfixes (/en/en), même sur une adresse déjà cassée.
+  const pathname = useCleanPathname()
   const searchParams = useSearchParams()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
