@@ -202,11 +202,23 @@ export const loginBodySchema = z.object({
   password: z.string().min(1).max(200),
 })
 
-const artistPhotoSchema = z.object({
-  url: z.string().min(1).max(2000),
-  publicId: z.string().max(500).optional().default(''),
-  caption: z.string().max(500).optional(),
-})
+const artistPhotoSchema = z
+  .object({
+    url: cloudinaryUrl,
+    publicId: cloudinaryPublicId.optional(),
+    public_id: cloudinaryPublicId.optional(),
+    caption: z.string().max(500).optional(),
+  })
+  .transform((p) => ({
+    url: p.url,
+    publicId: p.publicId || p.public_id || '',
+    ...(p.caption !== undefined ? { caption: p.caption } : {}),
+  }))
+  .refine((p) => publicIdMatchesUrl(p.url, p.publicId), {
+    path: ['publicId'],
+    message:
+      "Une photo n'est pas valide : l'identifiant ne correspond pas à notre espace photo",
+  })
 
 export const settingsBodySchema = z.object({
   artistName: z.string().trim().min(1, 'Le nom est obligatoire').max(200),
@@ -222,6 +234,6 @@ export const settingsBodySchema = z.object({
     .max(3000, 'La présentation fait 3000 caractères maximum')
     .optional()
     .default(''),
-  photos: z.array(artistPhotoSchema).max(3, 'Trois photos maximum').optional().default([]),
+  photos: z.array(artistPhotoSchema).max(10, 'Dix photos maximum').optional().default([]),
   translations: translationsSchema,
 })

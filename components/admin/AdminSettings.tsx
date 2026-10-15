@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { getSettings, DEFAULT_SETTINGS, isSessionExpired, redirectToLogin } from '@/lib/storage'
+import { getSettings, DEFAULT_SETTINGS, isSessionExpired, readSaveError } from '@/lib/storage'
 import { GallerySettings } from '@/lib/types'
 import { photoCaptionKey } from '@/lib/translations-core'
 import CloudinaryUpload from './CloudinaryUpload'
@@ -120,11 +120,12 @@ export default function AdminSettings() {
         body: JSON.stringify(settings),
       })
       if (!res.ok) {
-        if (res.status === 401) {
-          redirectToLogin()
-          return
-        }
-        throw new Error('save-failed')
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(settings))
+        } catch { /* ignore */ }
+        const msg = await readSaveError(res)
+        setError(msg)
+        return
       }
       localStorage.removeItem(DRAFT_KEY)
       localStorage.setItem(MIGRATED_KEY, '1')
@@ -133,11 +134,14 @@ export default function AdminSettings() {
       setMessage('Votre présentation est enregistrée ✓ — elle est maintenant visible sur votre site. Les traductions arrivent dans quelques secondes.')
       setTimeout(() => setMessage(''), 8000)
     } catch (err) {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(settings))
+      } catch { /* ignore */ }
       if (isSessionExpired(err)) {
-        redirectToLogin()
+        setError("Je n'ai pas pu enregistrer : session expirée, reconnectez-vous.")
         return
       }
-      setError('Une erreur est survenue — rien n\'a été perdu, réessayez.')
+      setError("Je n'ai pas pu enregistrer : vérifiez votre connexion internet — vos modifications sont gardées en brouillon.")
     } finally {
       setSaving(false)
     }
@@ -328,7 +332,7 @@ export default function AdminSettings() {
             ))}
 
             {photos.length < MAX_PHOTOS && (
-              <div className="border border-dashed border-[var(--line)] bg-[var(--surface)] p-3">
+              <div key={photos.length} className="border border-dashed border-[var(--line)] bg-[var(--surface)] p-3">
                 <p className="font-body text-sm text-[var(--muted)] mb-3">
                   Ajouter une photo ({photos.length + 1} sur {MAX_PHOTOS})
                 </p>

@@ -5,6 +5,8 @@ import { handleRouteError } from '@/lib/api'
 import { mapPaintingRow } from '@/lib/mappers'
 import { paintingBodySchema } from '@/lib/validation'
 
+export const dynamic = 'force-dynamic'
+
 // Projection publique : colonnes explicites — la colonne privée
 // `analysis` n'est JAMAIS lue ni renvoyée par l'API.
 const PUBLIC_COLS = `id, title, year, technique, dimensions, description, image_url,

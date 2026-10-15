@@ -63,6 +63,28 @@ async function throwIfNotOk(res: Response): Promise<void> {
   throw new Error(data.error || `Erreur serveur (${res.status})`)
 }
 
+// Construit un message d'erreur lisible en français quand un enregistrement
+// admin échoue (4xx ou 5xx), sans jamais perdre le brouillon local.
+export async function readSaveError(res: Response): Promise<string> {
+  const data = (await res.json().catch(() => ({}))) as { error?: string }
+  if (res.status === 401) {
+    return "Je n'ai pas pu enregistrer : session expirée, reconnectez-vous."
+  }
+  const detail = typeof data?.error === 'string' ? data.error.trim() : ''
+  if (detail) {
+    return detail.startsWith("Je n'ai pas pu enregistrer")
+      ? detail
+      : `Je n'ai pas pu enregistrer : ${detail}`
+  }
+  if (res.status === 405) {
+    return "Je n'ai pas pu enregistrer : méthode non autorisée (405). Vos modifications sont gardées en brouillon."
+  }
+  if (res.status >= 400 && res.status < 500) {
+    return `Je n'ai pas pu enregistrer : certaines informations ne sont pas valides (${res.status}). Vos modifications sont gardées en brouillon.`
+  }
+  return `Je n'ai pas pu enregistrer : le serveur ne répond pas (${res.status}). Vos modifications sont gardées en brouillon, réessayez.`
+}
+
 // Renvoie true si l'erreur indique une session admin expirée.
 export function isSessionExpired(err: unknown): boolean {
   return err instanceof Error && err.message.startsWith('Session expirée')

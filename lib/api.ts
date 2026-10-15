@@ -13,6 +13,12 @@ export function handleRouteError(err: unknown) {
   if (err instanceof ZodError) {
     const issue = err.issues[0]
     const path = issue?.path.join('.')
+    if (issue && (path.startsWith('photos') || path.startsWith('images') || path === 'imageUrl' || path === 'imagePublicId')) {
+      const msg = issue.message.startsWith('Une photo')
+        ? issue.message
+        : `Une photo n'est pas valide (${issue.message})`
+      return NextResponse.json({ error: msg }, { status: 400 })
+    }
     const message = issue
       ? `Champ invalide${path ? ` « ${path} »` : ''} : ${issue.message}`
       : 'Données invalides'

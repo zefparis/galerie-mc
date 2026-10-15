@@ -7,6 +7,10 @@ import { DEFAULT_SETTINGS } from '@/lib/storage'
 import { settingsFrenchFields, withStaleMarks } from '@/lib/translations-core'
 import { GallerySettings, Translations } from '@/lib/types'
 
+// Indispensable : sans force-dynamic, Next.js pré-rend statiquement GET /api/settings
+// au build et le CDN Vercel rejette alors PUT /api/settings en 405 Method Not Allowed.
+export const dynamic = 'force-dynamic'
+
 // Lecture publique : les visiteurs ont besoin du nom, de la présentation, etc.
 export async function GET() {
   try {

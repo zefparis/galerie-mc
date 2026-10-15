@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { isSessionExpired, redirectToLogin } from '@/lib/storage'
+import { isSessionExpired, readSaveError } from '@/lib/storage'
 import { GallerySettings, Translations } from '@/lib/types'
 import HelpTip from './HelpTip'
 import TranslationPanel from './TranslationPanel'
@@ -117,11 +117,15 @@ export default function AdminPresentation() {
         body: JSON.stringify({ ...settings, tagline, presentation }),
       })
       if (!res.ok) {
-        if (res.status === 401) {
-          redirectToLogin()
-          return
-        }
-        throw new Error('save-failed')
+        try {
+          localStorage.setItem(
+            DRAFT_KEY,
+            JSON.stringify({ tagline, presentation })
+          )
+        } catch { /* ignore */ }
+        const msg = await readSaveError(res)
+        setError(msg)
+        return
       }
       localStorage.removeItem(DRAFT_KEY)
       setDraftFound(false)
@@ -131,11 +135,17 @@ export default function AdminPresentation() {
       )
       setTimeout(() => setMessage(''), 8000)
     } catch (err) {
+      try {
+        localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ tagline, presentation })
+        )
+      } catch { /* ignore */ }
       if (isSessionExpired(err)) {
-        redirectToLogin()
+        setError("Je n'ai pas pu enregistrer : session expirée, reconnectez-vous.")
         return
       }
-      setError("Une erreur est survenue — rien n'a été perdu, réessayez.")
+      setError("Je n'ai pas pu enregistrer : vérifiez votre connexion internet — vos modifications sont gardées en brouillon.")
     } finally {
       setSaving(false)
     }
