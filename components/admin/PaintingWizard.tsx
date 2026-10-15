@@ -41,6 +41,12 @@ const STEPS = ['La photo', 'Les informations', 'Vérification']
 
 interface Props {
   painting: Painting | null // null = nouvelle toile
+  initialPhoto?: {
+    url: string
+    publicId: string
+    width?: number
+    height?: number
+  } | null
   onDone: (message: string) => void
   onCancel: () => void
 }
@@ -65,7 +71,12 @@ interface Draft {
   }
 }
 
-export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
+export default function PaintingWizard({
+  painting,
+  initialPhoto,
+  onDone,
+  onCancel,
+}: Props) {
   const isEditing = !!painting
   const draftKey = `mc-draft-painting-${painting?.id || 'new'}`
 
@@ -77,10 +88,10 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
     dimensions: painting?.dimensions || '',
     description: painting?.description || '',
     category: painting?.category || ('peintures' as PaintingCategory),
-    imageUrl: painting?.imageUrl || '',
-    imagePublicId: painting?.imagePublicId || '',
-    imageWidth: painting?.imageWidth,
-    imageHeight: painting?.imageHeight,
+    imageUrl: painting?.imageUrl || initialPhoto?.url || '',
+    imagePublicId: painting?.imagePublicId || initialPhoto?.publicId || '',
+    imageWidth: painting?.imageWidth ?? initialPhoto?.width,
+    imageHeight: painting?.imageHeight ?? initialPhoto?.height,
     price: painting?.price || 0,
     priceStatus: painting?.priceStatus || ('sur_demande' as PriceStatus),
     featured: painting?.featured || false,
@@ -94,10 +105,12 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
   const [localImage, setLocalImage] = useState('')
   const restored = useRef(false)
 
-  // Récupération du brouillon automatique
+  // Récupération du brouillon automatique (sauf si l'artiste vient de
+  // choisir une photo précise dans « Mes photos »).
   useEffect(() => {
     if (restored.current) return
     restored.current = true
+    if (initialPhoto?.url) return
     try {
       const raw = localStorage.getItem(draftKey)
       if (!raw) return
@@ -110,7 +123,7 @@ export default function PaintingWizard({ painting, onDone, onCancel }: Props) {
     } catch {
       // brouillon illisible — on l'ignore
     }
-  }, [draftKey])
+  }, [draftKey, initialPhoto])
 
   // Sauvegarde automatique du brouillon à chaque modification
   useEffect(() => {

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { uploadToCloudinaryProgress, compressImage, isTooBig, getCloudinarySettings } from '@/lib/cloudinary'
+import PhotoPickerModal from './PhotoPickerModal'
 
 interface Props {
   currentUrl: string
@@ -14,31 +15,28 @@ interface Props {
 type Status = 'idle' | 'preparing' | 'uploading' | 'success' | 'error'
 
 // Grande zone tactile : choix de photo, réduction automatique des grosses
-// photos de téléphone, barre de progression réelle.
+// photos de téléphone, barre de progression réelle, ou sélection dans la
+// photothèque Cloudinary existante.
 export default function CloudinaryUpload({ currentUrl, onUploaded, onLocalPreview }: Props) {
   const [status, setStatus] = useState<Status>('idle')
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
   const [preview, setPreview] = useState(currentUrl)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const settings = getCloudinarySettings()
+  useEffect(() => {
+    if (status !== 'uploading' && status !== 'preparing') {
+      setPreview(currentUrl)
+    }
+  }, [currentUrl, status])
 
-  if (!settings) {
-    return (
-      <div className="p-4 bg-[var(--warning-bg)] border border-[var(--warning-line)] rounded">
-        <p className="font-body text-base text-[var(--warning-ink)]">
-          ⚠️ L&apos;envoi de photos n&apos;est pas configuré. Contactez la personne
-          qui s&apos;occupe du site.
-        </p>
-      </div>
-    )
-  }
+  const settings = getCloudinarySettings()
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = '' // permet de re-choisir le même fichier
-    if (!file) return
+    if (!file || !settings) return
 
     if (!file.type.startsWith('image/')) {
       setError("Ce fichier n'est pas une photo. Choisissez une image.")
@@ -93,43 +91,64 @@ export default function CloudinaryUpload({ currentUrl, onUploaded, onLocalPrevie
       />
 
       {!preview ? (
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={status === 'uploading' || status === 'preparing'}
-          className="w-full min-h-[160px] sm:min-h-[200px] border-2 border-dashed border-[var(--line)] bg-[var(--surface)] flex flex-col items-center justify-center gap-3 p-6 transition-colors duration-200 hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]/30 disabled:opacity-60"
-        >
-          {status === 'preparing' ? (
-            <>
-              <span className="text-3xl" aria-hidden="true">⏳</span>
-              <span className="font-body text-lg text-[var(--ink)]">Préparation de la photo...</span>
-            </>
-          ) : status === 'uploading' ? (
-            <>
-              <span className="text-3xl" aria-hidden="true">📤</span>
-              <span className="font-body text-lg text-[var(--ink)]">Envoi en cours... {progress}%</span>
-              <span className="w-full max-w-xs h-2 bg-[var(--line)] overflow-hidden">
-                <span
-                  className="block h-full bg-[var(--accent)] transition-all duration-200"
-                  style={{ width: `${progress}%` }}
-                />
-              </span>
-            </>
+        <div className="space-y-3">
+          {settings ? (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={status === 'uploading' || status === 'preparing'}
+              className="w-full min-h-[160px] sm:min-h-[200px] border-2 border-dashed border-[var(--line)] bg-[var(--surface)] flex flex-col items-center justify-center gap-3 p-6 transition-colors duration-200 hover:border-[var(--accent)] hover:bg-[var(--accent-soft)]/30 disabled:opacity-60"
+            >
+              {status === 'preparing' ? (
+                <>
+                  <span className="text-3xl" aria-hidden="true">⏳</span>
+                  <span className="font-body text-lg text-[var(--ink)]">Préparation de la photo...</span>
+                </>
+              ) : status === 'uploading' ? (
+                <>
+                  <span className="text-3xl" aria-hidden="true">📤</span>
+                  <span className="font-body text-lg text-[var(--ink)]">Envoi en cours... {progress}%</span>
+                  <span className="w-full max-w-xs h-2 bg-[var(--line)] overflow-hidden">
+                    <span
+                      className="block h-full bg-[var(--accent)] transition-all duration-200"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-4xl" aria-hidden="true">📷</span>
+                  <span className="font-body text-lg font-medium text-[var(--ink)]">
+                    Envoyer une photo
+                  </span>
+                  <span className="font-body text-sm text-[var(--muted)]">
+                    Depuis votre téléphone ou votre ordinateur
+                  </span>
+                </>
+              )}
+            </button>
           ) : (
-            <>
-              <span className="text-4xl" aria-hidden="true">📷</span>
-              <span className="font-body text-lg font-medium text-[var(--ink)]">
-                Touchez ici pour choisir une photo
-              </span>
-              <span className="font-body text-sm text-[var(--muted)]">
-                Depuis votre téléphone ou votre ordinateur
-              </span>
-            </>
+            <div className="p-4 bg-[var(--warning-bg)] border border-[var(--warning-line)] rounded">
+              <p className="font-body text-base text-[var(--warning-ink)]">
+                ⚠️ L&apos;envoi de photos n&apos;est pas configuré. Contactez la personne
+                qui s&apos;occupe du site.
+              </p>
+            </div>
           )}
-        </button>
+
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            disabled={status === 'uploading' || status === 'preparing'}
+            className="btn-secondary w-full min-h-[52px] text-base"
+          >
+            🗂 Choisir dans mes photos
+          </button>
+        </div>
       ) : (
         <div>
           <div className="w-full sm:max-w-md bg-[var(--line)] overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element -- aperçu photo admin */}
             <img src={preview} alt="Aperçu de la photo choisie" className="w-full h-auto max-h-80 object-contain bg-[var(--surface)]" />
           </div>
           {status === 'uploading' && (
@@ -145,17 +164,28 @@ export default function CloudinaryUpload({ currentUrl, onUploaded, onLocalPrevie
           )}
           {status === 'success' && (
             <p className="mt-3 font-body text-base font-medium text-[var(--accent)]">
-              ✓ Photo envoyée
+              ✓ Photo prête
             </p>
           )}
           {status !== 'uploading' && status !== 'preparing' && (
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              className="btn-outline mt-4 text-sm"
-            >
-              Changer la photo
-            </button>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {settings && (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="btn-outline text-sm min-h-[48px]"
+                >
+                  Envoyer une autre photo
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
+                className="btn-secondary text-sm min-h-[48px]"
+              >
+                🗂 Choisir dans mes photos
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -172,6 +202,27 @@ export default function CloudinaryUpload({ currentUrl, onUploaded, onLocalPrevie
           </button>
         </div>
       )}
+
+      <PhotoPickerModal
+        open={pickerOpen}
+        mode="single"
+        maxSelect={1}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(chosen) => {
+          const p = chosen[0]
+          if (!p) return
+          onUploaded(
+            p.secure_url,
+            p.public_id,
+            p.width > 0 ? p.width : undefined,
+            p.height > 0 ? p.height : undefined
+          )
+          setPreview(p.secure_url)
+          onLocalPreview?.('')
+          setError('')
+          setStatus('success')
+        }}
+      />
     </div>
   )
 }

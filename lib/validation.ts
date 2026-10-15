@@ -7,25 +7,110 @@ const priceStatusSchema = z.enum(['visible', 'sur_demande', 'vendu', 'non_a_vend
 // Traductions déjà calculées (admin) : objet JSONB libre, optionnel.
 const translationsSchema = z.record(z.string(), z.unknown()).optional()
 
-export const paintingBodySchema = z.object({
-  id: uuidSchema.optional(),
-  title: z.string().trim().min(1, 'Le titre est obligatoire').max(300),
-  year: z.number().int().min(0).max(3000).nullable().optional(),
-  technique: z.string().max(100).nullable().optional(),
-  dimensions: z.string().max(200).optional().default(''),
-  description: z.string().max(20000).optional().default(''),
-  imageUrl: z.string().min(1, "L'image est obligatoire").max(2000),
-  imagePublicId: z.string().max(500).optional().default(''),
-  imageWidth: z.number().int().positive().nullable().optional(),
-  imageHeight: z.number().int().positive().nullable().optional(),
-  price: z.number().nonnegative().nullable().optional(),
-  priceStatus: priceStatusSchema.optional().default('sur_demande'),
-  category: z.enum(['peintures', 'collages']).optional().default('peintures'),
-  featured: z.boolean().optional().default(false),
-  order: z.number().int().optional().default(0),
-  signature: z.string().max(200).optional().default(''),
-  translations: translationsSchema,
-})
+// Nom du cloud Cloudinary : lu à chaque validation pour tenir compte
+// de l'environnement serveur courant sans figer la valeur à l'import.
+export function getCloudinaryCloudName(): string {
+  return (
+    process.env.CLOUDINARY_CLOUD_NAME ||
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
+    ''
+  ).trim()
+}
+
+const TRANSFORM_SEGMENT = /^(w|h|c|q|f|e|g|ar|dpr|fl|bo|b|r|o|a|t|x|y|z|ac|af|br|co|cs|d|dl|dn|du|eo|fn|fps|ki|l|ow|oh|p|pg|po|pr|so|sp|tw|u|vc|vs|vt)_/
+
+/** Extrait le public_id canonique (sans transformation, sans version v123,
+ *  sans extension finale) depuis une URL Cloudinary d'image. */
+export function extractCloudinaryPublicId(url: string, requiredCloud?: string): string | null {
+  if (!url || typeof url !== 'string' || url.includes('..') || url.includes('\\')) return null
+  const cloud = (requiredCloud ?? getCloudinaryCloudName()).trim()
+  const match = /^https:\/\/res\.cloudinary\.com\/([a-zA-Z0-9_-]+)\/image\/upload\/(.+)$/.exec(
+    url.trim()
+  )
+  if (!match) return null
+  const [, urlCloud, rest] = match
+  if (cloud && urlCloud !== cloud) return null
+
+  const cleanRest = rest.split(/[?#]/)[0]
+  const segments = cleanRest.split('/').filter(Boolean)
+  while (
+    segments.length > 1 &&
+    (segments[0].includes(',') ||
+      TRANSFORM_SEGMENT.test(segments[0]) ||
+      /^v\d+$/.test(segments[0]))
+  ) {
+    segments.shift()
+  }
+  if (!segments.length) return null
+  const joined = segments.join('/')
+  const withoutExt = joined.replace(/\.(jpe?g|png|webp|gif|avif|svg|bmp|tiff?|heic)$/i, '')
+  return withoutExt || null
+}
+
+// Exporté : réutilisé par les toiles, les expositions et la route d'analyse IA
+// (seules des images de notre espace Cloudinary sont acceptées).
+export const cloudinaryUrl = z
+  .string()
+  .trim()
+  .min(1, "L'image est obligatoire")
+  .max(2000)
+  .refine((u) => {
+    if (u.includes('..') || u.includes('\\')) return false
+    const cloud = getCloudinaryCloudName()
+    const prefix = cloud
+      ? `https://res.cloudinary.com/${cloud}/image/upload/`
+      : null
+    if (prefix && !u.startsWith(prefix)) return false
+    return extractCloudinaryPublicId(u, cloud) !== null
+  }, "L'image doit venir de l'espace photo du site")
+
+export const cloudinaryPublicId = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((id) => {
+    if (!id) return true
+    if (id.includes('..') || id.includes('//') || id.includes(':') || id.includes('\\')) {
+      return false
+    }
+    if (!/^[a-zA-Z0-9_\-/. ]+$/.test(id)) return false
+    const folderPrefix = (process.env.CLOUDINARY_FOLDER_PREFIX || '').trim()
+    if (folderPrefix && !id.startsWith(folderPrefix)) return false
+    return true
+  }, 'Identifiant de photo invalide')
+
+function publicIdMatchesUrl(imageUrl: string, imagePublicId?: string): boolean {
+  if (!imagePublicId) return true
+  const fromUrl = extractCloudinaryPublicId(imageUrl)
+  if (!fromUrl) return false
+  const cleanedId = imagePublicId.replace(/\.(jpe?g|png|webp|gif|avif|svg|bmp|tiff?|heic)$/i, '')
+  return fromUrl === cleanedId
+}
+
+export const paintingBodySchema = z
+  .object({
+    id: uuidSchema.optional(),
+    title: z.string().trim().min(1, 'Le titre est obligatoire').max(300),
+    year: z.number().int().min(0).max(3000).nullable().optional(),
+    technique: z.string().max(100).nullable().optional(),
+    dimensions: z.string().max(200).optional().default(''),
+    description: z.string().max(20000).optional().default(''),
+    imageUrl: cloudinaryUrl,
+    imagePublicId: cloudinaryPublicId.optional().default(''),
+    imageWidth: z.number().int().positive().nullable().optional(),
+    imageHeight: z.number().int().positive().nullable().optional(),
+    price: z.number().nonnegative().nullable().optional(),
+    priceStatus: priceStatusSchema.optional().default('sur_demande'),
+    category: z.enum(['peintures', 'collages']).optional().default('peintures'),
+    featured: z.boolean().optional().default(false),
+    order: z.number().int().optional().default(0),
+    signature: z.string().max(200).optional().default(''),
+    translations: translationsSchema,
+  })
+  .refine((b) => publicIdMatchesUrl(b.imageUrl, b.imagePublicId), {
+    path: ['imagePublicId'],
+    message: "L'identifiant de la photo ne correspond pas à l'adresse de notre espace photo",
+  })
 
 // Notice publique d'une toile : seuls ces 4 champs sont acceptés —
 // jamais notes_artiste ni repère de prix (privés, colonne `analysis`).
@@ -55,29 +140,42 @@ const dateStringSchema = z
   .string()
   .regex(/^(\d{4}-\d{2}-\d{2})?$/, 'Date invalide (format attendu : AAAA-MM-JJ)')
 
-// Photos d'exposition : seules des URLs Cloudinary de notre cloud sont
-// acceptées (le nom du cloud est une variable publique, présente côté
-// serveur aussi ; si elle manque on vérifie au moins le domaine).
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || ''
-// Exporté : réutilisé par la route d'analyse IA (seules des images de
-// notre espace Cloudinary sont envoyées au modèle).
-export const cloudinaryUrl = z
-  .string()
-  .max(2000)
-  .refine(
-    (u) =>
-      CLOUD_NAME
-        ? u.startsWith(`https://res.cloudinary.com/${CLOUD_NAME}/image/upload/`)
-        : /^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\//.test(u),
-    "L'image doit venir de l'espace photo du site"
-  )
+const eventImageSchema = z
+  .object({
+    url: cloudinaryUrl,
+    publicId: cloudinaryPublicId.optional(),
+    width: z.number().int().positive().optional(),
+    height: z.number().int().positive().optional(),
+    alt: z.string().max(120).optional(),
+  })
+  .refine((img) => publicIdMatchesUrl(img.url, img.publicId), {
+    path: ['publicId'],
+    message: "L'identifiant de la photo ne correspond pas à l'adresse de notre espace photo",
+  })
 
-const eventImageSchema = z.object({
-  url: cloudinaryUrl,
-  publicId: z.string().max(500).optional(),
-  width: z.number().int().positive().optional(),
-  height: z.number().int().positive().optional(),
-  alt: z.string().max(120).optional(),
+// Paramètres de requête pour GET /api/admin/photos (curseur, dossier, recherche).
+export const adminPhotosQuerySchema = z.object({
+  cursor: z
+    .string()
+    .trim()
+    .max(200)
+    .regex(/^[a-zA-Z0-9_\-=+/]*$/, 'Curseur de pagination invalide')
+    .optional()
+    .default(''),
+  folder: z
+    .string()
+    .trim()
+    .max(120)
+    .regex(/^[a-zA-Z0-9_\-/]*$/, 'Dossier invalide')
+    .refine((f) => !f.includes('..') && !f.includes('//'), 'Dossier invalide')
+    .optional()
+    .default(''),
+  q: z
+    .string()
+    .trim()
+    .max(120, 'Recherche trop longue (120 caractères max)')
+    .optional()
+    .default(''),
 })
 
 export const eventBodySchema = z.object({

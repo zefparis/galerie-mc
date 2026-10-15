@@ -12,10 +12,18 @@ import AdminSettings from '@/components/admin/AdminSettings'
 import AdminPresentation from '@/components/admin/AdminPresentation'
 import AdminInstallCard from '@/components/admin/AdminInstallCard'
 import AdminInstallLink from '@/components/admin/AdminInstallLink'
+import PhotoLibrary from '@/components/admin/PhotoLibrary'
 import { getPaintings } from '@/lib/storage'
-import { Painting, GalleryEvent } from '@/lib/types'
+import { AdminPhoto, Painting, GalleryEvent } from '@/lib/types'
 
-type View = 'home' | 'painting-new' | 'paintings' | 'events' | 'settings' | 'presentation'
+type View =
+  | 'home'
+  | 'painting-new'
+  | 'paintings'
+  | 'events'
+  | 'settings'
+  | 'presentation'
+  | 'photos'
 
 const VIEW_TITLES: Record<View, string> = {
   home: 'Bonjour 👋',
@@ -24,12 +32,22 @@ const VIEW_TITLES: Record<View, string> = {
   events: 'Mes événements',
   settings: 'Ma présentation',
   presentation: 'Présentation — page d’accueil',
+  photos: 'Mes photos',
 }
 
-export default function AdminClient() {
+interface InitialPaintingPhoto {
+  url: string
+  publicId: string
+  width?: number
+  height?: number
+}
+
+export default function AdminClient({ initialView = 'home' }: { initialView?: View }) {
   const router = useRouter()
-  const [view, setView] = useState<View>('home')
+  const [view, setView] = useState<View>(initialView)
   const [editingPainting, setEditingPainting] = useState<Painting | null>(null)
+  const [initialPaintingPhoto, setInitialPaintingPhoto] =
+    useState<InitialPaintingPhoto | null>(null)
   const [editingEvent, setEditingEvent] = useState<GalleryEvent | null>(null)
   const [wizardOpen, setWizardOpen] = useState(false)
   const [eventFormOpen, setEventFormOpen] = useState(false)
@@ -46,11 +64,21 @@ export default function AdminClient() {
       .catch(() => {})
   }, [refreshKey])
 
+  const syncUrl = (nextView: View) => {
+    if (typeof window === 'undefined') return
+    const target = nextView === 'photos' ? '/admin/photos' : '/admin'
+    if (window.location.pathname !== target) {
+      window.history.pushState(null, '', target)
+    }
+  }
+
   const goHome = (message?: string) => {
     setView('home')
+    syncUrl('home')
     setWizardOpen(false)
     setEventFormOpen(false)
     setEditingPainting(null)
+    setInitialPaintingPhoto(null)
     setEditingEvent(null)
     setRefreshKey((k) => k + 1)
     if (message) {
@@ -63,6 +91,7 @@ export default function AdminClient() {
     setWizardOpen(false)
     setEventFormOpen(false)
     setEditingPainting(null)
+    setInitialPaintingPhoto(null)
     setEditingEvent(null)
     setRefreshKey((k) => k + 1)
     if (message) {
@@ -73,12 +102,28 @@ export default function AdminClient() {
 
   const openNewPainting = () => {
     setEditingPainting(null)
+    setInitialPaintingPhoto(null)
     setWizardOpen(true)
     setView('paintings')
+    syncUrl('paintings')
+  }
+
+  const openNewPaintingWithPhoto = (photo: AdminPhoto) => {
+    setEditingPainting(null)
+    setInitialPaintingPhoto({
+      url: photo.secure_url,
+      publicId: photo.public_id,
+      width: photo.width > 0 ? photo.width : undefined,
+      height: photo.height > 0 ? photo.height : undefined,
+    })
+    setWizardOpen(true)
+    setView('paintings')
+    syncUrl('paintings')
   }
 
   const openEditPainting = (p: Painting) => {
     setEditingPainting(p)
+    setInitialPaintingPhoto(null)
     setWizardOpen(true)
   }
 
@@ -92,13 +137,20 @@ export default function AdminClient() {
     setEventFormOpen(true)
   }
 
-  const handleNavigate = (v: 'painting-new' | 'paintings' | 'events' | 'settings' | 'presentation') => {
+  const handleNavigate = (
+    v: 'painting-new' | 'paintings' | 'events' | 'settings' | 'presentation' | 'photos'
+  ) => {
     if (v === 'painting-new') {
       setEditingPainting(null)
+      setInitialPaintingPhoto(null)
       setWizardOpen(true)
       setView('paintings')
+      syncUrl('paintings')
     } else {
+      setWizardOpen(false)
+      setEventFormOpen(false)
       setView(v)
+      syncUrl(v)
     }
   }
 
@@ -133,6 +185,18 @@ export default function AdminClient() {
           </h1>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          {view !== 'photos' && (
+            <a
+              href="/admin/photos"
+              onClick={(e) => {
+                e.preventDefault()
+                handleNavigate('photos')
+              }}
+              className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors min-h-[48px] px-2 hidden sm:inline-flex items-center"
+            >
+              🗂 Mes photos
+            </a>
+          )}
           <AdminThemeToggle />
           <AdminInstallLink />
           <a
@@ -152,10 +216,10 @@ export default function AdminClient() {
         </div>
       </div>
 
-      {/* Plus large quand un formulaire a son aperçu en direct à droite. */}
+      {/* Plus large quand un formulaire a son aperçu en direct à droite ou sur la photothèque. */}
       <div
         className={`${
-          inForm || view === 'presentation' ? 'max-w-6xl' : 'max-w-3xl'
+          inForm || view === 'presentation' || view === 'photos' ? 'max-w-6xl' : 'max-w-3xl'
         } mx-auto px-4 sm:px-6 py-6 sm:py-10`}
       >
         {flash && (
@@ -185,6 +249,7 @@ export default function AdminClient() {
         {view === 'paintings' && wizardOpen && (
           <PaintingWizard
             painting={editingPainting}
+            initialPhoto={initialPaintingPhoto}
             onDone={(msg: string) => backToList(msg)}
             onCancel={() => backToList()}
           />
@@ -207,6 +272,13 @@ export default function AdminClient() {
 
         {view === 'settings' && <AdminSettings />}
         {view === 'presentation' && <AdminPresentation />}
+        {view === 'photos' && (
+          <PhotoLibrary
+            key={refreshKey}
+            mode="page"
+            onCreatePainting={openNewPaintingWithPhoto}
+          />
+        )}
       </div>
     </div>
   )

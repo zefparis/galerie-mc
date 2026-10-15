@@ -8,6 +8,7 @@ import {
   isTooBig,
   uploadToCloudinaryProgress,
 } from '@/lib/cloudinary'
+import PhotoPickerModal from './PhotoPickerModal'
 
 interface Props {
   images: EventImage[]
@@ -31,6 +32,7 @@ interface Pending {
 export default function EventPhotosField({ images, onChange, max = 10 }: Props) {
   const [pending, setPending] = useState<Pending[]>([])
   const [dragOver, setDragOver] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const counter = useRef(0)
 
@@ -111,17 +113,6 @@ export default function EventPhotosField({ images, onChange, max = 10 }: Props) 
     onChange(arr)
   }
 
-  if (!settings) {
-    return (
-      <div className="p-4 bg-[var(--warning-bg)] border border-[var(--warning-line)] rounded">
-        <p className="font-body text-base text-[var(--warning-ink)]">
-          ⚠️ L&apos;envoi de photos n&apos;est pas configuré. Contactez la personne
-          qui s&apos;occupe du site.
-        </p>
-      </div>
-    )
-  }
-
   return (
     <div>
       <div className="flex items-center justify-between gap-3 mb-4">
@@ -135,51 +126,70 @@ export default function EventPhotosField({ images, onChange, max = 10 }: Props) 
         )}
       </div>
 
-      {/* Zone d'envoi multiple */}
+      {/* Zone d'envoi multiple + sélection depuis la photothèque */}
       {remaining > 0 && (
-        <div
-          onDragOver={(e) => {
-            e.preventDefault()
-            setDragOver(true)
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault()
-            setDragOver(false)
-            if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files)
-          }}
-          className={`border-2 border-dashed transition-colors duration-200 ${
-            dragOver
-              ? 'border-[var(--accent)] bg-[var(--accent-soft)]/40'
-              : 'border-[var(--line)] bg-[var(--surface)]'
-          }`}
-        >
+        <div className="space-y-3">
+          {settings ? (
+            <div
+              onDragOver={(e) => {
+                e.preventDefault()
+                setDragOver(true)
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault()
+                setDragOver(false)
+                if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files)
+              }}
+              className={`border-2 border-dashed transition-colors duration-200 ${
+                dragOver
+                  ? 'border-[var(--accent)] bg-[var(--accent-soft)]/40'
+                  : 'border-[var(--line)] bg-[var(--surface)]'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="w-full min-h-[120px] flex flex-col items-center justify-center gap-2 p-5"
+              >
+                <span className="text-3xl" aria-hidden="true">📷</span>
+                <span className="font-body text-base font-medium text-[var(--ink)]">
+                  Envoyer une photo
+                </span>
+                <span className="font-body text-sm text-[var(--muted)] text-center">
+                  Plusieurs à la fois, depuis le téléphone ou l&apos;ordinateur — ou
+                  glissez-les ici.
+                </span>
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  if (e.target.files?.length) handleFiles(e.target.files)
+                  e.target.value = ''
+                }}
+                className="hidden"
+                aria-hidden="true"
+              />
+            </div>
+          ) : (
+            <div className="p-4 bg-[var(--warning-bg)] border border-[var(--warning-line)] rounded">
+              <p className="font-body text-base text-[var(--warning-ink)]">
+                ⚠️ L&apos;envoi de photos n&apos;est pas configuré. Contactez la personne
+                qui s&apos;occupe du site.
+              </p>
+            </div>
+          )}
+
           <button
             type="button"
-            onClick={() => fileRef.current?.click()}
-            className="w-full min-h-[120px] flex flex-col items-center justify-center gap-2 p-5"
+            onClick={() => setPickerOpen(true)}
+            className="btn-secondary w-full min-h-[52px] text-base"
           >
-            <span className="text-3xl" aria-hidden="true">📷</span>
-            <span className="font-body text-base font-medium text-[var(--ink)]">
-              Ajouter des photos
-            </span>
-            <span className="font-body text-sm text-[var(--muted)] text-center">
-              Plusieurs à la fois, depuis le téléphone ou l&apos;ordinateur — ou
-              glissez-les ici.
-            </span>
+            🗂 Choisir dans mes photos
           </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => {
-              if (e.target.files?.length) handleFiles(e.target.files)
-              e.target.value = ''
-            }}
-            className="hidden"
-            aria-hidden="true"
-          />
         </div>
       )}
 
@@ -298,6 +308,33 @@ export default function EventPhotosField({ images, onChange, max = 10 }: Props) 
           ))}
         </div>
       )}
+
+      <PhotoPickerModal
+        open={pickerOpen}
+        mode="multiple"
+        maxSelect={Math.max(1, remaining)}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(chosen) => {
+          const existingKeys = new Set(images.map((i) => i.publicId || i.url))
+          const added = chosen
+            .filter(
+              (p) =>
+                !existingKeys.has(p.public_id) &&
+                !existingKeys.has(p.secure_url)
+            )
+            .slice(0, Math.max(0, max - images.length))
+            .map((p) => ({
+              url: p.secure_url,
+              publicId: p.public_id,
+              width: p.width > 0 ? p.width : undefined,
+              height: p.height > 0 ? p.height : undefined,
+              alt: '',
+            }))
+          if (added.length > 0) {
+            onChange([...images, ...added])
+          }
+        }}
+      />
     </div>
   )
 }

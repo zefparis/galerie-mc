@@ -150,3 +150,23 @@ export interface GalleryEvent {
   translations?: Translations
   titleOriginal?: string
 }
+
+// Ressource image de la photothèque Cloudinary (lecture seule côté admin).
+// Seuls ces champs nettoyés quittent le serveur — aucune donnée interne du compte.
+export interface AdminPhoto {
+  public_id: string
+  secure_url: string
+  width: number
+  height: number
+  format: string
+  bytes: number
+  created_at: string
+  used: boolean
+  usedBy: string[]
+}
+
+export interface AdminPhotosResponse {
+  configured: boolean
+  photos: AdminPhoto[]
+  nextCursor: string | null
+}

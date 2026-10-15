@@ -1,19 +1,23 @@
 // Helpers d'URL Cloudinary pour les images stockées sous la forme
 // https://res.cloudinary.com/<cloud>/image/upload/[transforms/]<publicId>
 
+const TRANSFORM_PREFIX = /^(w|h|c|q|f|e|g|ar|dpr|fl|bo|b|r|o|a|t)_/
+
 function parts(url: string): { base: string; publicId: string } | null {
   const idx = url.indexOf('/upload/')
   if (!url.includes('res.cloudinary.com') || idx === -1) return null
   const base = url.slice(0, idx)
   const rest = url.slice(idx + '/upload/'.length)
-  // Si le premier segment ressemble à une transformation (contient "_" ou ","),
-  // on le retire pour récupérer le publicId brut.
+  // Si le premier segment est une transformation (contient "," ou commence
+  // par un paramètre Cloudinary comme w_, f_, c_, q_), on le retire pour
+  // récupérer le publicId (avec sa version éventuelle).
   const firstSlash = rest.indexOf('/')
   if (firstSlash === -1) return { base, publicId: rest }
   const first = rest.slice(0, firstSlash)
-  const publicId = first.includes('_') || first.includes(',')
-    ? rest.slice(firstSlash + 1)
-    : rest
+  const publicId =
+    first.includes(',') || TRANSFORM_PREFIX.test(first)
+      ? rest.slice(firstSlash + 1)
+      : rest
   return { base, publicId }
 }
 
