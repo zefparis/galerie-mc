@@ -82,6 +82,7 @@ async function geometry(page, label) {
   console.log(`\n— Géométrie ${label} —`)
   const n = await slideCount(page)
   check(n >= 1, `${n} slide(s) présente(s)`)
+  const frameTs = []
   for (let i = 0; i < n; i++) {
     if (n > 1) {
       await page.locator('main figure button[role="tab"]').nth(i).click()
@@ -89,6 +90,9 @@ async function geometry(page, label) {
     }
     const g = await slideBox(page, i).evaluate((el) => {
       const r = el.getBoundingClientRect()
+      const gf = el.closest('.gf')
+      const host = gf || el
+      const hr = host.getBoundingClientRect()
       const fig = el.closest('figure').getBoundingClientRect()
       const cap = el.closest('figure').querySelector('figcaption')
       const capR = cap.getBoundingClientRect()
@@ -96,17 +100,32 @@ async function geometry(page, label) {
       return {
         w: r.width,
         h: r.height,
+        hw: hr.width,
+        hh: hr.height,
         ratio: r.width / r.height,
         metaRatio: ar.length === 2 && ar[1] ? ar[0] / ar[1] : NaN,
-        cx: r.left + r.width / 2,
+        cx: hr.left + hr.width / 2,
         figCx: fig.left + fig.width / 2,
         capCx: capR.left + capR.width / 2,
         capAlign: getComputedStyle(cap).textAlign,
-        radius: getComputedStyle(el).borderRadius,
-        shadows: (getComputedStyle(el).boxShadow.match(/rgba/g) || []).length,
+        radius: getComputedStyle(host).borderRadius,
+        shadows: (getComputedStyle(host).boxShadow.match(/rgba/g) || []).length,
+        artShadow: getComputedStyle(el).boxShadow,
+        framed: !!gf,
+        pieces: gf
+          ? [...gf.querySelectorAll('i')].filter(
+              (x) => x.getAttribute('aria-hidden') === 'true'
+            ).length
+          : 0,
+        frameT: gf
+          ? (hr.height - r.height) / 2
+          : 0,
+        vh: innerHeight,
       }
     })
-    const p = await slideBox(page, i).evaluate((el) => el.getBoundingClientRect())
+    const p = await slideBox(page, i).evaluate((el) =>
+      (el.closest('.gf') || el).getBoundingClientRect()
+    )
     check(
       Number.isFinite(g.metaRatio) && Math.abs(g.ratio - g.metaRatio) < 0.02,
       `slide ${i + 1} : ratio affiché ${g.ratio.toFixed(3)} = métadonnées ${g.metaRatio.toFixed(3)}`
@@ -123,8 +142,31 @@ async function geometry(page, label) {
       (g.radius === '0px' || g.radius === '') && g.shadows >= 4,
       `slide ${i + 1} : ombre 3 couches + liseré, coins droits`
     )
+    check(
+      g.framed && g.pieces === 8,
+      `slide ${i + 1} : cadre doré (4 bords + 4 coins décoratifs, aria-hidden)`
+    )
+    check(
+      g.framed && g.artShadow === 'none',
+      `slide ${i + 1} : ombre portée déplacée sur le cadre (toile sans ombre)`
+    )
+    if (g.framed) {
+      const mh = Math.min(g.vh * 0.68, 560)
+      check(
+        g.hh <= mh + 2 && g.frameT >= 14 && g.frameT <= 46,
+        `slide ${i + 1} : cadre + toile ≤ hauteur max (${Math.round(g.hh)} ≤ ${Math.round(mh)} px, épaisseur ~${Math.round(g.frameT)} px)`
+      )
+      frameTs.push(g.frameT)
+    }
     console.log(
-      `    · slide ${i + 1} : ${Math.round(p.width)}×${Math.round(p.height)} px`
+      `    · slide ${i + 1} : ${Math.round(p.width)}×${Math.round(p.height)} px (cadre compris)`
+    )
+  }
+  if (frameTs.length > 1) {
+    const spread = Math.max(...frameTs) - Math.min(...frameTs)
+    check(
+      spread < 1,
+      `épaisseur de cadre identique sur toutes les toiles (écart ${spread.toFixed(2)} px)`
     )
   }
   return n

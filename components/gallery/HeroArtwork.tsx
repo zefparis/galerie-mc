@@ -142,6 +142,7 @@ export default function HeroArtwork({ paintings, artistName }: Props) {
               sizes="(max-width: 768px) 92vw, 44vw"
               priority={i === 0}
               cartel
+              framed
               onOpen={i === active ? () => setLightbox(true) : undefined}
               openLabel={t('zoomAria', { title: p.title })}
               focusable={i === active}

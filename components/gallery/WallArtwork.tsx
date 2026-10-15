@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, type SyntheticEvent } from 'react'
 import { useLocale } from 'next-intl'
 import { Painting } from '@/lib/types'
 import { blurDataUrl, cloudinaryUrl } from '@/lib/images'
@@ -21,6 +21,8 @@ interface Props {
   cartel?: boolean
   /** 'hero' : hauteur max min(68vh,560px) ; 'detail' : 80vh (fiche œuvre). */
   variant?: 'hero' | 'detail'
+  /** Entoure la toile du cadre doré (hero de l'accueil uniquement). */
+  framed?: boolean
   /** next/image sans optimisation (aperçu admin sur fichiers locaux blob:). */
   unoptimized?: boolean
   /** Le titre affiché est un exemple grisé (champ vide dans le formulaire). */
@@ -41,6 +43,7 @@ export default function WallArtwork({
   focusable = true,
   cartel = false,
   variant = 'hero',
+  framed = false,
   unoptimized,
   titlePlaceholder,
   className,
@@ -52,6 +55,76 @@ export default function WallArtwork({
   const [size, setSize] = useState<[number, number] | null>(
     p.imageWidth && p.imageHeight ? [p.imageWidth, p.imageHeight] : null
   )
+
+  // Cadre doré : la boîte extérieure (.gf) emporte l'ombre portée et
+  // l'épaisseur du cadre ; la toile interne (.gf-art) garde le ratio.
+  // Sans dimensions en base : repli 4/5, corrigé à la mesure de l'image.
+  if (framed) {
+    const [w, h] = size ?? [4, 5]
+    const measure = size
+      ? undefined
+      : (e: SyntheticEvent<HTMLImageElement>) => {
+          const im = e.currentTarget
+          if (im.naturalWidth > 0) setSize([im.naturalWidth, im.naturalHeight])
+        }
+    const framedImg = (
+      <span
+        className="gf"
+        style={{
+          width: `min(100%, calc((var(--art-mh) - var(--gf-py)) * ${w} / ${h} + var(--gf-px)))`,
+        }}
+      >
+        <span className="wall-art gf-art" style={{ aspectRatio: `${w} / ${h}` }}>
+          <Image
+            src={cloudinaryUrl(p.imageUrl, 'f_auto,q_auto')}
+            alt={alt}
+            fill
+            sizes={sizes}
+            priority={priority}
+            unoptimized={unoptimized}
+            placeholder="blur"
+            blurDataURL={blurDataUrl(p.imageUrl)}
+            onLoad={measure}
+            className="wall-art-img"
+          />
+        </span>
+        {/* Pièces du cadre : purement décoratives (maquette cadre-dore). */}
+        <i className="gf-i gf-et" aria-hidden="true" />
+        <i className="gf-i gf-eb" aria-hidden="true" />
+        <i className="gf-i gf-el" aria-hidden="true" />
+        <i className="gf-i gf-er" aria-hidden="true" />
+        <i className="gf-c gf-ctl" aria-hidden="true" />
+        <i className="gf-c gf-ctr" aria-hidden="true" />
+        <i className="gf-c gf-cbl" aria-hidden="true" />
+        <i className="gf-c gf-cbr" aria-hidden="true" />
+      </span>
+    )
+    const framedArtwork = onOpen ? (
+      <button
+        type="button"
+        onClick={onOpen}
+        aria-label={openLabel}
+        tabIndex={focusable ? 0 : -1}
+        className="flex w-full justify-center cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]"
+      >
+        {framedImg}
+      </button>
+    ) : (
+      framedImg
+    )
+    if (!cartel) return <div className={className}>{framedArtwork}</div>
+    return (
+      <figure className={className}>
+        {framedArtwork}
+        <Cartel
+          p={p}
+          locale={locale}
+          techLabel={techLabel}
+          titlePlaceholder={titlePlaceholder}
+        />
+      </figure>
+    )
+  }
 
   const img = size ? (
     // La boîte porte le ratio : largeur = min(colonne, hauteurMax × ratio).
@@ -108,6 +181,33 @@ export default function WallArtwork({
 
   if (!cartel) return <div className={className}>{artwork}</div>
 
+  return (
+    <figure className={className}>
+      {artwork}
+      <Cartel
+        p={p}
+        locale={locale}
+        techLabel={techLabel}
+        titlePlaceholder={titlePlaceholder}
+      />
+    </figure>
+  )
+}
+
+// Cartel centré sous le tableau (titre italique + métadonnées), hauteur
+// fixe : la ligne de base commune des tableaux ne bouge pas quand son
+// contenu change.
+function Cartel({
+  p,
+  locale,
+  techLabel,
+  titlePlaceholder,
+}: {
+  p: Painting
+  locale: Locale
+  techLabel: ReturnType<typeof useTechniqueLabel>
+  titlePlaceholder?: boolean
+}) {
   const technique = p.technique ? techLabel(p.technique) : ''
   const year = p.year
     ? new Intl.NumberFormat(locale, { useGrouping: false }).format(p.year)
@@ -116,24 +216,17 @@ export default function WallArtwork({
   const meta = [technique, year, dims].filter(Boolean).join(' · ')
 
   return (
-    <figure className={className}>
-      {artwork}
-      {/* Hauteur fixe : la ligne de base commune des tableaux ne bouge
-          pas quand le cartel change de contenu. */}
-      <figcaption className="mt-3 h-[54px] md:h-[58px] text-center">
-        <p
-          className={`font-display italic text-[15px] md:text-[17px] leading-snug ${
-            titlePlaceholder ? 'text-[var(--muted)]' : 'text-[var(--ink)]'
-          }`}
-        >
-          {p.title}
-        </p>
-        {meta && (
-          <p className="mt-1 font-body text-[13px] text-[var(--muted)]">
-            {meta}
-          </p>
-        )}
-      </figcaption>
-    </figure>
+    <figcaption className="mt-3 h-[54px] md:h-[58px] text-center">
+      <p
+        className={`font-display italic text-[15px] md:text-[17px] leading-snug ${
+          titlePlaceholder ? 'text-[var(--muted)]' : 'text-[var(--ink)]'
+        }`}
+      >
+        {p.title}
+      </p>
+      {meta && (
+        <p className="mt-1 font-body text-[13px] text-[var(--muted)]">{meta}</p>
+      )}
+    </figcaption>
   )
 }

@@ -620,3 +620,125 @@ html.dark,
   width: 100%;
   height: 100%;
 }
+
+/* ─── Cadre doré du hero ─────────────────────────────────────────────
+   Uniquement sur l'œuvre en vedette de l'accueil (.gf n'existe que là).
+   Le padding ménage l'épaisseur du cadre ; la toile (.gf-art) garde le
+   ratio image_width/image_height — seules les bandes de bord s'étirent,
+   les coins gardent leurs proportions. --gf-t = épaisseur affichée ;
+   les longueurs sources (px) sont ramenées par ×t/162 (épaisseur source
+   moyenne : gauche 159, haut 165, droite 158, bas 166). Le tout cadre +
+   toile reste borné par --art-mh et la largeur de colonne, sans CLS.
+   Ombre portée identique à .wall-art, portée par le conteneur extérieur. */
+.gf {
+  --art-mh: 60vh;
+  --gf-t: clamp(16px, calc(var(--art-mh) * 0.05), 30px);
+  /* Somme des épaisseurs verticales (165 + 166) et horizontales
+     (159 + 158) ramenées à l'échelle d'affichage. */
+  --gf-py: calc(var(--gf-t) * 331 / 162);
+  --gf-px: calc(var(--gf-t) * 317 / 162);
+  position: relative;
+  display: block;
+  margin-inline: auto;
+  max-width: 100%;
+  padding:
+    calc(var(--gf-t) * 165 / 162) calc(var(--gf-t) * 158 / 162)
+    calc(var(--gf-t) * 166 / 162) calc(var(--gf-t) * 159 / 162);
+  /* Repli doré pendant le chargement des pièces (61 Ko au total). */
+  background: linear-gradient(135deg, #8f6a2f, #c9a45c 42%, #7a5a24 68%, #b08d4e);
+  box-shadow: var(--art-shadow), 0 0 0 1px var(--art-hairline);
+}
+@media (min-width: 768px) {
+  .gf {
+    --art-mh: min(68vh, 560px);
+    --gf-t: clamp(24px, calc(var(--art-mh) * 0.07), 44px);
+  }
+}
+/* La toile à l'intérieur du cadre : la largeur de la boîte extérieure
+   (fixée en ligne) détermine la hauteur via le ratio. L'ombre du rebord
+   intérieur « tombe » sur la toile. */
+.gf-art {
+  width: 100%;
+  margin-inline: 0;
+  box-shadow: none;
+}
+.gf-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow:
+    inset 0 3px 7px rgba(0, 0, 0, 0.55),
+    inset 3px 0 6px rgba(0, 0, 0, 0.35),
+    inset -2px 0 5px rgba(0, 0, 0, 0.25),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.25);
+}
+/* Bords à répéter (sous les coins) : ils démarrent 191 px source sous
+   le coin pour que le fondu des coins se mélange à eux ; « round » fait
+   tomber le motif juste. */
+.gf-i {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+.gf-et {
+  top: 0;
+  left: calc(var(--gf-t) * 191 / 162);
+  right: calc(var(--gf-t) * 191 / 162);
+  height: calc(var(--gf-t) * 165 / 162);
+  background: url('/cadre-dore/assets/edge-top.webp') 0 0 /
+    calc(var(--gf-t) * 218 / 162) 100% round no-repeat;
+}
+.gf-eb {
+  bottom: 0;
+  left: calc(var(--gf-t) * 191 / 162);
+  right: calc(var(--gf-t) * 191 / 162);
+  height: calc(var(--gf-t) * 166 / 162);
+  background: url('/cadre-dore/assets/edge-bottom.webp') 0 0 /
+    calc(var(--gf-t) * 220 / 162) 100% round no-repeat;
+}
+.gf-el {
+  left: 0;
+  top: calc(var(--gf-t) * 191 / 162);
+  bottom: calc(var(--gf-t) * 191 / 162);
+  width: calc(var(--gf-t) * 159 / 162);
+  background: url('/cadre-dore/assets/edge-left.webp') 0 0 /
+    100% calc(var(--gf-t) * 228 / 162) no-repeat round;
+}
+.gf-er {
+  right: 0;
+  top: calc(var(--gf-t) * 191 / 162);
+  bottom: calc(var(--gf-t) * 191 / 162);
+  width: calc(var(--gf-t) * 158 / 162);
+  background: url('/cadre-dore/assets/edge-right.webp') 0 0 /
+    100% calc(var(--gf-t) * 230 / 162) no-repeat round;
+}
+/* Coins (au-dessus des bords) : taille fixe à l'échelle, jamais étirés. */
+.gf-c {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  width: calc(var(--gf-t) * 222 / 162);
+  height: calc(var(--gf-t) * 222 / 162);
+  background-size: 100% 100%;
+}
+.gf-ctl {
+  top: 0;
+  left: 0;
+  background-image: url('/cadre-dore/assets/corner-tl.webp');
+}
+.gf-ctr {
+  top: 0;
+  right: 0;
+  background-image: url('/cadre-dore/assets/corner-tr.webp');
+}
+.gf-cbl {
+  bottom: 0;
+  left: 0;
+  background-image: url('/cadre-dore/assets/corner-bl.webp');
+}
+.gf-cbr {
+  bottom: 0;
+  right: 0;
+  background-image: url('/cadre-dore/assets/corner-br.webp');
+}
