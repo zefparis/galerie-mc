@@ -575,6 +575,30 @@ export default function PaintingWizard({
               </span>
             </span>
           </label>
+
+          {/* Alertes qualité non bloquantes pour l'affichage accueil :
+              photo trop petite ou ratio extrême. */}
+          {form.featured &&
+            !!form.imageWidth &&
+            !!form.imageHeight &&
+            (Math.max(form.imageWidth, form.imageHeight) < 900 ||
+              form.imageWidth / form.imageHeight > 2 ||
+              form.imageWidth / form.imageHeight < 0.5) && (
+              <ul className="space-y-2" role="status">
+                {Math.max(form.imageWidth, form.imageHeight) < 900 && (
+                  <li className="p-3 bg-[var(--warning-bg)] border border-[var(--warning-line)] font-body text-sm text-[var(--warning-ink)]">
+                    Cette photo est petite pour la page d&apos;accueil, une
+                    image plus grande sera plus nette.
+                  </li>
+                )}
+                {(form.imageWidth / form.imageHeight > 2 ||
+                  form.imageWidth / form.imageHeight < 0.5) && (
+                  <li className="p-3 bg-[var(--warning-bg)] border border-[var(--warning-line)] font-body text-sm text-[var(--warning-ink)]">
+                    Vérifiez le cadrage : le cadre épouse la photo telle quelle.
+                  </li>
+                )}
+              </ul>
+            )}
         </div>
       )}
 

@@ -56,7 +56,9 @@ export default async function Home({ params }: Props) {
   })
   const localized = paintings.map((p) => localizePainting(p, locale))
 
-  const featuredList = localized.filter((p) => p.featured)
+  // Carrousel du hero : toutes les toiles cochées pour l'accueil,
+  // dans l'ordre habituel, plafonnées à 8.
+  const featuredList = localized.filter((p) => p.featured).slice(0, 8)
   if (featuredList.length === 0 && localized.length > 0) featuredList.push(localized[0])
   const selection = localized.slice(0, 6)
 

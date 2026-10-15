@@ -23,6 +23,9 @@ interface Props {
   variant?: 'hero' | 'detail'
   /** Entoure la toile du cadre doré (hero de l'accueil uniquement). */
   framed?: boolean
+  /** Stratégie de chargement de l'image (carrousel : voisines en eager,
+   *  les autres en lazy). */
+  loading?: 'eager' | 'lazy'
   /** next/image sans optimisation (aperçu admin sur fichiers locaux blob:). */
   unoptimized?: boolean
   /** Le titre affiché est un exemple grisé (champ vide dans le formulaire). */
@@ -44,6 +47,7 @@ export default function WallArtwork({
   cartel = false,
   variant = 'hero',
   framed = false,
+  loading,
   unoptimized,
   titlePlaceholder,
   className,
@@ -85,6 +89,7 @@ export default function WallArtwork({
             placeholder="blur"
             blurDataURL={blurDataUrl(p.imageUrl)}
             onLoad={measure}
+            loading={priority ? undefined : loading}
             className="wall-art-img"
           />
         </span>

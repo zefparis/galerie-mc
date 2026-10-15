@@ -128,35 +128,91 @@ export default function HeroArtwork({ paintings, artistName }: Props) {
       {/* Zone de hauteur fixe : l'ancrage ne bouge jamais, quel que soit
           le format du tableau. */}
       <div className="relative h-[calc(60vh+64px)] md:h-[calc(min(68vh,560px)+64px)]">
-        {paintings.map((p, i) => (
-          <div
-            key={p.id}
-            aria-hidden={i !== active}
-            className={`absolute inset-x-0 bottom-0 flex justify-center transition-opacity duration-[350ms] ease-in-out ${
-              i === active ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            }`}
-          >
-            <WallArtwork
-              painting={p}
-              alt={altFor(p)}
-              sizes="(max-width: 768px) 92vw, 44vw"
-              priority={i === 0}
-              cartel
-              framed
-              onOpen={i === active ? () => setLightbox(true) : undefined}
-              openLabel={t('zoomAria', { title: p.title })}
-              focusable={i === active}
-              className="w-full"
-            />
-          </div>
-        ))}
+        {paintings.map((p, i) => {
+          // Précharge la toile affichée et ses voisines ; le reste en lazy.
+          const near =
+            len > 1 &&
+            (i === (active + 1) % len || i === (active - 1 + len) % len)
+          return (
+            <div
+              key={p.id}
+              aria-hidden={i !== active}
+              className={`absolute inset-x-0 bottom-0 flex justify-center transition-opacity duration-[350ms] ease-in-out ${
+                i === active ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
+            >
+              <WallArtwork
+                painting={p}
+                alt={altFor(p)}
+                sizes="(max-width: 768px) 92vw, 44vw"
+                priority={i === 0}
+                loading={i === active || near ? 'eager' : 'lazy'}
+                cartel
+                framed
+                onOpen={i === active ? () => setLightbox(true) : undefined}
+                openLabel={t('zoomAria', { title: p.title })}
+                focusable={i === active}
+                className="w-full"
+              />
+            </div>
+          )
+        })}
       </div>
 
-      <p className="sr-only" role="status" aria-live="polite">
-        {t('artworkN', { n: active + 1, title: current.title })}
-      </p>
+      {len <= 5 && (
+        <p className="sr-only" role="status" aria-live="polite">
+          {t('artworkN', { n: active + 1, title: current.title })}
+        </p>
+      )}
 
-      {len > 1 && (
+      {/* Au-delà de 5 toiles : compteur accessible + flèches 44 px à la
+          place des points (cibles tactiles et clavier identiques). La
+          région polie unique annonce « Œuvre n : titre » aux lecteurs
+          d'écran ; « n / N » reste affiché visuellement. */}
+      {len > 5 && (
+        <div
+          className="mt-[22px] flex items-center justify-center gap-3"
+          role="group"
+          aria-label={t('chooseArtwork')}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              prev()
+              pauseBriefly()
+            }}
+            aria-label={t('prevArtwork')}
+            className="h-11 w-11 flex items-center justify-center text-2xl leading-none text-[var(--ink)] opacity-70 hover:opacity-100 hover:text-[var(--accent)] transition-colors duration-200"
+          >
+            ‹
+          </button>
+          <p
+            role="status"
+            aria-live="polite"
+            className="font-body text-sm text-[var(--muted)] tabular-nums min-w-[3.5rem] text-center"
+          >
+            <span aria-hidden="true">
+              {active + 1} / {len}
+            </span>
+            <span className="sr-only">
+              {t('artworkN', { n: active + 1, title: current.title })}
+            </span>
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              next()
+              pauseBriefly()
+            }}
+            aria-label={t('nextArtwork')}
+            className="h-11 w-11 flex items-center justify-center text-2xl leading-none text-[var(--ink)] opacity-70 hover:opacity-100 hover:text-[var(--accent)] transition-colors duration-200"
+          >
+            ›
+          </button>
+        </div>
+      )}
+
+      {len > 1 && len <= 5 && (
         <div
           className="mt-[22px] flex items-center justify-center gap-1"
           role="tablist"

@@ -60,6 +60,70 @@ export default function PhotoLibrary({
   const [filter, setFilter] = useState<UsageFilter>('all')
   const [search, setSearch] = useState('')
 
+  // Mode « page » uniquement : synchronisation des dimensions des toiles
+  // (image_width/image_height) depuis l'espace photo, idempotent.
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
+
+  const handleSyncDims = async () => {
+    if (syncing) return
+    setSyncing(true)
+    setSyncMsg('')
+    try {
+      const res = await fetch('/api/admin/photos/sync-dimensions', {
+        method: 'POST',
+      })
+      if (res.status === 401) {
+        redirectToLogin()
+        return
+      }
+      const data = (await res.json().catch(() => ({}))) as {
+        configured?: boolean
+        missing?: number
+        updated?: number
+        unreachable?: number
+        error?: string
+      }
+      if (!res.ok) {
+        setSyncMsg(
+          data.error ||
+            "Je n'ai pas pu mettre à jour — réessayez dans un instant."
+        )
+        return
+      }
+      if (data.configured === false) {
+        setSyncMsg(
+          'Photothèque non configurée — les clés de lecture manquent sur le serveur.'
+        )
+        return
+      }
+      const updated = data.updated || 0
+      const unreachable = data.unreachable || 0
+      if (updated > 0) {
+        setSyncMsg(
+          `${updated} toile${updated > 1 ? 's' : ''} mise${updated > 1 ? 's' : ''} à jour.` +
+            (unreachable
+              ? ` ${unreachable} photo${unreachable > 1 ? 's' : ''} introuvable${unreachable > 1 ? 's' : ''} dans votre espace.`
+              : '')
+        )
+      } else if ((data.missing || 0) === 0) {
+        setSyncMsg('Toutes vos toiles ont déjà leurs dimensions.')
+      } else {
+        setSyncMsg(
+          `Aucune mise à jour possible : ${unreachable} photo${unreachable > 1 ? 's' : ''} introuvable${unreachable > 1 ? 's' : ''} dans votre espace.`
+        )
+      }
+    } catch (err) {
+      if (isSessionExpired(err)) {
+        redirectToLogin()
+        return
+      }
+      setSyncMsg("Je n'ai pas pu mettre à jour — réessayez dans un instant.")
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   // En mode « page » : photo ouverte en grand aperçu (modale détail).
   const [activePhoto, setActivePhoto] = useState<AdminPhoto | null>(null)
   const lastClickedTriggerRef = useRef<HTMLButtonElement | null>(null)
@@ -317,6 +381,29 @@ export default function PhotoLibrary({
             {countLabel}
           </p>
         </div>
+
+        {mode === 'page' && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <button
+              type="button"
+              onClick={handleSyncDims}
+              disabled={syncing}
+              className="font-body text-sm text-[var(--muted)] hover:text-[var(--accent)] underline underline-offset-4 decoration-[var(--line)] hover:decoration-[var(--accent)] min-h-[44px] px-1 disabled:opacity-50"
+            >
+              {syncing
+                ? 'Mise à jour des formats…'
+                : 'Mettre à jour les formats des photos'}
+            </button>
+            {syncMsg && (
+              <p
+                role="status"
+                className="font-body text-sm text-[var(--ink-soft)]"
+              >
+                {syncMsg}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {limitNotice && (

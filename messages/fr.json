@@ -27,6 +27,8 @@
     "zoomAria": "Agrandir « {title} »",
     "chooseArtwork": "Choisir l'œuvre affichée",
     "artworkN": "Œuvre {n} : {title}",
+    "prevArtwork": "Œuvre précédente",
+    "nextArtwork": "Œuvre suivante",
     "photoAlt": "{title}, {technique}, {year}, par {artist}"
   },
   "home": {

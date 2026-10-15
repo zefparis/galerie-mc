@@ -117,6 +117,7 @@ export default function PaintingPreview({ form, translations, localImage }: Prop
             alt={painting.title}
             sizes="400px"
             cartel
+            framed
             unoptimized={blob}
             titlePlaceholder={titleEmpty}
           />

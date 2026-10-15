@@ -78,6 +78,47 @@ const slideCount = (page) => stage(page).locator('> div:first-child > div').coun
 const imgOf = (pg, i) =>
   stage(pg).locator('> div:first-child > div').nth(i).locator('img')
 
+// Navigation carrousel : points (≤5 toiles) ou compteur « n / N » +
+// flèches ‹ › (>5 toiles). Retourne le mode détecté.
+async function navMode(page) {
+  const tabs = await page.locator('main figure button[role="tab"]').count()
+  return tabs > 0 ? 'dots' : 'counter'
+}
+
+async function currentSlide(page) {
+  if ((await navMode(page)) === 'dots') {
+    return page
+      .locator('main figure button[role="tab"][aria-selected="true"]')
+      .evaluate((el) => [...el.parentNode.children].indexOf(el))
+  }
+  const txt =
+    (await page
+      .locator('main figure [role="group"] p[role="status"] span[aria-hidden="true"]')
+      .first()
+      .textContent()) || ''
+  return parseInt(txt.trim().split('/')[0], 10) - 1
+}
+
+async function goToSlide(page, i) {
+  if ((await navMode(page)) === 'dots') {
+    await page.locator('main figure button[role="tab"]').nth(i).click()
+    return
+  }
+  const nextBtn = page.locator(
+    'main figure button[aria-label="Œuvre suivante"]'
+  )
+  const prevBtn = page.locator(
+    'main figure button[aria-label="Œuvre précédente"]'
+  )
+  for (let k = 0; k < 14; k++) {
+    const cur = await currentSlide(page)
+    if (cur === i || !Number.isFinite(cur)) return
+    if (i > cur) await nextBtn.click()
+    else await prevBtn.click()
+    await page.waitForTimeout(420)
+  }
+}
+
 async function geometry(page, label) {
   console.log(`\n— Géométrie ${label} —`)
   const n = await slideCount(page)
@@ -85,7 +126,7 @@ async function geometry(page, label) {
   const frameTs = []
   for (let i = 0; i < n; i++) {
     if (n > 1) {
-      await page.locator('main figure button[role="tab"]').nth(i).click()
+      await goToSlide(page, i)
       await page.waitForTimeout(500)
     }
     const g = await slideBox(page, i).evaluate((el) => {
@@ -186,9 +227,50 @@ async function behaviour(page) {
   if (n < 2) {
     console.log('    · une seule œuvre : fondu/clavier/balayage non applicables')
   } else {
+    const mode = await navMode(page)
+    if (n > 5) {
+      check(mode === 'counter', 'mode compteur pour plus de 5 toiles')
+      const counter = page.locator(
+        'main figure [role="group"] p[role="status"]'
+      )
+      const cTxt = (
+        (await counter.locator('span[aria-hidden="true"]').textContent()) || ''
+      ).trim()
+      check(
+        /^\d+ \/ \d+$/.test(cTxt) && (await counter.getAttribute('aria-live')) === 'polite',
+        `compteur accessible « ${cTxt} » (aria-live poli)`
+      )
+      const btnBox = await page
+        .locator('main figure button[aria-label="Œuvre suivante"]')
+        .boundingBox()
+      check(
+        !!btnBox && btnBox.width >= 44 && btnBox.height >= 44,
+        `flèches ‹ › utilisables au doigt (${Math.round(btnBox?.width || 0)}×${Math.round(btnBox?.height || 0)} px)`
+      )
+      // Navigation par les flèches : le compteur suit (retour à 1 d'abord,
+      // la boucle de géométrie laisse le carrousel sur la dernière toile).
+      await goToSlide(page, 0)
+      await page.waitForTimeout(450)
+      await page.locator('main figure button[aria-label="Œuvre suivante"]').click()
+      await page.waitForTimeout(450)
+      check((await currentSlide(page)) === 1, 'flèche › avance le compteur à 2')
+      await page.locator('main figure button[aria-label="Œuvre précédente"]').click()
+      await page.waitForTimeout(450)
+      check((await currentSlide(page)) === 0, 'flèche ‹ revient à 1')
+    } else {
+      check(mode === 'dots', 'points de navigation pour 5 toiles ou moins')
+    }
+
     // Fondu enchaîné : pendant la transition, l'ancienne et la nouvelle
-    // slide sont toutes deux partiellement opaques.
-    await page.locator('main figure button[role="tab"]').nth(1).click()
+    // slide sont toutes deux partiellement opaques. On déclenche UN pas
+    // sans attendre la fin (goToSlide temporiserait trop).
+    await goToSlide(page, 0)
+    await page.waitForTimeout(450)
+    if (mode === 'counter') {
+      await page.locator('main figure button[aria-label="Œuvre suivante"]').click()
+    } else {
+      await page.locator('main figure button[role="tab"]').nth(1).click()
+    }
     const mid = await page.waitForTimeout(120).then(() =>
       page.evaluate(() =>
         [...document.querySelectorAll('main figure .wall-art')].map(
@@ -207,22 +289,16 @@ async function behaviour(page) {
     )
     await page.waitForTimeout(400)
 
-    // Clavier : flèche droite depuis un point
-    await page.locator('main figure button[role="tab"]').first().focus()
-    const before = await page
-      .locator('main figure button[role="tab"][aria-selected="true"]')
-      .evaluate((el) => [...el.parentNode.children].indexOf(el))
+    // Clavier : flèche droite depuis un contrôle du carrousel
+    await page.locator('main figure button').first().focus()
+    const before = await currentSlide(page)
     await page.keyboard.press('ArrowRight')
     await page.waitForTimeout(450)
-    const after = await page
-      .locator('main figure button[role="tab"][aria-selected="true"]')
-      .evaluate((el) => [...el.parentNode.children].indexOf(el))
+    const after = await currentSlide(page)
     check(after === (before + 1) % n, `flèche clavier : ${before} → ${after}`)
 
     // Balayage tactile simulé (vers la gauche = suivant)
-    const selBefore = await page
-      .locator('main figure button[role="tab"][aria-selected="true"]')
-      .evaluate((el) => [...el.parentNode.children].indexOf(el))
+    const selBefore = await currentSlide(page)
     await stage(page).evaluate((fig) => {
       const r = fig.getBoundingClientRect()
       const y = r.top + r.height / 3
@@ -240,9 +316,7 @@ async function behaviour(page) {
       mk('touchend', r.left + r.width * 0.2)
     })
     await page.waitForTimeout(450)
-    const selAfter = await page
-      .locator('main figure button[role="tab"][aria-selected="true"]')
-      .evaluate((el) => [...el.parentNode.children].indexOf(el))
+    const selAfter = await currentSlide(page)
     check(selAfter === (selBefore + 1) % n, `balayage : ${selBefore} → ${selAfter}`)
   }
 
@@ -254,7 +328,7 @@ async function behaviour(page) {
     }).observe({ type: 'layout-shift', buffered: true })
   })
   if (n > 1) {
-    await page.locator('main figure button[role="tab"]').first().click()
+    await goToSlide(page, 0)
     await page.waitForTimeout(600)
   }
   const cls = await page.evaluate(() => window.__cls)
@@ -278,7 +352,7 @@ async function shots(page, width, tag) {
     await page.waitForTimeout(150)
     for (let i = 0; i < n; i++) {
       if (n > 1) {
-        await page.locator('main figure button[role="tab"]').nth(i).click()
+        await goToSlide(page, i)
         await page.waitForTimeout(500)
       }
       await page.screenshot({ path: `${SHOTS}-${tag}-s${i + 1}-${dark ? 'dark' : 'light'}.png` })
@@ -335,12 +409,12 @@ async function main() {
     const page = await ctx.newPage()
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
     if ((await slideCount(page)) > 1) {
-      const first = await stage(page)
-        .locator('figcaption')
-        .first()
-        .textContent()
+      const active = stage(page).locator(
+        '> div:first-child > div[aria-hidden="false"] figcaption'
+      )
+      const first = await active.textContent()
       await page.waitForTimeout(7000)
-      const after = await stage(page).locator('figcaption').first().textContent()
+      const after = await active.textContent()
       check(first === after, 'aucun défilement automatique (mouvement réduit)')
     } else {
       console.log('    · une seule œuvre — non applicable')
