@@ -4,8 +4,51 @@ import { requireAdmin } from '@/lib/auth'
 import { badRequest, handleRouteError, notFound } from '@/lib/api'
 import { mapPaintingRow } from '@/lib/mappers'
 import { paintingBodySchema, uuidSchema } from '@/lib/validation'
-import { withStaleMarks } from '@/lib/translations-core'
-import type { Translations } from '@/lib/types'
+import { paintingFrenchFields, withStaleMarks } from '@/lib/translations-core'
+import type { PaintingAnalysis, PaintingNotice, Translations } from '@/lib/types'
+
+export const dynamic = 'force-dynamic'
+
+const PUBLIC_COLS = `id, title, year, technique, dimensions, description, image_url,
+  image_public_id, price, price_status, featured, "order", created_at,
+  image_width, image_height, category, signature, notice, translations`
+
+function sanitizeNoticeInput(n: PaintingNotice | null | undefined): PaintingNotice | null {
+  if (!n) return null
+  const clean: PaintingNotice = {
+    accroche: (n.accroche || '').trim(),
+    texte_client: (n.texte_client || '').trim(),
+    ambiance: (n.ambiance || '').trim(),
+    matiere_technique: (n.matiere_technique || []).map((p) => p.trim()).filter(Boolean),
+  }
+  return clean.accroche || clean.texte_client || clean.ambiance || clean.matiere_technique.length
+    ? clean
+    : null
+}
+
+function sanitizeAnalysisInput(a: PaintingAnalysis | null | undefined): PaintingAnalysis | null {
+  if (!a) return null
+  const clean: PaintingAnalysis = {
+    accroche: (a.accroche || '').trim(),
+    texte_client: (a.texte_client || '').trim(),
+    ambiance: (a.ambiance || '').trim(),
+    matiere_technique: (a.matiere_technique || []).map((p) => p.trim()).filter(Boolean),
+    ...(Array.isArray(a.notes_artiste)
+      ? { notes_artiste: a.notes_artiste.map((n) => n.trim()).filter(Boolean) }
+      : {}),
+    ...(typeof a.repere_prix === 'string' && a.repere_prix.trim()
+      ? { repere_prix: a.repere_prix.trim() }
+      : {}),
+  }
+  const hasAny =
+    clean.accroche ||
+    clean.texte_client ||
+    clean.ambiance ||
+    clean.matiere_technique.length ||
+    (clean.notes_artiste && clean.notes_artiste.length > 0) ||
+    clean.repere_prix
+  return hasAny ? clean : null
+}
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const denied = requireAdmin(req)
@@ -17,26 +60,48 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const b = paintingBodySchema.parse(await req.json())
 
-    // Ancien français + traductions : si le titre/la description change,
-    // les traductions corrigées à la main passent « À mettre à jour ».
+    // Ancien français + traductions : si le titre, la description ou la
+    // notice change, les traductions corrigées à la main passent « À mettre à jour ».
     let mergedTranslations: Translations | undefined = b.translations as Translations | undefined
+    let prevNotice: PaintingNotice | null = null
+    let prevAnalysis: PaintingAnalysis | null = null
     try {
       const prev = await pool.query(
-        'SELECT title, description, translations FROM paintings WHERE id=$1',
+        'SELECT title, description, notice, analysis, translations FROM paintings WHERE id=$1',
         [parsedId.data]
       )
       if (prev.rows.length) {
+        prevNotice = (prev.rows[0].notice as PaintingNotice | null) || null
+        prevAnalysis = (prev.rows[0].analysis as PaintingAnalysis | null) || null
+        const nextNoticeForDiff =
+          b.notice !== undefined ? sanitizeNoticeInput(b.notice) : prevNotice
         const base = mergedTranslations ?? (prev.rows[0].translations as Translations)
         mergedTranslations = withStaleMarks(
           base,
-          { title: prev.rows[0].title || '', description: prev.rows[0].description || '' },
-          { title: b.title, description: b.description }
+          paintingFrenchFields({
+            title: prev.rows[0].title || '',
+            description: prev.rows[0].description || '',
+            notice: prevNotice || undefined,
+          }),
+          paintingFrenchFields({
+            title: b.title,
+            description: b.description,
+            notice: nextNoticeForDiff || undefined,
+          })
         )
       }
     } catch (err) {
-      // Colonne translations absente : on continue sans.
+      // Colonnes récentes absentes : on continue sans.
       if ((err as { code?: string })?.code !== '42703') throw err
     }
+
+    const nextNotice =
+      b.notice !== undefined ? sanitizeNoticeInput(b.notice) : prevNotice
+    const nextAnalysis =
+      b.analysis !== undefined
+        ? sanitizeAnalysisInput(b.analysis)
+        : prevAnalysis
+    const analysisUpdated = b.analysis !== undefined && sanitizeAnalysisInput(b.analysis) !== null
 
     const values = [
       b.title,
@@ -59,6 +124,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       ...values.slice(0, 14),
       JSON.stringify(mergedTranslations || {}),
       b.signature,
+      nextNotice ? JSON.stringify(nextNotice) : null,
+      nextAnalysis ? JSON.stringify(nextAnalysis) : null,
+      analysisUpdated,
       parsedId.data,
     ]
     let rows
@@ -66,8 +134,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       ;({ rows } = await pool.query(
         `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
          image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10, "order"=$11,
-         image_width=$12, image_height=$13, category=$14, translations=$15, signature=$16
-         WHERE id=$17 RETURNING *`,
+         image_width=$12, image_height=$13, category=$14, translations=$15, signature=$16,
+         notice=$17::jsonb, analysis=$18::jsonb,
+         analysed_at=CASE WHEN $19::boolean THEN now() ELSE analysed_at END
+         WHERE id=$20 RETURNING ${PUBLIC_COLS}`,
         valuesT
       ))
     } catch (err) {

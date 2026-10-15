@@ -87,10 +87,66 @@ function publicIdMatchesUrl(imageUrl: string, imagePublicId?: string): boolean {
   return fromUrl === cleanedId
 }
 
+const HTML_TAG_RE = /<\/?[a-zA-Z][^>]*>/
+const noHtml = (msg = 'Le texte ne doit pas contenir de balises HTML') =>
+  z.string().refine((s) => !HTML_TAG_RE.test(s), msg)
+
+// Notice publique d'une toile : seuls ces 4 champs sont acceptés —
+// jamais notes_artiste ni repère de prix (privés, colonne `analysis`).
+export const noticeBodySchema = z
+  .object({
+    accroche: noHtml()
+      .pipe(z.string().max(300, "L'accroche fait 300 caractères maximum"))
+      .optional()
+      .default(''),
+    texte_client: noHtml()
+      .pipe(z.string().max(4000, 'Le texte fait 4000 caractères maximum'))
+      .optional()
+      .default(''),
+    ambiance: noHtml()
+      .pipe(z.string().max(1500, "L'ambiance fait 1500 caractères maximum"))
+      .optional()
+      .default(''),
+    matiere_technique: z
+      .array(noHtml().pipe(z.string().max(200, 'Chaque puce fait 200 caractères maximum')))
+      .max(8, 'Huit puces maximum')
+      .optional()
+      .default([]),
+  })
+  .strict()
+
+// Analyse IA privée (colonne `analysis`, jamais exposée côté public).
+export const analysisBodySchema = z
+  .object({
+    accroche: noHtml()
+      .pipe(z.string().max(300, "L'accroche fait 300 caractères maximum"))
+      .optional()
+      .default(''),
+    texte_client: noHtml()
+      .pipe(z.string().max(4000, 'Le texte fait 4000 caractères maximum'))
+      .optional()
+      .default(''),
+    ambiance: noHtml()
+      .pipe(z.string().max(1500, "L'ambiance fait 1500 caractères maximum"))
+      .optional()
+      .default(''),
+    matiere_technique: z
+      .array(noHtml().pipe(z.string().max(200)))
+      .max(8, 'Huit puces maximum')
+      .optional()
+      .default([]),
+    notes_artiste: z
+      .array(noHtml().pipe(z.string().max(400)))
+      .max(5, 'Cinq notes maximum')
+      .optional(),
+    repere_prix: noHtml().pipe(z.string().max(120)).optional(),
+  })
+  .strict()
+
 export const paintingBodySchema = z
   .object({
     id: uuidSchema.optional(),
-    title: z.string().trim().min(1, 'Le titre est obligatoire').max(300),
+    title: noHtml().pipe(z.string().trim().min(1, 'Le titre est obligatoire').max(300)),
     year: z.number().int().min(0).max(3000).nullable().optional(),
     technique: z.string().max(100).nullable().optional(),
     dimensions: z.string().max(200).optional().default(''),
@@ -105,29 +161,16 @@ export const paintingBodySchema = z
     featured: z.boolean().optional().default(false),
     order: z.number().int().optional().default(0),
     signature: z.string().max(200).optional().default(''),
+    createdAt: z.string().max(100).optional(),
     translations: translationsSchema,
+    notice: noticeBodySchema.nullable().optional(),
+    analysis: analysisBodySchema.nullable().optional(),
   })
+  .strict()
   .refine((b) => publicIdMatchesUrl(b.imageUrl, b.imagePublicId), {
     path: ['imagePublicId'],
     message: "L'identifiant de la photo ne correspond pas à l'adresse de notre espace photo",
   })
-
-// Notice publique d'une toile : seuls ces 4 champs sont acceptés —
-// jamais notes_artiste ni repère de prix (privés, colonne `analysis`).
-export const noticeBodySchema = z.object({
-  accroche: z.string().max(300, "L'accroche fait 300 caractères maximum").optional().default(''),
-  texte_client: z
-    .string()
-    .max(4000, 'Le texte fait 4000 caractères maximum')
-    .optional()
-    .default(''),
-  ambiance: z.string().max(1500, "L'ambiance fait 1500 caractères maximum").optional().default(''),
-  matiere_technique: z
-    .array(z.string().max(200))
-    .max(8, 'Huit puces maximum')
-    .optional()
-    .default([]),
-})
 
 const mediaSchema = z.object({
   type: z.enum(['photo', 'video']),

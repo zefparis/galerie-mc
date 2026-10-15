@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { analysisOutputSchema } from '../lib/analyse'
-import { noticeBodySchema } from '../lib/validation'
+import { analysisBodySchema, noticeBodySchema, paintingBodySchema } from '../lib/validation'
 import { mapPaintingRow } from '../lib/mappers'
 import { paintingFrenchFields } from '../lib/translations-core'
 
@@ -104,5 +104,48 @@ describe('séparation public / privé', () => {
     // Toile sans notice : champs vides → planField les ignore (skip).
     const empty = paintingFrenchFields({ title: 'T' })
     expect(empty.notice_accroche).toBe('')
+  })
+
+  it('paintingBodySchema accepte notice + analysis, mais rejette tout champ inconnu ou HTML', () => {
+    const base = {
+      title: 'Lumière d’octobre',
+      imageUrl: 'https://res.cloudinary.com/demo/image/upload/f_auto,q_auto/cat',
+      imagePublicId: 'cat',
+      notice: {
+        accroche: 'Une phrase sensible.',
+        texte_client: 'Premier paragraphe.\n\nSecond paragraphe.',
+        ambiance: 'Dans un salon clair.',
+        matiere_technique: ['Couteau', 'Touches épaisses'],
+      },
+      analysis: VALID,
+    }
+    expect(paintingBodySchema.safeParse(base).success).toBe(true)
+
+    // Champ inconnu à la racine → rejeté (.strict())
+    expect(
+      paintingBodySchema.safeParse({ ...base, champInconnu: 'interdit' }).success
+    ).toBe(false)
+
+    // Champ privé glissé dans notice → rejeté (.strict())
+    expect(
+      noticeBodySchema.safeParse({
+        ...base.notice,
+        notes_artiste: ['interdit dans notice'],
+      }).success
+    ).toBe(false)
+
+    // Balises HTML dans notice ou analysis → rejetées
+    expect(
+      noticeBodySchema.safeParse({
+        ...base.notice,
+        texte_client: 'Texte <script>alert(1)</script>',
+      }).success
+    ).toBe(false)
+    expect(
+      analysisBodySchema.safeParse({
+        ...VALID,
+        notes_artiste: ['<img src=x onerror=alert(1)>'],
+      }).success
+    ).toBe(false)
   })
 })

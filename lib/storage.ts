@@ -1,4 +1,4 @@
-import { GallerySettings, Painting } from './types'
+import { GallerySettings, Painting, PaintingAnalysis, PaintingNotice } from './types'
 
 const SETTINGS_KEY = 'mc-gallery-settings-v1'
 
@@ -95,7 +95,12 @@ export function redirectToLogin(): void {
   window.location.href = '/admin/login?expired=1'
 }
 
-export async function savePainting(painting: Painting): Promise<Painting> {
+export type PaintingWritePayload = Omit<Painting, 'notice'> & {
+  notice?: PaintingNotice | null
+  analysis?: PaintingAnalysis | null
+}
+
+export async function savePainting(painting: PaintingWritePayload): Promise<Painting> {
   const res = await fetch('/api/paintings', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -105,7 +110,10 @@ export async function savePainting(painting: Painting): Promise<Painting> {
   return res.json()
 }
 
-export async function updatePainting(id: string, painting: Painting): Promise<Painting> {
+export async function updatePainting(
+  id: string,
+  painting: PaintingWritePayload
+): Promise<Painting> {
   const res = await fetch(`/api/paintings/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

@@ -2,15 +2,22 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { savePainting, updatePainting, getNextOrder, isSessionExpired, redirectToLogin } from '@/lib/storage'
-import { Painting, Technique, PriceStatus, PaintingCategory, Translations } from '@/lib/types'
+import { savePainting, updatePainting, getNextOrder, isSessionExpired, redirectToLogin, type PaintingWritePayload } from '@/lib/storage'
+import { Painting, PaintingAnalysis, PaintingNotice, Technique, PriceStatus, PaintingCategory, Translations } from '@/lib/types'
 import { CATEGORIES, CATEGORY_LABEL, TECHNIQUES_BY_CATEGORY } from '@/lib/catalog'
 import CloudinaryUpload from './CloudinaryUpload'
 import HelpTip from './HelpTip'
 import TranslationPanel from './TranslationPanel'
 import FormWithPreview from './PreviewShell'
 import PaintingPreview from './PaintingPreview'
-import AnalysePanel from './AnalysePanel'
+import AnalysePanel, {
+  EMPTY_ANALYSE_STATE,
+  fieldsToNotice,
+  hasAnalyseDraft,
+  noticeToAnalyseState,
+  stateToAnalysis,
+  type AnalyseFormState,
+} from './AnalysePanel'
 
 // La traduction part en arrière-plan : l'enregistrement n'attend jamais
 // le service de traduction, et un échec est silencieux (le texte est déjà
@@ -69,6 +76,7 @@ interface Draft {
     featured: boolean
     signature: string
   }
+  analyse?: AnalyseFormState
 }
 
 export default function PaintingWizard({
@@ -97,6 +105,13 @@ export default function PaintingWizard({
     featured: painting?.featured || false,
     signature: painting?.signature || '',
   })
+  const [analyseState, setAnalyseState] = useState<AnalyseFormState>(() =>
+    noticeToAnalyseState(painting?.notice, null)
+  )
+  const [publishedNotice, setPublishedNotice] = useState<PaintingNotice | null>(
+    painting?.notice || null
+  )
+  const [confirmExitOpen, setConfirmExitOpen] = useState(false)
   const [draftFound, setDraftFound] = useState(false)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -104,6 +119,7 @@ export default function PaintingWizard({
   // Aperçu local du fichier pendant l'envoi Cloudinary (blob:).
   const [localImage, setLocalImage] = useState('')
   const restored = useRef(false)
+  const analyseLoaded = useRef(false)
 
   // Récupération du brouillon automatique (sauf si l'artiste vient de
   // choisir une photo précise dans « Mes photos »).
@@ -115,8 +131,11 @@ export default function PaintingWizard({
       const raw = localStorage.getItem(draftKey)
       if (!raw) return
       const draft = JSON.parse(raw) as Draft
-      if (draft?.form && (draft.form.title || draft.form.imageUrl)) {
+      if (draft?.form && (draft.form.title || draft.form.imageUrl || (draft.analyse && hasAnalyseDraft(draft.analyse)))) {
         setForm((f) => ({ ...f, ...draft.form }))
+        if (draft.analyse) {
+          setAnalyseState(draft.analyse)
+        }
         setStep(draft.step || 1)
         setDraftFound(true)
       }
@@ -125,16 +144,68 @@ export default function PaintingWizard({
     }
   }, [draftKey, initialPhoto])
 
-  // Sauvegarde automatique du brouillon à chaque modification
+  // Toile existante : charge une seule fois l'analyse privée enregistrée
+  // (notes_artiste, repere_prix, et brouillon si pas encore de notice publiée).
+  useEffect(() => {
+    if (!painting?.id || analyseLoaded.current) return
+    analyseLoaded.current = true
+    fetch(`/api/paintings/${painting.id}/analyse`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return
+        const a = (data.analysis as PaintingAnalysis | null) || null
+        const n = (data.notice as PaintingNotice | null) || null
+        if (n) setPublishedNotice(n)
+        setAnalyseState((prev) => {
+          // Si l'artiste a déjà commencé à modifier dans l'écran, ses
+          // champs priment ; on récupère seulement les notes privées.
+          if (hasAnalyseDraft(prev)) {
+            return {
+              ...prev,
+              notes_artiste: prev.notes_artiste.length
+                ? prev.notes_artiste
+                : a?.notes_artiste || [],
+              repere_prix: prev.repere_prix || a?.repere_prix || '',
+            }
+          }
+          return noticeToAnalyseState(n, a)
+        })
+      })
+      .catch(() => {})
+  }, [painting?.id])
+
+  // Sauvegarde automatique du brouillon à chaque modification (y compris le texte IA)
   useEffect(() => {
     if (isEditing) return // pas de brouillon en modification, seulement en création
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(draftKey, JSON.stringify({ step, form }))
+        localStorage.setItem(draftKey, JSON.stringify({ step, form, analyse: analyseState }))
       } catch { /* stockage plein — non bloquant */ }
     }, 400)
     return () => clearTimeout(t)
-  }, [form, step, draftKey, isEditing])
+  }, [form, analyseState, step, draftKey, isEditing])
+
+  // Garde-fou navigation navigateur : avertit si un texte généré n'est pas enregistré.
+  const hasUnsavedGeneratedText =
+    analyseState.generatedUnpersisted && hasAnalyseDraft(analyseState)
+
+  useEffect(() => {
+    if (!hasUnsavedGeneratedText) return
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [hasUnsavedGeneratedText])
+
+  const requestCancel = () => {
+    if (hasUnsavedGeneratedText) {
+      setConfirmExitOpen(true)
+      return
+    }
+    onCancel()
+  }
 
   const discardDraft = () => {
     localStorage.removeItem(draftKey)
@@ -155,17 +226,25 @@ export default function PaintingWizard({
       featured: false,
       signature: '',
     })
+    setAnalyseState(EMPTY_ANALYSE_STATE)
     setStep(1)
   }
 
   const canContinue = step === 1 ? !!form.imageUrl : step === 2 ? !!form.title.trim() : true
+  const hasTextDraft = hasAnalyseDraft(analyseState)
+  const willPublishText = hasTextDraft && analyseState.publishWithPainting
 
   const handlePublish = async () => {
     setError('')
     setSaving(true)
     try {
       const order = painting?.order || (await getNextOrder())
-      const data: Painting = {
+      const noticePayload: PaintingNotice | null = willPublishText
+        ? fieldsToNotice(analyseState)
+        : null
+      const analysisPayload: PaintingAnalysis | null = stateToAnalysis(analyseState)
+
+      const data: PaintingWritePayload = {
         id: painting?.id || uuidv4(),
         title: form.title.trim(),
         year: form.year,
@@ -183,6 +262,8 @@ export default function PaintingWizard({
         signature: form.signature.trim() || undefined,
         order,
         createdAt: painting?.createdAt || new Date().toISOString(),
+        notice: noticePayload,
+        ...(analysisPayload ? { analysis: analysisPayload } : {}),
       }
 
       if (isEditing) {
@@ -201,7 +282,12 @@ export default function PaintingWizard({
         redirectToLogin()
         return
       }
-      setError("Une erreur est survenue — rien n'a été perdu. Réessayez.")
+      const detail = err instanceof Error && err.message ? err.message : ''
+      setError(
+        detail
+          ? `Je n'ai pas pu enregistrer : ${detail}. Votre toile et votre texte sont conservés ici.`
+          : "Une erreur est survenue — rien n'a été perdu. Réessayez."
+      )
       setSaving(false)
     }
   }
@@ -224,7 +310,7 @@ export default function PaintingWizard({
             Étape {step} sur 3 — {STEPS[step - 1]}
           </p>
           <button
-            onClick={onCancel}
+            onClick={requestCancel}
             className="font-body text-sm text-[var(--muted)] hover:text-[var(--ink)] min-h-[44px] px-2"
           >
             Annuler
@@ -241,6 +327,36 @@ export default function PaintingWizard({
           ))}
         </div>
       </div>
+
+      {/* Confirmation avant de quitter avec du texte généré non enregistré */}
+      {confirmExitOpen && (
+        <div
+          className="mb-6 p-4 border border-[var(--accent)]/40 bg-[var(--accent-soft)]"
+          role="alertdialog"
+          aria-label="Confirmer la sortie sans enregistrer"
+        >
+          <p className="font-body text-base text-[var(--ink)]">
+            Vous avez un texte de présentation non enregistré. Voulez-vous
+            quitter sans l&apos;enregistrer ?
+          </p>
+          <div className="flex flex-wrap gap-3 mt-3">
+            <button
+              type="button"
+              onClick={() => setConfirmExitOpen(false)}
+              className="btn-primary text-sm min-h-[44px]"
+            >
+              Rester sur cette toile
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="btn-outline text-sm min-h-[44px]"
+            >
+              Quitter sans enregistrer
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Brouillon retrouvé */}
       {draftFound && (
@@ -508,7 +624,10 @@ export default function PaintingWizard({
               year={form.year}
               dimensions={form.dimensions}
               signature={form.signature}
-              publishedNotice={painting?.notice}
+              value={analyseState}
+              onChange={setAnalyseState}
+              publishedNotice={publishedNotice}
+              onPublishedNoticeChange={setPublishedNotice}
             />
           </div>
 
@@ -542,10 +661,12 @@ export default function PaintingWizard({
             french={{
               title: form.title,
               description: form.description,
-              notice_accroche: painting.notice?.accroche || '',
-              notice_texte: painting.notice?.texte_client || '',
-              notice_ambiance: painting.notice?.ambiance || '',
-              notice_matiere: (painting.notice?.matiere_technique || []).join('\n'),
+              notice_accroche: analyseState.accroche || publishedNotice?.accroche || '',
+              notice_texte: analyseState.texte || publishedNotice?.texte_client || '',
+              notice_ambiance: analyseState.ambiance || publishedNotice?.ambiance || '',
+              notice_matiere:
+                analyseState.matiere ||
+                (publishedNotice?.matiere_technique || []).join('\n'),
             }}
             translations={translations}
             onTranslationsChange={setTranslations}
@@ -563,7 +684,7 @@ export default function PaintingWizard({
             ← Retour
           </button>
         ) : (
-          <button onClick={onCancel} className="btn-outline flex-1 text-base">
+          <button onClick={requestCancel} className="btn-outline flex-1 text-base">
             Annuler
           </button>
         )}
@@ -584,9 +705,11 @@ export default function PaintingWizard({
           >
             {saving
               ? 'Enregistrement...'
-              : isEditing
-                ? 'Enregistrer les modifications'
-                : '✓ Mettre en ligne'}
+              : willPublishText
+                ? '✓ Mettre en ligne avec le texte'
+                : isEditing
+                  ? 'Enregistrer les modifications'
+                  : '✓ Mettre en ligne'}
           </button>
         )}
       </div>
