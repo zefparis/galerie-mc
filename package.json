@@ -18,7 +18,8 @@
     "test:i18n-nav": "node scripts/i18n-nav-check.mjs",
     "techniques:audit": "node scripts/techniques-audit.mjs",
     "test:pwa": "node scripts/pwa-check.mjs",
-    "test:pwa-kill": "node scripts/pwa-kill-check.mjs"
+    "test:pwa-kill": "node scripts/pwa-kill-check.mjs",
+    "hover:check": "node scripts/hover-audit.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

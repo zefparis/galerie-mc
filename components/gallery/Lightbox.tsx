@@ -144,7 +144,7 @@ export default function Lightbox({ src, alt, onClose, onPrev, onNext, counter, u
   return (
     <div
       ref={rootRef}
-      className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center select-none"
+      className="night-surface fixed inset-0 z-[60] bg-black/95 flex items-center justify-center select-none"
       role="dialog"
       aria-modal="true"
       aria-label={t('aria', { alt })}

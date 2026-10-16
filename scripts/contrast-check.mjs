@@ -117,6 +117,9 @@ const PAIRS = [
   ['accent', 'surface', 4.5, 'lien sur carte'],
   ['accent', 'accent-soft', 4.5, 'badge / pastille sur fond accent'],
   ['accent-hover', 'bg', 4.5, 'lien survolé'],
+  ['accent-hover', 'surface', 4.5, 'lien survolé sur carte'],
+  ['accent-hover', 'accent-soft', 4.5, 'pastille de filtre survolée'],
+  ['ink', 'mat', 4.5, 'btn-outline survolé (fond passe-partout)'],
   // Boutons
   ['bg', 'ink', 4.5, 'btn-primary'],
   ['bg', 'btn-primary-hover', 4.5, 'btn-primary survolé'],
@@ -143,12 +146,23 @@ const PAIRS = [
   ['#FFFFFF', { blend: ['#000000', 0.6, '#FFFFFF'] }, 4.5, 'voile du tiroir mobile'],
   // États non textuels (3:1)
   ['accent', 'bg', 3.0, 'icônes / outline focus'],
+  ['accent', 'surface', 3.0, 'outline focus sur carte'],
+  ['accent', 'accent-soft', 3.0, 'outline focus sur pastille'],
+  ['on-night', { blend: ['#000000', 0.95, 'bg'] }, 3.0, 'outline focus sur voile lightbox'],
+  ['accent-on-night', 'night', 3.0, 'accent clair du tiroir (non textuel)'],
   [{ blend: ['ink', 0.6, 'bg'] }, 'bg', 3.0, 'point inactif du carrousel hero (60 % encre)'],
   ['line', 'bg', 1.0, 'filets décoratifs (informatif — non exigé WCAG)'],
   // Barre nav translucide au scroll — dessous le plus défavorable
   ['ink-soft', { blend: ['var(--bg)', 0.88, '#000000'] }, 4.5, 'barre nav verre dépoli (dessous noir)'],
   ['ink-soft', { blend: ['var(--bg)', 0.88, '#FFFFFF'] }, 4.5, 'barre nav verre dépoli (dessous blanc)'],
   ['on-night', { blend: ['var(--night)', 0.88, '#FFFFFF'] }, 4.5, 'tiroir verre dépoli (dessous clair)'],
+  // Survols sur la barre nav translucide — mêmes dessous défavorables
+  ['ink', { blend: ['var(--bg)', 0.88, '#000000'] }, 4.5, 'lien nav survolé (dessous noir)'],
+  ['ink', { blend: ['var(--bg)', 0.88, '#FFFFFF'] }, 4.5, 'lien nav survolé (dessous blanc)'],
+  ['accent', { blend: ['var(--bg)', 0.88, '#000000'] }, 4.5, 'lien nav actif (dessous noir)'],
+  ['accent', { blend: ['var(--bg)', 0.88, '#FFFFFF'] }, 4.5, 'lien nav actif (dessous blanc)'],
+  ['accent-hover', { blend: ['var(--bg)', 0.88, '#000000'] }, 4.5, 'lien nav survolé accent (dessous noir)'],
+  ['accent-hover', { blend: ['var(--bg)', 0.88, '#FFFFFF'] }, 4.5, 'lien nav survolé accent (dessous blanc)'],
 ]
 
 // ── Calcul ─────────────────────────────────────────────────────────────

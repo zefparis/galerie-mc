@@ -35,6 +35,7 @@
   --night: #1D1A16;
   --night-ink: #EDE8DF;
   --on-night: #EDE8DF;
+  --on-night-soft: #D8D2C6;
   --on-night-muted: #B9B1A2;
   --on-night-faint: #948C7D;
   /* Accent vu SUR fond sombre (lien actif du tiroir) : doré clair fixe. */
@@ -344,9 +345,10 @@ textarea::placeholder {
   opacity: 1;
 }
 
-/* Dans le tiroir mobile (toujours sombre), le focus visible doit rester
-   clair quel que soit le thème choisi. */
-.mobile-drawer :focus-visible {
+/* Dans le tiroir mobile et la lightbox (surfaces toujours sombres), le
+   focus visible doit rester clair quel que soit le thème choisi. */
+.mobile-drawer :focus-visible,
+.night-surface :focus-visible {
   outline-color: var(--on-night);
 }
 

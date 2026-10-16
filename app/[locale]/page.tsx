@@ -127,19 +127,19 @@ export default async function Home({ params }: Props) {
               <div className="hidden sm:flex items-end gap-6">
                 <Link
                   href="/galerie?categorie=peintures"
-                  className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
+                  className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent-hover)] transition-colors duration-200 pb-1"
                 >
                   {t('peinturesShort')}
                 </Link>
                 <Link
                   href="/galerie?categorie=collages"
-                  className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
+                  className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent-hover)] transition-colors duration-200 pb-1"
                 >
                   {t('collagesShort')}
                 </Link>
                 <Link
                   href="/galerie"
-                  className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
+                  className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent-hover)] transition-colors duration-200 pb-1"
                 >
                   {t('allGallery')}
                 </Link>
@@ -150,13 +150,13 @@ export default async function Home({ params }: Props) {
           <Reveal className="sm:hidden mt-6 flex flex-col items-center gap-4">
             <Link
               href="/galerie?categorie=peintures"
-              className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)]"
+              className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent-hover)]"
             >
               {t('peinturesLink')}
             </Link>
             <Link
               href="/galerie?categorie=collages"
-              className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)]"
+              className="font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent-hover)]"
             >
               {t('collagesLink')}
             </Link>
@@ -184,7 +184,7 @@ export default async function Home({ params }: Props) {
                 </div>
                 <Link
                   href="/expositions"
-                  className="hidden sm:inline-flex font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors duration-200 pb-1"
+                  className="hidden sm:inline-flex font-body text-xs font-medium uppercase tracking-[0.18em] text-[var(--ink-soft)] hover:text-[var(--accent-hover)] transition-colors duration-200 pb-1"
                 >
                   {t('seeAll')}
                 </Link>

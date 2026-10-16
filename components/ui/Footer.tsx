@@ -64,7 +64,7 @@ export default async function Footer({
               {settings.email && (
                 <a
                   href={`mailto:${settings.email}`}
-                  className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors"
+                  className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent-hover)] transition-colors"
                 >
                   {settings.email}
                 </a>
@@ -72,7 +72,7 @@ export default async function Footer({
               {settings.phone && (
                 <a
                   href={`tel:${settings.phone.replace(/\s/g, '')}`}
-                  className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors"
+                  className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent-hover)] transition-colors"
                 >
                   {settings.phone}
                 </a>
@@ -82,7 +82,7 @@ export default async function Footer({
                   href={`https://instagram.com/${settings.instagram.replace('@', '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors"
+                  className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent-hover)] transition-colors"
                 >
                   Instagram
                 </a>
@@ -114,7 +114,7 @@ export default async function Footer({
             </p>
             <Link
               href="/informations-legales"
-              className="font-body text-xs text-[var(--muted)] hover:text-[var(--accent)] transition-colors underline-offset-4 hover:underline"
+              className="font-body text-xs text-[var(--muted)] hover:text-[var(--accent-hover)] transition-colors underline-offset-4 hover:underline"
             >
               {t('legal')}
             </Link>

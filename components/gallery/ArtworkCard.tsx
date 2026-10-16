@@ -81,10 +81,10 @@ export default function ArtworkCard({
         {/* Voile + infos au survol / focus clavier (écrans avec hover) */}
         <div className="pointer-events-none absolute inset-0 hidden md:block bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100 group-focus-visible:opacity-100" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden md:block p-5 opacity-0 translate-y-3 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-focus-visible:opacity-100 group-focus-visible:translate-y-0">
-          <h3 className="font-serif text-lg font-normal leading-snug text-white">{p.title}</h3>
-          <p className="mt-1 font-body text-xs tracking-wide text-white/85">{meta}</p>
+          <h3 className="font-serif text-lg font-normal leading-snug text-[var(--on-night)]">{p.title}</h3>
+          <p className="mt-1 font-body text-xs tracking-wide text-[var(--on-night-soft)]">{meta}</p>
           {info && (
-            <p className="mt-1.5 font-body text-xs font-medium uppercase tracking-[0.14em] text-white/90">
+            <p className="mt-1.5 font-body text-xs font-medium uppercase tracking-[0.14em] text-[var(--on-night)]">
               {info}
             </p>
           )}

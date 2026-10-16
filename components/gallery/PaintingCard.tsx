@@ -40,10 +40,10 @@ export default function PaintingCard({ painting }: { painting: Painting }) {
         {/* Overlay au survol (desktop) */}
         <div className="absolute inset-0 hidden md:flex flex-col justify-end p-5 bg-gradient-to-t from-black/70 via-black/0 to-transparent opacity-0 transition-transform duration-300 group-hover:opacity-100">
           <div className="translate-y-2 transition-transform duration-300 group-hover:translate-y-0">
-            <h3 className="font-display text-xl text-white leading-tight">
+            <h3 className="font-display text-xl text-[var(--on-night)] leading-tight">
               {painting.title}
             </h3>
-            <p className="font-body text-[11px] text-white/75 uppercase tracking-[0.14em] mt-1">
+            <p className="font-body text-[11px] text-[var(--on-night-soft)] uppercase tracking-[0.14em] mt-1">
               {painting.year} · {painting.technique ? techLabel(painting.technique) : ''}
               {status ? ` · ${status}` : ''}
             </p>

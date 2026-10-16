@@ -163,7 +163,7 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
                 className={`font-display text-3xl py-5 min-h-[56px] flex items-center border-b border-white/10 transition-colors duration-200 ${
                   isActive(href)
                     ? 'text-[var(--accent-on-night)]'
-                    : 'text-[var(--on-night)] hover:text-[var(--on-night-muted)]'
+                    : 'text-[var(--on-night)] hover:text-[var(--accent-on-night)]'
                 }`}
                 style={{ transitionDelay: drawerOpen ? `${i * 40}ms` : '0ms' }}
               >

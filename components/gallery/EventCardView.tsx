@@ -47,7 +47,7 @@ export default function EventCardView({ event, dateLabel, unoptimized, titlePlac
           <p className="eyebrow">{dateLabel}</p>
         )}
         <h3
-          className={`font-display text-2xl mt-1 leading-tight group-hover:text-[var(--accent)] transition-colors duration-200 ${
+          className={`font-display text-2xl mt-1 leading-tight group-hover:text-[var(--accent-hover)] transition-colors duration-200 ${
             titlePlaceholder ? 'text-[var(--muted)] italic' : 'text-[var(--ink)]'
           }`}
         >

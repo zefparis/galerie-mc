@@ -182,7 +182,7 @@ export default function HeroArtwork({ paintings, artistName }: Props) {
               pauseBriefly()
             }}
             aria-label={t('prevArtwork')}
-            className="h-11 w-11 flex items-center justify-center text-2xl leading-none text-[var(--ink)] opacity-70 hover:opacity-100 hover:text-[var(--accent)] transition-colors duration-200"
+            className="h-11 w-11 flex items-center justify-center text-2xl leading-none text-[var(--ink)] opacity-70 hover:opacity-100 hover:text-[var(--accent-hover)] transition-colors duration-200"
           >
             ‹
           </button>
@@ -205,7 +205,7 @@ export default function HeroArtwork({ paintings, artistName }: Props) {
               pauseBriefly()
             }}
             aria-label={t('nextArtwork')}
-            className="h-11 w-11 flex items-center justify-center text-2xl leading-none text-[var(--ink)] opacity-70 hover:opacity-100 hover:text-[var(--accent)] transition-colors duration-200"
+            className="h-11 w-11 flex items-center justify-center text-2xl leading-none text-[var(--ink)] opacity-70 hover:opacity-100 hover:text-[var(--accent-hover)] transition-colors duration-200"
           >
             ›
           </button>
