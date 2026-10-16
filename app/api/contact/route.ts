@@ -66,6 +66,9 @@ export async function POST(req: NextRequest) {
         {
           error:
             "Je n'ai pas pu envoyer votre message — réessayez dans un instant ou écrivez directement à l'artiste.",
+          // Motif technique Resend (visible dans l'onglet Réseau) pour
+          // diagnostiquer la configuration sans lire les logs Vercel.
+          ...(sent.hint ? { hint: sent.hint } : {}),
         },
         { status: 502 }
       )

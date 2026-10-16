@@ -26,9 +26,9 @@ interface ContactMailInput {
 
 export async function sendContactEmail(
   input: ContactMailInput
-): Promise<{ ok: boolean; status: number; error?: string }> {
+): Promise<{ ok: boolean; status: number; hint?: string }> {
   const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) return { ok: false, status: 503, error: 'not-configured' }
+  if (!apiKey) return { ok: false, status: 503, hint: 'not-configured' }
 
   const base = (
     process.env.RESEND_API_BASE_URL || 'https://api.resend.com'
@@ -82,7 +82,16 @@ export async function sendContactEmail(
     if (res.ok) return { ok: true, status: res.status }
     const detail = await res.text().catch(() => '')
     console.error('[mail] envoi refusé', res.status, detail.slice(0, 300))
-    return { ok: false, status: res.status }
+    // Le nom d'erreur Resend (ex. « validation_error ») est renvoyé dans
+    // « hint » pour diagnostiquer sans ouvrir les logs Vercel.
+    let hint: string | undefined
+    try {
+      const j = JSON.parse(detail) as { name?: string; message?: string }
+      hint = [j.name, j.message].filter(Boolean).join(' : ').slice(0, 160)
+    } catch {
+      hint = detail.slice(0, 160) || undefined
+    }
+    return { ok: false, status: res.status, hint }
   } catch (err) {
     console.error('[mail] envoi impossible', err)
     return { ok: false, status: 0 }
