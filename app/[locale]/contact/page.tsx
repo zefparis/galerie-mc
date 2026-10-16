@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import ContactForm from '@/components/contact/ContactForm'
 import { getGallerySettings } from '@/lib/data'
+import { mailConfigured } from '@/lib/mail'
 import { alternatesFor, OG_LOCALE } from '@/lib/seo'
 import { routing, type Locale } from '@/i18n/routing'
 
@@ -38,7 +39,10 @@ export default async function ContactPage() {
           </div>
         }
       >
-        <ContactForm artistEmail={settings.email} />
+        <ContactForm
+          artistEmail={settings.email}
+          mailConfigured={mailConfigured()}
+        />
       </Suspense>
     </div>
   )

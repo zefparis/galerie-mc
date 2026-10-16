@@ -5,7 +5,13 @@ import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Reveal from '@/components/ui/Reveal'
 
-export default function ContactForm({ artistEmail }: { artistEmail: string }) {
+interface Props {
+  artistEmail: string
+  /** Envoi serveur configuré (RESEND_API_KEY) — calculé côté serveur. */
+  mailConfigured: boolean
+}
+
+export default function ContactForm({ artistEmail, mailConfigured }: Props) {
   const t = useTranslations('contact')
   const searchParams = useSearchParams()
   const [form, setForm] = useState({
@@ -13,6 +19,7 @@ export default function ContactForm({ artistEmail }: { artistEmail: string }) {
     email: '',
     subject: '',
     message: '',
+    website: '', // pot-de-miel : doit rester vide
   })
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
@@ -24,11 +31,6 @@ export default function ContactForm({ artistEmail }: { artistEmail: string }) {
     }
   }, [searchParams])
 
-  const emailjsConfigured =
-    process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID &&
-    process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID &&
-    process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
-
   const handleSend = async () => {
     if (!form.name || !form.email || !form.message) {
       setErrorMessage(t('required'))
@@ -36,7 +38,7 @@ export default function ContactForm({ artistEmail }: { artistEmail: string }) {
       return
     }
 
-    if (!emailjsConfigured) {
+    if (!mailConfigured) {
       setErrorMessage(t('notConfigured'))
       setStatus('error')
       return
@@ -46,20 +48,30 @@ export default function ContactForm({ artistEmail }: { artistEmail: string }) {
     setErrorMessage('')
 
     try {
-      const emailjs = await import('@emailjs/browser')
-      await emailjs.send(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-        {
-          from_name: form.name,
-          from_email: form.email,
-          subject: form.subject,
-          message: form.message,
-        },
-        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
-      )
-      setStatus('success')
-      setForm({ name: '', email: '', subject: '', message: '' })
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string
+        configured?: boolean
+      }
+      if (res.ok) {
+        setStatus('success')
+        setForm({ name: '', email: '', subject: '', message: '', website: '' })
+        return
+      }
+      if (res.status === 503 || data.configured === false) {
+        setErrorMessage(t('notConfigured'))
+      } else if (res.status === 400) {
+        setErrorMessage(
+          /email/i.test(data.error || '') ? t('invalidEmail') : t('required')
+        )
+      } else {
+        setErrorMessage(t('sendError'))
+      }
+      setStatus('error')
     } catch {
       setErrorMessage(t('sendError'))
       setStatus('error')
@@ -78,7 +90,7 @@ export default function ContactForm({ artistEmail }: { artistEmail: string }) {
         </p>
       </Reveal>
 
-      {!emailjsConfigured && artistEmail && (
+      {!mailConfigured && artistEmail && (
         <div className="mb-10 p-5 bg-[var(--surface)] border border-[var(--line)]">
           <p className="font-body text-sm text-[var(--ink-soft)]">
             {t('direct')}{' '}
@@ -154,6 +166,25 @@ export default function ContactForm({ artistEmail }: { artistEmail: string }) {
                 className="input-field min-h-[170px] resize-y"
                 rows={6}
                 placeholder={t('messagePh')}
+              />
+            </div>
+
+            {/* Pot-de-miel anti-robots : invisible, jamais rempli par un
+                humain, exclu de la tabulation et des lecteurs d'écran.
+                Pas de label textuel : tout libellé ressortirait dans
+                l'audit i18n des pages traduites. */}
+            <div
+              aria-hidden="true"
+              className="absolute -left-[9999px] h-0 w-0 overflow-hidden"
+            >
+              <input
+                id="contact-website"
+                name="website"
+                type="text"
+                value={form.website}
+                onChange={(e) => setForm({ ...form, website: e.target.value })}
+                tabIndex={-1}
+                autoComplete="off"
               />
             </div>
 

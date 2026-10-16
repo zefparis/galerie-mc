@@ -156,6 +156,7 @@
     "send": "Nachricht senden",
     "sending": "Wird gesendet...",
     "required": "Bitte füllen Sie alle Pflichtfelder aus.",
+    "invalidEmail": "Bitte prüfen Sie Ihre E-Mail-Adresse — sie scheint ungültig.",
     "sendError": "Senden fehlgeschlagen. Bitte versuchen Sie es erneut oder kontaktieren Sie die Künstlerin direkt.",
     "successTitle": "Nachricht gesendet",
     "successBody": "Vielen Dank — ich antworte so bald wie möglich.",

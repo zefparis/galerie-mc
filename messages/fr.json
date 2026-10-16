@@ -156,6 +156,7 @@
     "send": "Envoyer le message",
     "sending": "Envoi en cours...",
     "required": "Veuillez remplir tous les champs obligatoires.",
+    "invalidEmail": "Vérifiez votre adresse email — elle semble invalide.",
     "sendError": "Erreur lors de l'envoi. Veuillez réessayer ou contacter l'artiste directement.",
     "successTitle": "Message envoyé",
     "successBody": "Merci — je vous répondrai dans les meilleurs délais.",

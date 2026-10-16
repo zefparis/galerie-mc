@@ -156,6 +156,7 @@
     "send": "Enviar el mensaje",
     "sending": "Enviando...",
     "required": "Por favor, rellene todos los campos obligatorios.",
+    "invalidEmail": "Compruebe su dirección de correo — parece inválida.",
     "sendError": "Error al enviar. Inténtelo de nuevo o contacte directamente con la artista.",
     "successTitle": "Mensaje enviado",
     "successBody": "Gracias — le responderé lo antes posible.",

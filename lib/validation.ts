@@ -280,3 +280,23 @@ export const settingsBodySchema = z.object({
   photos: z.array(artistPhotoSchema).max(10, 'Dix photos maximum').optional().default([]),
   translations: translationsSchema,
 })
+
+// Formulaire de contact public : message envoyé à l'artiste par email.
+// « website » est un champ pot-de-miel : toujours vide chez un humain.
+export const contactBodySchema = z
+  .object({
+    name: z.string().trim().min(1, 'Le nom est obligatoire').max(100),
+    email: z
+      .string()
+      .trim()
+      .email('Vérifiez votre adresse email — elle semble invalide')
+      .max(200),
+    subject: z.string().trim().max(150).optional().default(''),
+    message: z
+      .string()
+      .trim()
+      .min(5, 'Le message est trop court')
+      .max(4000, 'Le message fait 4000 caractères maximum'),
+    website: z.string().max(500).optional().default(''),
+  })
+  .strict()

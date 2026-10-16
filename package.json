@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",
-    "@emailjs/browser": "^4.4.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.19.40",
     "@types/react": "^18.3.28",

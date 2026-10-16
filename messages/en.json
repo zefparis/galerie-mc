@@ -156,6 +156,7 @@
     "send": "Send message",
     "sending": "Sending...",
     "required": "Please fill in all required fields.",
+    "invalidEmail": "Please check your email address — it looks invalid.",
     "sendError": "Sending failed. Please try again or contact the artist directly.",
     "successTitle": "Message sent",
     "successBody": "Thank you — I will reply as soon as possible.",
