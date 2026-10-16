@@ -16,6 +16,28 @@ export function mailConfigured(): boolean {
   return !!process.env.RESEND_API_KEY
 }
 
+// Domaine vérifié dans Resend : seule une adresse @scandellart.fr peut
+// signer les envois (DKIM/DMARC). « contact@scandellart.fr » n'a pas
+// besoin d'exister : c'est l'expéditeur technique, les réponses des
+// visiteurs arrivent via reply_to sur la boîte de l'artiste.
+const VERIFIED_DOMAIN = 'scandellart.fr'
+const DEFAULT_FROM = "Scandell'Art <contact@scandellart.fr>"
+
+// from = CONTACT_FROM s'il pointe vers le domaine vérifié, sinon repli
+// sur contact@scandellart.fr (jamais CONTACT_TO ni une adresse externe :
+// Resend la refuserait et Yahoo la rejetterait via DMARC).
+export function resolveFrom(): string {
+  const v = (process.env.CONTACT_FROM || '').trim()
+  if (!v) return DEFAULT_FROM
+  const addr = (/<([^>]+)>\s*$/.exec(v)?.[1] || v).trim()
+  const domain = addr.split('@').pop()?.toLowerCase()
+  if (domain === VERIFIED_DOMAIN) return v
+  console.warn(
+    `[mail] CONTACT_FROM hors domaine vérifié (${addr || v}), repli sur ${DEFAULT_FROM}`
+  )
+  return DEFAULT_FROM
+}
+
 interface ContactMailInput {
   name: string
   email: string
@@ -33,9 +55,7 @@ export async function sendContactEmail(
   const base = (
     process.env.RESEND_API_BASE_URL || 'https://api.resend.com'
   ).replace(/\/+$/, '')
-  const from =
-    process.env.CONTACT_FROM ||
-    "Scandell'Art <onboarding@resend.dev>"
+  const from = resolveFrom()
 
   const subject = input.subject
     ? `[Scandell'Art] ${input.subject}`
