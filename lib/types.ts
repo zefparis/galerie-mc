@@ -99,8 +99,10 @@ export interface GallerySettings {
   // Texte de présentation de la page d'accueil (paragraphes, ≤3000).
   presentation?: string
   email: string
-  phone?: string
-  instagram?: string
+  // Lien Instagram canonique (https://www.instagram.com/<id>/) — null =
+  // aucun lien affiché. L'artiste ne veut pas de téléphone : aucun champ
+  // n'est lu ni écrit (la donnée éventuelle en base est ignorée).
+  instagramUrl?: string | null
   processText?: string
   photos?: ArtistPhoto[]
   translations?: Translations

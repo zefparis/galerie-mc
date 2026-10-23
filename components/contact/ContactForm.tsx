@@ -4,14 +4,19 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Reveal from '@/components/ui/Reveal'
+import InstagramLink from '@/components/ui/InstagramLink'
 
 interface Props {
   artistEmail: string
+  /** Lien Instagram canonique des réglages — null = rien affiché. */
+  instagramUrl?: string | null
+  /** aria-label traduit pour le lien Instagram (nouvel onglet). */
+  instagramAria: string
   /** Envoi serveur configuré (RESEND_API_KEY) — calculé côté serveur. */
   mailConfigured: boolean
 }
 
-export default function ContactForm({ artistEmail, mailConfigured }: Props) {
+export default function ContactForm({ artistEmail, instagramUrl, instagramAria, mailConfigured }: Props) {
   const t = useTranslations('contact')
   const searchParams = useSearchParams()
   const [form, setForm] = useState({
@@ -90,14 +95,23 @@ export default function ContactForm({ artistEmail, mailConfigured }: Props) {
         </p>
       </Reveal>
 
-      {!mailConfigured && artistEmail && (
-        <div className="mb-10 p-5 bg-[var(--surface)] border border-[var(--line)]">
-          <p className="font-body text-sm text-[var(--ink-soft)]">
-            {t('direct')}{' '}
-            <a href={`mailto:${artistEmail}`} className="text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors">
-              {artistEmail}
-            </a>
-          </p>
+      {((!mailConfigured && artistEmail) || instagramUrl) && (
+        <div className="mb-10 p-5 bg-[var(--surface)] border border-[var(--line)] space-y-2">
+          {!mailConfigured && artistEmail && (
+            <p className="font-body text-sm text-[var(--ink-soft)]">
+              {t('direct')}{' '}
+              <a href={`mailto:${artistEmail}`} className="text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors">
+                {artistEmail}
+              </a>
+            </p>
+          )}
+          {instagramUrl && (
+            <InstagramLink
+              url={instagramUrl}
+              ariaLabel={instagramAria}
+              className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent-hover)] transition-colors"
+            />
+          )}
         </div>
       )}
 

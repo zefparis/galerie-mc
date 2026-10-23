@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { getSettings, DEFAULT_SETTINGS, isSessionExpired, readSaveError } from '@/lib/storage'
+import { instagramInputValue, normalizeInstagramUrl } from '@/lib/instagram'
 import { GallerySettings } from '@/lib/types'
 import { photoCaptionKey } from '@/lib/translations-core'
 import CloudinaryUpload from './CloudinaryUpload'
@@ -110,6 +111,11 @@ export default function AdminSettings() {
     setMessage('')
     if (!settings.artistName.trim()) {
       setError('Votre nom est obligatoire pour enregistrer.')
+      return
+    }
+    const insta = settings.instagramUrl?.trim()
+    if (insta && !normalizeInstagramUrl(insta)) {
+      setError("Le lien Instagram ne semble pas valide — ex : @votre_compte ou https://www.instagram.com/votre_compte")
       return
     }
     setSaving(true)
@@ -357,34 +363,19 @@ export default function AdminSettings() {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div>
-            <label htmlFor="st-insta" className="label-field">
-              Instagram <span className="label-optional">— facultatif</span>
-            </label>
-            <input
-              id="st-insta"
-              type="text"
-              value={settings.instagram || ''}
-              onChange={(e) => setSettings({ ...settings, instagram: e.target.value })}
-              className="input-field"
-              placeholder="@votre_compte"
-            />
-          </div>
-          <div>
-            <label htmlFor="st-phone" className="label-field">
-              Téléphone <span className="label-optional">— facultatif</span>
-            </label>
-            <input
-              id="st-phone"
-              type="tel"
-              value={settings.phone || ''}
-              onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
-              className="input-field"
-              placeholder="06 12 34 56 78"
-              inputMode="tel"
-            />
-          </div>
+        <div>
+          <label htmlFor="st-insta" className="label-field">
+            Lien Instagram <span className="label-optional">— facultatif</span>
+            <HelpTip text="Votre compte Instagram, affiché dans le pied de page et sur la page Contact. Vous pouvez coller l'adresse complète ou juste votre identifiant. Laissez vide pour ne pas l'afficher." />
+          </label>
+          <input
+            id="st-insta"
+            type="text"
+            value={instagramInputValue(settings.instagramUrl)}
+            onChange={(e) => setSettings({ ...settings, instagramUrl: e.target.value })}
+            className="input-field"
+            placeholder="@votre_compte"
+          />
         </div>
 
         {/* ── Traductions ── */}

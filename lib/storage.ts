@@ -1,4 +1,5 @@
-import { GallerySettings, Painting, PaintingAnalysis, PaintingNotice } from './types'
+import { normalizeInstagramUrl } from './instagram'
+import { GallerySettings, Painting, PaintingAnalysis, PaintingNotice, Translations } from './types'
 
 const SETTINGS_KEY = 'mc-gallery-settings-v1'
 
@@ -13,8 +14,7 @@ export const DEFAULT_SETTINGS: GallerySettings = {
   tagline: 'Peintures et collages — la matière en lumière',
   presentation: '',
   email: 'marieclairescandella@yahoo.fr',
-  phone: '',
-  instagram: '',
+  instagramUrl: null,
   processText: '',
   photos: [],
   cloudinaryCloudName: '',
@@ -39,6 +39,26 @@ export function getSettings(): GallerySettings {
 export function saveSettings(settings: GallerySettings): void {
   if (typeof window === 'undefined') return
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
+}
+
+/** Fusionne le JSONB `settings.data` avec les valeurs par défaut. Les clés
+ *  retirées (`phone`, ancienne clé `instagram` au format identifiant)
+ *  ne sont jamais renvoyées ; un ancien `instagram` est converti en
+ *  `instagramUrl` canonique quand celle-ci n'est pas déjà renseignée. */
+export function mergeSettings(
+  data: unknown,
+  translations?: Translations
+): GallerySettings {
+  const raw = { ...((data ?? {}) as Record<string, unknown>) }
+  const legacyInstagram = raw.instagram
+  delete raw.instagram
+  delete raw.phone
+  const merged = { ...DEFAULT_SETTINGS, ...raw } as GallerySettings
+  if (merged.instagramUrl == null) {
+    merged.instagramUrl = normalizeInstagramUrl(legacyInstagram)
+  }
+  if (translations !== undefined) merged.translations = translations
+  return merged
 }
 
 // ─── Paintings (PostgreSQL via API) ───────────────────────────────────────────

@@ -53,7 +53,7 @@ export default function middleware(req: NextRequest) {
   }
 
   // Page légale : le pied de page y masque sa colonne « Contact »
-  // (aucun e-mail ni téléphone affiché sur cette page).
+  // (aucun e-mail ni lien direct affiché sur cette page).
   if ('/' + segments.slice(i).join('/') === '/informations-legales') {
     req.headers.set('x-legal-page', '1')
   }

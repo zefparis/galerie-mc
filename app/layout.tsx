@@ -5,6 +5,7 @@ import { getLocale, getMessages } from "next-intl/server"
 import "./globals.css"
 import { routing, type Locale } from "@/i18n/routing"
 import SwRegister from "@/components/pwa/SwRegister"
+import { getGallerySettings } from "@/lib/data"
 
 // Fonts auto-hébergées : aucun appel réseau au build, rendu instantané.
 const cormorant = localFont({
@@ -85,6 +86,17 @@ export default async function RootLayout({
   // Messages explicites : garantis quelle que soit la stratégie de rendu
   // (statique ou dynamique), l'héritage implicite n'étant pas fiable.
   const messages = await getMessages({ locale }).catch(() => undefined)
+  // Données structurées de l'artiste : le lien Instagram ne figure dans
+  // sameAs que s'il est renseigné dans les réglages.
+  const settings = await getGallerySettings()
+  const artistJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: settings.artistName,
+    url: (process.env.NEXT_PUBLIC_SITE_URL || 'https://scandellart.fr').replace(/\/$/, ''),
+    jobTitle: 'Artiste peintre',
+    ...(settings.instagramUrl ? { sameAs: [settings.instagramUrl] } : {}),
+  }
   return (
     <html lang={locale} suppressHydrationWarning className={`${cormorant.variable} ${inter.variable} ${fraunces.variable}`}>
       <head>
@@ -94,6 +106,12 @@ export default async function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `try{var t=localStorage.getItem('mc-theme'),s=window.matchMedia('(prefers-color-scheme: dark)').matches,a=location.pathname.indexOf('/admin')===0,d=t==='dark'||(t!=='light'&&s&&(t==='auto'||!a));if(d)document.documentElement.classList.add('dark')}catch(e){}`,
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(artistJsonLd).replace(/</g, '\\u003c'),
           }}
         />
       </head>

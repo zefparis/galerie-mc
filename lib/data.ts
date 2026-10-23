@@ -4,7 +4,7 @@
 import pool from './db'
 import { mapPaintingRow, mapEventRow } from './mappers'
 import { Painting, GalleryEvent, GallerySettings } from './types'
-import { DEFAULT_SETTINGS } from './storage'
+import { DEFAULT_SETTINGS, mergeSettings } from './storage'
 
 // Projection publique des toiles : colonnes listées explicitement — la
 // colonne privée `analysis` (notes_artiste, repère de prix) ne doit
@@ -87,18 +87,14 @@ export async function getGallerySettings(): Promise<GallerySettings> {
   try {
     const { rows } = await pool.query('SELECT data, translations FROM settings WHERE id = 1')
     if (!rows.length) return DEFAULT_SETTINGS
-    return {
-      ...DEFAULT_SETTINGS,
-      ...(rows[0].data as Partial<GallerySettings>),
-      translations: rows[0].translations || {},
-    }
+    return mergeSettings(rows[0].data, rows[0].translations || {})
   } catch (err) {
     // Colonne translations pas encore créée : lecture sans elle.
     if ((err as { code?: string })?.code === '42703') {
       try {
         const { rows } = await pool.query('SELECT data FROM settings WHERE id = 1')
         if (!rows.length) return DEFAULT_SETTINGS
-        return { ...DEFAULT_SETTINGS, ...(rows[0].data as Partial<GallerySettings>) }
+        return mergeSettings(rows[0].data)
       } catch {
         return DEFAULT_SETTINGS
       }

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { normalizeInstagramUrl } from './instagram'
 
 export const uuidSchema = z.string().uuid('Identifiant invalide')
 
@@ -268,8 +269,19 @@ export const settingsBodySchema = z.object({
   bio: z.string().max(20000).optional().default(''),
   bioShort: z.string().max(500).optional().default(''),
   email: z.string().max(300).optional().default(''),
-  phone: z.string().max(50).optional().default(''),
-  instagram: z.string().max(200).optional().default(''),
+  // Lien Instagram : « @id », « id » ou URL instagram.com acceptés,
+  // normalisés en https://www.instagram.com/id/ — vide/null = pas de lien.
+  instagramUrl: z
+    .string()
+    .trim()
+    .max(300)
+    .refine(
+      (s) => !s || normalizeInstagramUrl(s) !== null,
+      'Lien Instagram invalide — ex : @votre_compte ou https://www.instagram.com/votre_compte'
+    )
+    .transform((s) => normalizeInstagramUrl(s))
+    .nullish()
+    .default(null),
   processText: z.string().max(20000).optional().default(''),
   tagline: z.string().max(160, "L'accroche fait 160 caractères maximum").optional().default(''),
   presentation: z

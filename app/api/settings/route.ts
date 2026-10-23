@@ -3,7 +3,7 @@ import pool from '@/lib/db'
 import { requireAdmin } from '@/lib/auth'
 import { handleRouteError } from '@/lib/api'
 import { settingsBodySchema } from '@/lib/validation'
-import { DEFAULT_SETTINGS } from '@/lib/storage'
+import { DEFAULT_SETTINGS, mergeSettings } from '@/lib/storage'
 import { settingsFrenchFields, withStaleMarks } from '@/lib/translations-core'
 import { GallerySettings, Translations } from '@/lib/types'
 
@@ -16,11 +16,9 @@ export async function GET() {
   try {
     const { rows } = await pool.query('SELECT data, translations FROM settings WHERE id = 1')
     if (!rows.length) return NextResponse.json(DEFAULT_SETTINGS)
-    return NextResponse.json({
-      ...DEFAULT_SETTINGS,
-      ...(rows[0].data as Partial<GallerySettings>),
-      translations: (rows[0].translations as Translations) || {},
-    })
+    return NextResponse.json(
+      mergeSettings(rows[0].data, (rows[0].translations as Translations) || {})
+    )
   } catch (err) {
     // Table ou colonne pas encore créée : valeurs par défaut plutôt que 500.
     const code = (err as { code?: string })?.code
@@ -28,10 +26,7 @@ export async function GET() {
       try {
         const { rows } = await pool.query('SELECT data FROM settings WHERE id = 1')
         if (!rows.length) return NextResponse.json(DEFAULT_SETTINGS)
-        return NextResponse.json({
-          ...DEFAULT_SETTINGS,
-          ...(rows[0].data as Partial<GallerySettings>),
-        })
+        return NextResponse.json(mergeSettings(rows[0].data))
       } catch {
         return NextResponse.json(DEFAULT_SETTINGS)
       }

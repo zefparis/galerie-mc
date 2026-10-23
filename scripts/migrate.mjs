@@ -138,6 +138,18 @@ const statements = [
     attempted_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_at ON login_attempts (ip, attempted_at)`,
+  // Lien Instagram : l'ancienne clé `instagram` (identifiant brut) devient
+  // `instagramUrl` canonique si celle-ci n'existe pas déjà. L'identifiant
+  // n'est repris que s'il est sain (lettres/chiffres/points/underscores,
+  // ≤30) — une valeur exotique est simplement abandonnée, pas copiée.
+  // L'ancienne clé et le `phone` retiré ne sont plus lus ni écrits.
+  `UPDATE settings
+   SET data = (data - 'instagram' - 'phone') ||
+     jsonb_build_object('instagramUrl', concat('https://www.instagram.com/', ltrim(data->>'instagram', '@'), '/'))
+   WHERE id = 1
+     AND data ? 'instagram'
+     AND NOT data ? 'instagramUrl'
+     AND data->>'instagram' ~ '^@?[A-Za-z0-9._]{1,30}$'`,
 ]
 
 try {

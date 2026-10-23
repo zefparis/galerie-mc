@@ -5,6 +5,7 @@ import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 import { headers } from 'next/headers'
 import Logo from '@/components/ui/Logo'
 import InstallLink from '@/components/pwa/InstallLink'
+import InstagramLink from '@/components/ui/InstagramLink'
 import { GallerySettings } from '@/lib/types'
 import type { Locale } from '@/i18n/routing'
 
@@ -19,7 +20,7 @@ export default async function Footer({
   const tn = await getTranslations('nav')
   const tl = await getTranslations('lang')
   const ti = await getTranslations('install')
-  // /informations-legales : aucun e-mail ni téléphone affiché sur la page.
+  // /informations-legales : aucun e-mail ni lien direct affiché sur la page.
   const isLegalPage = headers().get('x-legal-page') === '1'
 
   return (
@@ -69,23 +70,12 @@ export default async function Footer({
                   {settings.email}
                 </a>
               )}
-              {settings.phone && (
-                <a
-                  href={`tel:${settings.phone.replace(/\s/g, '')}`}
+              {settings.instagramUrl && (
+                <InstagramLink
+                  url={settings.instagramUrl}
+                  ariaLabel={t('instagramAria')}
                   className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent-hover)] transition-colors"
-                >
-                  {settings.phone}
-                </a>
-              )}
-              {settings.instagram && (
-                <a
-                  href={`https://instagram.com/${settings.instagram.replace('@', '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent-hover)] transition-colors"
-                >
-                  Instagram
-                </a>
+                />
               )}
             </div>
             </div>
@@ -107,18 +97,18 @@ export default async function Footer({
           <InstallLink label={ti('link')} />
         </div>
 
-        <div className="mt-12 pt-6 border-t border-[var(--line)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <p className="font-body text-xs text-[var(--muted)]">
-              &copy; {new Date().getFullYear()} {settings.artistName} — {t('rights')}
-            </p>
-            <Link
-              href="/informations-legales"
-              className="font-body text-xs text-[var(--muted)] hover:text-[var(--accent-hover)] transition-colors underline-offset-4 hover:underline"
-            >
-              {t('legal')}
-            </Link>
-          </div>
+        {/* Barre basse : les trois éléments partagent la même ligne de
+            base (items-center) ; sur mobile ils s'empilent proprement. */}
+        <div className="mt-12 pt-6 border-t border-[var(--line)] flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <p className="font-body text-xs text-[var(--muted)]">
+            &copy; {new Date().getFullYear()} {settings.artistName} — {t('rights')}
+          </p>
+          <Link
+            href="/informations-legales"
+            className="font-body text-xs text-[var(--muted)] hover:text-[var(--accent-hover)] transition-colors underline-offset-4 hover:underline"
+          >
+            {t('legal')}
+          </Link>
           <p className="font-body text-xs text-[var(--muted)]">
             {t('originals')}
           </p>

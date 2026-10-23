@@ -29,6 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ContactPage() {
   const t = await getTranslations('contact')
+  const tf = await getTranslations('footer')
   const settings = await getGallerySettings()
   return (
     <div className="pt-16 md:pt-20">
@@ -41,6 +42,8 @@ export default async function ContactPage() {
       >
         <ContactForm
           artistEmail={settings.email}
+          instagramUrl={settings.instagramUrl}
+          instagramAria={tf('instagramAria')}
           mailConfigured={mailConfigured()}
         />
       </Suspense>
