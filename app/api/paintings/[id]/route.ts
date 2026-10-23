@@ -50,7 +50,8 @@ function sanitizeAnalysisInput(a: PaintingAnalysis | null | undefined): Painting
   return hasAny ? clean : null
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const denied = requireAdmin(req)
   if (denied) return denied
 
@@ -167,7 +168,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const denied = requireAdmin(req)
   if (denied) return denied
 

@@ -7,7 +7,8 @@ export const contentType = 'image/png'
 export const alt = "Scandell'Art — Marie-Claire Scandella"
 
 // Image de partage par langue : la tagline suit la locale du segment.
-export default async function OgImage({ params }: { params: { locale: string } }) {
+export default async function OgImage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params
   const locale = routing.locales.includes(params.locale as Locale)
     ? (params.locale as Locale)
     : routing.defaultLocale

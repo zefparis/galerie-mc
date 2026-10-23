@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import AdminHome from '@/components/admin/AdminHome'
 import AdminThemeToggle from '@/components/admin/AdminThemeToggle'
@@ -186,7 +187,7 @@ export default function AdminClient({ initialView = 'home' }: { initialView?: Vi
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {view !== 'photos' && (
-            <a
+            <Link
               href="/admin/photos"
               onClick={(e) => {
                 e.preventDefault()
@@ -195,7 +196,7 @@ export default function AdminClient({ initialView = 'home' }: { initialView?: Vi
               className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--accent)] transition-colors min-h-[48px] px-2 hidden sm:inline-flex items-center"
             >
               🗂 Mes photos
-            </a>
+            </Link>
           )}
           <AdminThemeToggle />
           <AdminInstallLink />

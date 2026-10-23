@@ -22,13 +22,18 @@ export const metadata: Metadata = {
 // re-rend à chaque changement de langue en navigation client, contrairement
 // au layout racine dont le rendu est réutilisé par le routeur — c'est ce
 // qui figeait la locale et provoquait les préfixes empilés (/en/en…).
-export default async function LocaleLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode
-  params: { locale: string }
-}) {
+export default async function LocaleLayout(
+  props: {
+    children: React.ReactNode
+    params: Promise<{ locale: string }>
+  }
+) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   if (!routing.locales.includes(params.locale as Locale)) notFound()
   const locale = params.locale as Locale
   const [messages, settings] = await Promise.all([

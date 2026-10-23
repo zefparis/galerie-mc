@@ -6,10 +6,11 @@ import OfflineRetry from '@/components/pwa/OfflineRetry'
 import type { Locale } from '@/i18n/routing'
 
 interface Props {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const t = await getTranslations({
     locale: params.locale as Locale,
     namespace: 'offline',

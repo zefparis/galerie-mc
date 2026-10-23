@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { getPaintings, deletePainting, reorderPainting, updatePainting, isSessionExpired, redirectToLogin } from '@/lib/storage'
 import { Painting, PaintingCategory } from '@/lib/types'
 import { CATEGORIES, CATEGORY_SHORT } from '@/lib/catalog'
@@ -358,10 +359,12 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
 
                   {/* Vignette */}
                   <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-[var(--line)] overflow-hidden relative">
-                    <img
+                    <Image
                       src={painting.imageUrl}
                       alt={painting.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="80px"
+                      className="object-cover"
                     />
                   </div>
 
@@ -436,11 +439,13 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
           aria-labelledby="delete-title"
         >
           <div className="bg-[var(--surface)] max-w-md w-full p-6 sm:p-8 shadow-xl">
-            <div className="w-24 h-24 mx-auto bg-[var(--line)] overflow-hidden">
-              <img
+            <div className="w-24 h-24 mx-auto bg-[var(--line)] overflow-hidden relative">
+              <Image
                 src={deleteTarget.imageUrl}
                 alt={deleteTarget.title}
-                className="w-full h-full object-cover"
+                fill
+                sizes="96px"
+                className="object-cover"
               />
             </div>
             <h3 id="delete-title" className="font-display text-2xl text-center text-[var(--ink)] mt-4">

@@ -15,11 +15,12 @@ const SECTIONS = [
 // Date de la dernière révision du contenu — affichée localisée.
 const UPDATED = new Date(2026, 9, 14)
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { locale: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ locale: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const locale = params.locale as Locale
   const t = await getTranslations({ locale, namespace: 'legal' })
   return {
@@ -29,7 +30,8 @@ export async function generateMetadata({
   }
 }
 
-export default async function LegalPage({ params }: { params: { locale: string } }) {
+export default async function LegalPage(props: { params: Promise<{ locale: string }> }) {
+  const params = await props.params;
   const locale = params.locale as Locale
   const t = await getTranslations({ locale, namespace: 'legal' })
 
@@ -102,5 +104,5 @@ export default async function LegalPage({ params }: { params: { locale: string }
         ))}
       </div>
     </div>
-  )
+  );
 }

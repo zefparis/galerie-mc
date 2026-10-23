@@ -12,11 +12,13 @@ import Reveal from '@/components/ui/Reveal'
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  params: { locale: string }
-  searchParams: { categorie?: string }
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ categorie?: string }>
 }
 
-export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const locale = params.locale as Locale
   const t = await getTranslations({ locale })
   const cat = isCategory(searchParams.categorie) ? searchParams.categorie : null
@@ -42,7 +44,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   }
 }
 
-export default async function GaleriePage({ params, searchParams }: Props) {
+export default async function GaleriePage(props: Props) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const t = await getTranslations()
   const paintings = (await getPaintings()).map((p) => localizePainting(p, params.locale as Locale))
   const cat = isCategory(searchParams.categorie) ? searchParams.categorie : null

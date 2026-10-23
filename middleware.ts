@@ -2,9 +2,7 @@ import createMiddleware from 'next-intl/middleware'
 import { NextRequest, NextResponse } from 'next/server'
 import { routing } from './i18n/routing'
 
-const intl = createMiddleware(routing, {
-  localeDetection: false,
-})
+const intl = createMiddleware(routing)
 
 const LOCALE_SET = new Set<string>(routing.locales)
 const CANONICAL_HOST = 'scandellart.fr'

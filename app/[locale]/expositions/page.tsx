@@ -10,10 +10,11 @@ import Reveal from '@/components/ui/Reveal'
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const locale = params.locale as Locale
   const t = await getTranslations({ locale, namespace: 'events' })
   return {
@@ -29,7 +30,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function ExpositionsPage({ params }: Props) {
+export default async function ExpositionsPage(props: Props) {
+  const params = await props.params;
   const t = await getTranslations('events')
   const events = (await getPublishedEvents()).map((e) =>
     localizeEvent(e, params.locale as Locale)

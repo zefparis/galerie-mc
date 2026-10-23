@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { GalleryEvent } from '@/lib/types'
 import { redirectToLogin } from '@/lib/storage'
 
@@ -119,9 +120,9 @@ export default function EventList({ onAdd, onEdit }: Props) {
               className="flex items-center gap-3 p-3 border border-[var(--line)] bg-[var(--surface)]"
             >
               {/* Vignette */}
-              <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-[var(--line)] overflow-hidden">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-[var(--line)] overflow-hidden relative">
                 {evt.coverUrl ? (
-                  <img src={evt.coverUrl} alt={evt.title} className="w-full h-full object-cover" />
+                  <Image src={evt.coverUrl} alt={evt.title} fill sizes="80px" className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[var(--muted)]">
                     📅
@@ -179,11 +180,13 @@ export default function EventList({ onAdd, onEdit }: Props) {
         >
           <div className="bg-[var(--surface)] max-w-md w-full p-6 sm:p-8 shadow-xl">
             {deleteTarget.coverUrl && (
-              <div className="w-24 h-24 mx-auto bg-[var(--line)] overflow-hidden">
-                <img
+              <div className="w-24 h-24 mx-auto bg-[var(--line)] overflow-hidden relative">
+                <Image
                   src={deleteTarget.coverUrl}
                   alt={deleteTarget.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="96px"
+                  className="object-cover"
                 />
               </div>
             )}

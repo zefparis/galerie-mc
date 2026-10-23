@@ -21,7 +21,7 @@ export default async function Footer({
   const tl = await getTranslations('lang')
   const ti = await getTranslations('install')
   // /informations-legales : aucun e-mail ni lien direct affiché sur la page.
-  const isLegalPage = headers().get('x-legal-page') === '1'
+  const isLegalPage = (await headers()).get('x-legal-page') === '1'
 
   return (
     <footer className="footer w-full border-t border-[var(--line)] bg-[var(--bg)]">

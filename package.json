@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "vercel-build": "node scripts/migrate.mjs --soft && next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "migrate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/migrate.mjs",
     "i18n:check": "node scripts/i18n-check.mjs",
     "translate:check": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/translate-check.mjs",
@@ -27,12 +27,12 @@
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.14.0",
-    "next": "^14.2.35",
-    "next-intl": "^3.26.5",
+    "next": "15.5.28",
+    "next-intl": "^4.14.9",
     "pg": "^8.20.0",
-    "postcss": "^8.4.49",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "postcss": "^8.5.30",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "tailwindcss": "^3.4.17",
     "uuid": "^14.0.0",
     "zod": "^4.6.7"
@@ -40,14 +40,19 @@
   "devDependencies": {
     "@types/node": "^20.19.40",
     "@types/pg": "^8.20.0",
-    "@types/react": "^18.3.28",
-    "@types/react-dom": "^18.3.7",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "@types/uuid": "^10.0.0",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.35",
+    "eslint": "9.39.5",
+    "eslint-config-next": "15.5.28",
     "node-html-parser": "^9.0.4",
     "playwright": "^1.64.0",
     "typescript": "^5.9.3",
     "vitest": "^3.2.7"
+  },
+  "overrides": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "postcss": "^8.5.30"
   }
 }

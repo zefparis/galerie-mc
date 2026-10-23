@@ -22,7 +22,8 @@ function noticeFrench(n: PaintingNotice | null | undefined): Record<string, stri
 }
 
 // PUT — publie (ou republie après correction) le texte relu par l'artiste.
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const denied = requireAdmin(req)
   if (denied) return denied
 
@@ -67,7 +68,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
 // DELETE — retire la notice de la fiche publique. L'analyse privée et les
 // traductions sont conservées : rien n'est perdu si on republie.
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const denied = requireAdmin(req)
   if (denied) return denied
 

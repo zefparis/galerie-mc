@@ -8,10 +8,11 @@ import { alternatesFor, OG_LOCALE } from '@/lib/seo'
 import { routing, type Locale } from '@/i18n/routing'
 
 interface Props {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const locale = params.locale as Locale
   const t = await getTranslations({ locale, namespace: 'contact' })
   return {

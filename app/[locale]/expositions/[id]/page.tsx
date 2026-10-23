@@ -16,10 +16,11 @@ import Reveal from '@/components/ui/Reveal'
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  params: { id: string; locale: string }
+  params: Promise<{ id: string; locale: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const locale = params.locale as Locale
   const t = await getTranslations({ locale, namespace: 'events' })
   const event = await getPublishedEventById(params.id)
@@ -98,7 +99,8 @@ function MediaItem({ media, videoTitle }: { media: EventMedia; videoTitle: strin
   )
 }
 
-export default async function ExpositionDetailPage({ params }: Props) {
+export default async function ExpositionDetailPage(props: Props) {
+  const params = await props.params;
   const locale = params.locale as Locale
   const t = await getTranslations('events')
   const event = await getPublishedEventById(params.id)

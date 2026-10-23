@@ -10,11 +10,12 @@ import PaintingDetail from '@/components/gallery/PaintingDetail'
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  params: { id: string; locale: string }
-  searchParams: { categorie?: string }
+  params: Promise<{ id: string; locale: string }>
+  searchParams: Promise<{ categorie?: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const locale = params.locale as Locale
   const t = await getTranslations({ locale })
   const messages = (await getMessages({ locale })) as { techniques?: Record<string, string> }
@@ -49,7 +50,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function OeuvrePage({ params, searchParams }: Props) {
+export default async function OeuvrePage(props: Props) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const locale = params.locale as Locale
   const [painting, all, settings] = await Promise.all([
     getPaintingById(params.id),

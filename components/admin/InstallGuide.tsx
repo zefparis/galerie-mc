@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useInstallState } from '@/components/pwa/useInstallState'
 import { ShareGlyph } from '@/components/pwa/InstallHelpDialog'
 
@@ -109,9 +110,9 @@ export default function InstallGuide() {
             <p className="font-body text-lg text-[var(--ink)]">
               🎉 C’est fait, l’atelier est déjà installé !
             </p>
-            <a href="/admin" className="btn-accent !min-h-[48px] mt-4 inline-flex">
+            <Link href="/admin" className="btn-accent !min-h-[48px] mt-4 inline-flex">
               Ouvrir l’atelier
-            </a>
+            </Link>
           </div>
         ) : st.inApp ? (
           <div className="mt-8">
@@ -161,12 +162,12 @@ export default function InstallGuide() {
           </div>
         )}
 
-        <a
+        <Link
           href="/admin"
           className="mt-10 inline-block font-body text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] min-h-[44px]"
         >
           ← Retour à l’atelier
-        </a>
+        </Link>
       </div>
     </div>
   )

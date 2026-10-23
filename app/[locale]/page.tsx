@@ -16,10 +16,11 @@ import Reveal from '@/components/ui/Reveal'
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const locale = params.locale as Locale
   const t = await getTranslations({ locale, namespace: 'home' })
   // L'accroche éditable nourrit la meta description quand elle existe.
@@ -39,7 +40,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function Home({ params }: Props) {
+export default async function Home(props: Props) {
+  const params = await props.params;
   const locale = params.locale as Locale
   const t = await getTranslations('home')
   const th = await getTranslations('hero')
