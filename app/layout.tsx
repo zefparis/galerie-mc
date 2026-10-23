@@ -48,7 +48,8 @@ export const metadata: Metadata = {
     title: "Marie-Claire Scandella — Artiste Peintre",
     description:
       "Galerie en ligne de Marie-Claire Scandella, artiste peintre abstraite à Montreuil-aux-Lions.",
-    images: ["/og-image.jpg"],
+    // Pas d'image explicite : app/[locale]/opengraph-image.tsx fournit le
+    // visuel OG généré pour toutes les pages localisées.
     locale: "fr_FR",
     type: "website",
   },

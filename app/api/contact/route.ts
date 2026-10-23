@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { contactBodySchema } from '@/lib/validation'
 import { handleRouteError } from '@/lib/api'
 import { isRateLimited } from '@/lib/ratelimit'
+import { getClientIp } from '@/lib/client-ip'
 import { mailConfigured, sendContactEmail } from '@/lib/mail'
 import { getGallerySettings } from '@/lib/data'
 
@@ -18,10 +19,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip') ||
-    'inconnu'
+  const ip = getClientIp(req)
   if (isRateLimited(`contact:${ip}`, 4, 10 * 60_000)) {
     return NextResponse.json(
       {

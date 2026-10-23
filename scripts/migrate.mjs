@@ -131,6 +131,13 @@ const statements = [
   // vide ou garde encore l'ancienne valeur par défaut ; une adresse saisie
   // par l'artiste n'est jamais écrasée.
   `UPDATE settings SET data = jsonb_set(data, '{email}', '"marieclairescandella@yahoo.fr"') WHERE id = 1 AND COALESCE(NULLIF(TRIM(data->>'email'), ''), 'contact@marie-claire-scandella.fr') = 'contact@marie-claire-scandella.fr'`,
+  // Verrou anti brute-force du login admin : une ligne par tentative
+  // échouée, comptée sur 15 min et purgée après 24 h.
+  `CREATE TABLE IF NOT EXISTS login_attempts (
+    ip TEXT NOT NULL,
+    attempted_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_at ON login_attempts (ip, attempted_at)`,
 ]
 
 try {

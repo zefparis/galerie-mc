@@ -26,6 +26,13 @@ export function handleRouteError(err: unknown) {
   }
 
   const code = (err as { code?: string })?.code
+  // Violation de clé unique (ex. id de toile déjà pris) : conflit, pas 500.
+  if (code === '23505') {
+    return NextResponse.json(
+      { error: 'Un élément avec cet identifiant existe déjà' },
+      { status: 409 }
+    )
+  }
   if (code === '42P01') {
     return NextResponse.json(
       { error: 'Base de données non initialisée — lancez npm run migrate' },

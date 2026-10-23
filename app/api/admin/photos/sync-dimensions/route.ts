@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { handleRouteError } from '@/lib/api'
 import { isRateLimited } from '@/lib/ratelimit'
+import { getClientIp } from '@/lib/client-ip'
 import { syncPaintingImageDims } from '@/lib/image-dims'
 
 export const dynamic = 'force-dynamic'
@@ -13,10 +14,7 @@ export async function POST(req: NextRequest) {
   const denied = requireAdmin(req)
   if (denied) return denied
 
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip') ||
-    'admin'
+  const ip = getClientIp(req)
   if (isRateLimited(`admin-sync-dims:${ip}`, 6, 60_000)) {
     return NextResponse.json(
       { error: 'Trop de demandes rapprochées — patientez quelques secondes.' },

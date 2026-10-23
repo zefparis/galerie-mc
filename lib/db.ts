@@ -11,7 +11,9 @@ function sslConfig() {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: sslConfig(),
-  max: 10,
+  // 3 connexions par instance : sur Vercel chaque lambda a son propre pool —
+  // un max plus large épuiserait vite le plafond d'une petite base.
+  max: 3,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
 })
