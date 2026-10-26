@@ -8,7 +8,7 @@ import LocaleBanner from '@/components/ui/LocaleBanner'
 import HtmlLang from '@/components/ui/HtmlLang'
 import InstallBanner from '@/components/pwa/InstallBanner'
 import InstallHelpDialog from '@/components/pwa/InstallHelpDialog'
-import { getGallerySettings } from '@/lib/data'
+import { getGallerySettings, hasDrawings } from '@/lib/data'
 import { localizeSettings } from '@/lib/i18n'
 import { routing, type Locale } from '@/i18n/routing'
 
@@ -36,7 +36,7 @@ export default async function LocaleLayout(
 
   if (!routing.locales.includes(params.locale as Locale)) notFound()
   const locale = params.locale as Locale
-  const [messages, settings] = await Promise.all([
+  const [messages, settings, drawings] = await Promise.all([
     getMessages({ locale }),
     Promise.all([
       getGallerySettings(),
@@ -44,16 +44,19 @@ export default async function LocaleLayout(
     ]).then(([s, td]) =>
       localizeSettings(s, locale, { bio: td('bio'), bioShort: td('bioShort') })
     ),
+    // L'onglet « Dessins » (header + pied de page) n'existe que s'il y a
+    // au moins un dessin en ligne.
+    hasDrawings(),
   ])
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <HtmlLang locale={locale} />
-      <Navbar artistName={settings.artistName} locale={locale} />
+      <Navbar artistName={settings.artistName} locale={locale} hasDrawings={drawings} />
       {/* .site-texture active la texture « lin » en fond (globals.css,
           body:has) — absente de l'admin, qui garde un fond uni. */}
       <main className="site-texture flex-1">{children}</main>
-      <Footer settings={settings} locale={locale} />
+      <Footer settings={settings} locale={locale} hasDrawings={drawings} />
       <LocaleBanner />
       {/* Invitation d'installation : bannière mobile différée + aide
           partagée (tiroir, pied de page, bannière). */}

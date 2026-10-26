@@ -15,7 +15,7 @@ import AdminInstallCard from '@/components/admin/AdminInstallCard'
 import AdminInstallLink from '@/components/admin/AdminInstallLink'
 import PhotoLibrary from '@/components/admin/PhotoLibrary'
 import { getPaintings } from '@/lib/storage'
-import { AdminPhoto, Painting, GalleryEvent } from '@/lib/types'
+import { AdminPhoto, Painting, PaintingCategory, GalleryEvent } from '@/lib/types'
 
 type View =
   | 'home'
@@ -50,6 +50,7 @@ export default function AdminClient({ initialView = 'home' }: { initialView?: Vi
   const [initialPaintingPhoto, setInitialPaintingPhoto] =
     useState<InitialPaintingPhoto | null>(null)
   const [editingEvent, setEditingEvent] = useState<GalleryEvent | null>(null)
+  const [newPaintingCategory, setNewPaintingCategory] = useState<PaintingCategory | null>(null)
   const [wizardOpen, setWizardOpen] = useState(false)
   const [eventFormOpen, setEventFormOpen] = useState(false)
   const [flash, setFlash] = useState('')
@@ -93,6 +94,7 @@ export default function AdminClient({ initialView = 'home' }: { initialView?: Vi
     setEventFormOpen(false)
     setEditingPainting(null)
     setInitialPaintingPhoto(null)
+    setNewPaintingCategory(null)
     setEditingEvent(null)
     setRefreshKey((k) => k + 1)
     if (message) {
@@ -101,9 +103,10 @@ export default function AdminClient({ initialView = 'home' }: { initialView?: Vi
     }
   }
 
-  const openNewPainting = () => {
+  const openNewPainting = (category?: PaintingCategory) => {
     setEditingPainting(null)
     setInitialPaintingPhoto(null)
+    setNewPaintingCategory(category || null)
     setWizardOpen(true)
     setView('paintings')
     syncUrl('paintings')
@@ -111,6 +114,7 @@ export default function AdminClient({ initialView = 'home' }: { initialView?: Vi
 
   const openNewPaintingWithPhoto = (photo: AdminPhoto) => {
     setEditingPainting(null)
+    setNewPaintingCategory(null)
     setInitialPaintingPhoto({
       url: photo.secure_url,
       publicId: photo.public_id,
@@ -144,6 +148,7 @@ export default function AdminClient({ initialView = 'home' }: { initialView?: Vi
     if (v === 'painting-new') {
       setEditingPainting(null)
       setInitialPaintingPhoto(null)
+      setNewPaintingCategory(null)
       setWizardOpen(true)
       setView('paintings')
       syncUrl('paintings')
@@ -251,6 +256,7 @@ export default function AdminClient({ initialView = 'home' }: { initialView?: Vi
           <PaintingWizard
             painting={editingPainting}
             initialPhoto={initialPaintingPhoto}
+            defaultCategory={newPaintingCategory || undefined}
             onDone={(msg: string) => backToList(msg)}
             onCancel={() => backToList()}
           />

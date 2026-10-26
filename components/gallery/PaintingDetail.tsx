@@ -26,6 +26,10 @@ export default function PaintingDetail({ painting, artistName, prevId, nextId, c
   const router = useRouter()
   const [lightbox, setLightbox] = useState(false)
   const qs = category ? `?categorie=${category}` : ''
+  // Le retour renvoie vers la galerie d'origine : /dessins a sa page
+  // dédiée, peintures et collages restent sur /galerie.
+  const backHref = category === 'dessins' ? '/dessins' : `/galerie${qs}`
+  const backLabel = category === 'dessins' ? t('backDessins') : t('back')
 
   const technique = painting.technique ? techLabel(painting.technique) : ''
   const statusLabel =
@@ -46,10 +50,10 @@ export default function PaintingDetail({ painting, artistName, prevId, nextId, c
     <div className="pt-16 md:pt-20">
       <div className="max-w-7xl mx-auto gutter-x pt-6 md:pt-10">
         <Link
-          href={`/galerie${qs}`}
+          href={backHref}
           className="inline-flex items-center min-h-[44px] font-body text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--muted)] hover:text-[var(--ink)] transition-colors duration-200"
         >
-          {t('back')}
+          {backLabel}
         </Link>
       </div>
 

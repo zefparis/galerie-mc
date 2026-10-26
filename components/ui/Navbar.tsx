@@ -8,14 +8,22 @@ import ThemeToggle from '@/components/ui/ThemeToggle'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 import Logo from '@/components/ui/Logo'
 import InstallLink from '@/components/pwa/InstallLink'
+import { navItems } from '@/lib/catalog'
 import type { Locale } from '@/i18n/routing'
-
-const HREFS = ['/galerie', '/expositions', '/contact'] as const
 
 // `locale` vient du layout serveur ([locale] ou 404 racine) : la langue
 // affichée par le sélecteur est celle de la page servie, jamais un état
 // client potentiellement périmé.
-export default function Navbar({ artistName, locale }: { artistName: string; locale?: Locale }) {
+export default function Navbar({
+  artistName,
+  locale,
+  hasDrawings = false,
+}: {
+  artistName: string
+  locale?: Locale
+  // L'onglet DESSINS n'existe que s'il y a au moins un dessin en ligne.
+  hasDrawings?: boolean
+}) {
   const t = useTranslations('nav')
   const ti = useTranslations('install')
   const pathname = useCleanPathname()
@@ -40,10 +48,12 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
     setDrawerOpen(false)
   }, [pathname])
 
-  const labels: Record<(typeof HREFS)[number], string> = {
-    '/galerie': t('galerie'),
-    '/expositions': t('expositions'),
-    '/contact': t('contact'),
+  const items = navItems(hasDrawings)
+  const labels: Record<(typeof items)[number]['key'], string> = {
+    galerie: t('galerie'),
+    dessins: t('dessins'),
+    expositions: t('expositions'),
+    contact: t('contact'),
   }
   // pathname est déjà dépréfixé (useCleanPathname lit l'URL réelle).
   const isActive = (href: string) => pathname.startsWith(href)
@@ -76,7 +86,7 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-9">
-            {HREFS.map((href) => (
+            {items.map(({ href, key }) => (
               <Link
                 key={href}
                 href={href}
@@ -87,7 +97,7 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
                 }`}
                 aria-current={isActive(href) ? 'page' : undefined}
               >
-                {labels[href]}
+                {labels[key]}
               </Link>
             ))}
           </div>
@@ -155,7 +165,7 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
             </button>
           </div>
           <div className="flex flex-col px-8 mt-2">
-            {HREFS.map((href, i) => (
+            {items.map(({ href, key }, i) => (
               <Link
                 key={href}
                 href={href}
@@ -167,7 +177,7 @@ export default function Navbar({ artistName, locale }: { artistName: string; loc
                 }`}
                 style={{ transitionDelay: drawerOpen ? `${i * 40}ms` : '0ms' }}
               >
-                {labels[href]}
+                {labels[key]}
               </Link>
             ))}
           </div>

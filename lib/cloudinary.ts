@@ -5,6 +5,10 @@ export interface CloudinaryResult {
   height?: number
 }
 
+// Dossiers de l'espace photo : les dessins sont rangés à part des toiles.
+export const CLOUDINARY_PAINTINGS_FOLDER = 'galerie-mc'
+export const CLOUDINARY_DRAWINGS_FOLDER = 'galerie-mc/dessins'
+
 export async function uploadToCloudinary(
   file: File | Blob,
   cloudName: string,
@@ -18,13 +22,14 @@ export function uploadToCloudinaryProgress(
   file: File | Blob,
   cloudName: string,
   uploadPreset: string,
-  onProgress: (ratio: number) => void
+  onProgress: (ratio: number) => void,
+  folder: string = CLOUDINARY_PAINTINGS_FOLDER
 ): Promise<CloudinaryResult> {
   return new Promise((resolve, reject) => {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('upload_preset', uploadPreset)
-    formData.append('folder', 'galerie-mc')
+    formData.append('folder', folder)
 
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`)

@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { getTranslations } from 'next-intl/server'
 import { getPaintings } from '@/lib/data'
 import { localizePainting } from '@/lib/i18n'
-import { isCategory } from '@/lib/catalog'
+import { isGalleryCategory } from '@/lib/catalog'
 import { alternatesFor, OG_LOCALE } from '@/lib/seo'
 import { routing, type Locale } from '@/i18n/routing'
 import GalleryClient from '@/components/gallery/GalleryClient'
@@ -21,7 +21,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   const locale = params.locale as Locale
   const t = await getTranslations({ locale })
-  const cat = isCategory(searchParams.categorie) ? searchParams.categorie : null
+  // ?categorie=dessins est ignoré ici : les dessins ont leur page dédiée.
+  const cat = isGalleryCategory(searchParams.categorie) ? searchParams.categorie : null
   const label = cat ? t(`categories.${cat}`) : t('galerie.title')
   const description = t(
     cat === 'collages'
@@ -49,7 +50,7 @@ export default async function GaleriePage(props: Props) {
   const params = await props.params;
   const t = await getTranslations()
   const paintings = (await getPaintings()).map((p) => localizePainting(p, params.locale as Locale))
-  const cat = isCategory(searchParams.categorie) ? searchParams.categorie : null
+  const cat = isGalleryCategory(searchParams.categorie) ? searchParams.categorie : null
   const title = cat ? t(`categories.${cat}`) : t('galerie.title')
   const introKey = cat === 'collages' ? 'introCollages' : cat === 'peintures' ? 'introPeintures' : 'introAll'
 

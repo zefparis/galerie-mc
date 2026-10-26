@@ -10,6 +10,8 @@ interface Props {
   /** URL locale (blob:) du fichier choisi, avant la fin de l'envoi —
       utilisée par l'aperçu en direct. '' quand elle n'est plus d'actualité. */
   onLocalPreview?: (url: string) => void
+  /** Dossier Cloudinary de rangement (dessins rangés à part des toiles). */
+  folder?: string
 }
 
 type Status = 'idle' | 'preparing' | 'uploading' | 'success' | 'error'
@@ -17,7 +19,7 @@ type Status = 'idle' | 'preparing' | 'uploading' | 'success' | 'error'
 // Grande zone tactile : choix de photo, réduction automatique des grosses
 // photos de téléphone, barre de progression réelle, ou sélection dans la
 // photothèque Cloudinary existante.
-export default function CloudinaryUpload({ currentUrl, onUploaded, onLocalPreview }: Props) {
+export default function CloudinaryUpload({ currentUrl, onUploaded, onLocalPreview, folder }: Props) {
   const [status, setStatus] = useState<Status>('idle')
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
@@ -67,7 +69,8 @@ export default function CloudinaryUpload({ currentUrl, onUploaded, onLocalPrevie
         blob,
         settings.cloudName,
         settings.uploadPreset,
-        (ratio) => setProgress(Math.round(ratio * 100))
+        (ratio) => setProgress(Math.round(ratio * 100)),
+        folder
       )
       onUploaded(result.url, result.publicId, result.width, result.height)
       setPreview(result.url)

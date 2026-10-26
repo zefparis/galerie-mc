@@ -7,7 +7,8 @@ import { Painting, PaintingCategory } from '@/lib/types'
 import { CATEGORIES, CATEGORY_SHORT } from '@/lib/catalog'
 
 interface Props {
-  onAdd: () => void
+  // La galerie de l'onglet actif est présélectionnée dans le formulaire.
+  onAdd: (category?: PaintingCategory) => void
   onEdit: (painting: Painting) => void
 }
 
@@ -151,7 +152,7 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
   return (
     <div>
       <button
-        onClick={onAdd}
+        onClick={() => onAdd(category === 'all' ? undefined : category)}
         className="btn-primary w-full text-lg mb-6"
       >
         + Ajouter une toile

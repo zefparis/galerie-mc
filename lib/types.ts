@@ -4,13 +4,16 @@ export type Technique =
   | 'Aquarelle'
   | 'Pastel'
   | 'Fusain'
+  | 'Crayon'
   | 'Technique mixte'
   | 'Collage'
   | 'Technique mixte sur papier'
   | 'Encre sur papier'
   | 'Autre'
 
-export type PaintingCategory = 'peintures' | 'collages'
+// 'dessins' a sa page dédiée (/dessins) ; 'peintures' et 'collages'
+// partagent la galerie /galerie.
+export type PaintingCategory = 'peintures' | 'collages' | 'dessins'
 
 export type PriceStatus = 'visible' | 'sur_demande' | 'vendu' | 'non_a_vendre'
 

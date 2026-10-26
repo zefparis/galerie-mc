@@ -87,9 +87,19 @@ const statements = [
   // Dimensions réelles de l'image (ratio affiché sans saut de mise en page)
   `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS image_width INTEGER`,
   `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS image_height INTEGER`,
-  // Deux galeries : peintures / collages. Toutes les œuvres existantes
-  // restent en 'peintures' grâce au DEFAULT.
+  // Trois galeries : peintures / collages / dessins. Toutes les œuvres
+  // existantes restent en 'peintures' grâce au DEFAULT.
   `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'peintures'`,
+  // Valeurs autorisées : la contrainte est ajoutée une seule fois
+  // (DO block — pas de ADD CONSTRAINT IF NOT EXISTS en SQL standard).
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'paintings_category_check') THEN
+      ALTER TABLE paintings ADD CONSTRAINT paintings_category_check
+        CHECK (category IN ('peintures','collages','dessins'));
+    END IF;
+  END $$`,
+  // Ordre d'affichage indépendant par galerie (même tri que le site).
+  `CREATE INDEX IF NOT EXISTS idx_paintings_category_order ON paintings (category, featured DESC, "order")`,
   // Traductions automatiques (en/es/de) : { en: {champ: texte}, ...,
   // _meta: { champ: { langue: { sourceHash, statut } } } }. Jamais de
   // contenu existant modifié — colonne vide au départ.

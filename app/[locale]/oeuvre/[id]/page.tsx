@@ -5,6 +5,7 @@ import { getPaintingById, getPaintings, getGallerySettings } from '@/lib/data'
 import { alternatesFor, OG_LOCALE } from '@/lib/seo'
 import { routing, type Locale } from '@/i18n/routing'
 import { localizePainting, techniqueLabel } from '@/lib/i18n'
+import { isCategory } from '@/lib/catalog'
 import PaintingDetail from '@/components/gallery/PaintingDetail'
 
 export const dynamic = 'force-dynamic'
@@ -61,13 +62,10 @@ export default async function OeuvrePage(props: Props) {
   ])
   if (!painting) notFound()
 
-  // Précédente/suivante dans la galerie affichée (?categorie=collages),
-  // sinon toute la galerie.
-  const cat = searchParams.categorie
-  const siblings =
-    cat === 'peintures' || cat === 'collages'
-      ? all.filter((p) => p.category === cat)
-      : all
+  // Précédente/suivante dans la galerie d'origine (?categorie=collages,
+  // ?categorie=dessins…), sinon toutes les œuvres.
+  const cat = isCategory(searchParams.categorie) ? searchParams.categorie : undefined
+  const siblings = cat ? all.filter((p) => p.category === cat) : all
   const index = siblings.findIndex((p) => p.id === painting.id)
   const prevId = index > 0 ? siblings[index - 1].id : undefined
   const nextId = index >= 0 && index < siblings.length - 1 ? siblings[index + 1].id : undefined
@@ -78,7 +76,7 @@ export default async function OeuvrePage(props: Props) {
       artistName={settings.artistName}
       prevId={prevId}
       nextId={nextId}
-      category={cat === 'peintures' || cat === 'collages' ? cat : undefined}
+      category={cat}
     />
   )
 }

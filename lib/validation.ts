@@ -158,7 +158,7 @@ export const paintingBodySchema = z
     imageHeight: z.number().int().positive().nullable().optional(),
     price: z.number().nonnegative().nullable().optional(),
     priceStatus: priceStatusSchema.optional().default('sur_demande'),
-    category: z.enum(['peintures', 'collages']).optional().default('peintures'),
+    category: z.enum(['peintures', 'collages', 'dessins']).optional().default('peintures'),
     featured: z.boolean().optional().default(false),
     order: z.number().int().optional().default(0),
     signature: z.string().max(200).optional().default(''),

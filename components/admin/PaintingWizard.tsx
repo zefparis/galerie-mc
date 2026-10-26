@@ -6,6 +6,7 @@ import { savePainting, updatePainting, getNextOrder, isSessionExpired, redirectT
 import { Painting, PaintingAnalysis, PaintingNotice, Technique, PriceStatus, PaintingCategory, Translations } from '@/lib/types'
 import { CATEGORIES, CATEGORY_LABEL, TECHNIQUES_BY_CATEGORY } from '@/lib/catalog'
 import CloudinaryUpload from './CloudinaryUpload'
+import { CLOUDINARY_DRAWINGS_FOLDER, CLOUDINARY_PAINTINGS_FOLDER } from '@/lib/cloudinary'
 import HelpTip from './HelpTip'
 import TranslationPanel from './TranslationPanel'
 import FormWithPreview from './PreviewShell'
@@ -54,6 +55,8 @@ interface Props {
     width?: number
     height?: number
   } | null
+  // Galerie présélectionnée en création (onglet actif de la liste).
+  defaultCategory?: PaintingCategory
   onDone: (message: string) => void
   onCancel: () => void
 }
@@ -82,20 +85,24 @@ interface Draft {
 export default function PaintingWizard({
   painting,
   initialPhoto,
+  defaultCategory,
   onDone,
   onCancel,
 }: Props) {
   const isEditing = !!painting
   const draftKey = `mc-draft-painting-${painting?.id || 'new'}`
+  const initialCategory: PaintingCategory =
+    painting?.category || defaultCategory || 'peintures'
 
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({
     title: painting?.title || '',
     year: painting?.year || new Date().getFullYear(),
-    technique: painting?.technique || ('Huile sur toile' as Technique),
+    technique: painting?.technique ||
+      (TECHNIQUES_BY_CATEGORY[initialCategory][0] as Technique),
     dimensions: painting?.dimensions || '',
     description: painting?.description || '',
-    category: painting?.category || ('peintures' as PaintingCategory),
+    category: initialCategory,
     imageUrl: painting?.imageUrl || initialPhoto?.url || '',
     imagePublicId: painting?.imagePublicId || initialPhoto?.publicId || '',
     imageWidth: painting?.imageWidth ?? initialPhoto?.width,
@@ -213,10 +220,10 @@ export default function PaintingWizard({
     setForm({
       title: '',
       year: new Date().getFullYear(),
-      technique: 'Huile sur toile',
+      technique: TECHNIQUES_BY_CATEGORY[initialCategory][0] as Technique,
       dimensions: '',
       description: '',
-      category: 'peintures' as PaintingCategory,
+      category: initialCategory,
       imageUrl: '',
       imagePublicId: '',
       imageWidth: undefined,
@@ -238,7 +245,7 @@ export default function PaintingWizard({
     setError('')
     setSaving(true)
     try {
-      const order = painting?.order || (await getNextOrder())
+      const order = painting?.order || (await getNextOrder(form.category))
       const noticePayload: PaintingNotice | null = willPublishText
         ? fieldsToNotice(analyseState)
         : null
@@ -385,6 +392,11 @@ export default function PaintingWizard({
           </p>
           <CloudinaryUpload
             currentUrl={form.imageUrl}
+            folder={
+              form.category === 'dessins'
+                ? CLOUDINARY_DRAWINGS_FOLDER
+                : CLOUDINARY_PAINTINGS_FOLDER
+            }
             onUploaded={(url, publicId, width, height) => setForm({ ...form, imageUrl: url, imagePublicId: publicId, imageWidth: width, imageHeight: height })}
             onLocalPreview={setLocalImage}
           />
@@ -402,7 +414,7 @@ export default function PaintingWizard({
           <div>
             <p className="label-field">
               Où voulez-vous la ranger ?
-              <HelpTip text="« Peintures contemporaines » pour vos toiles, « Collages sur papier » pour vos collages. Les visiteurs pourront choisir la galerie à voir." />
+              <HelpTip text="« Peintures contemporaines » pour vos toiles, « Collages sur papier » pour vos collages, « Dessins » pour vos dessins. Les visiteurs pourront choisir la galerie à voir." />
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Galerie de rangement">
               {CATEGORIES.map((c) => (
@@ -411,7 +423,17 @@ export default function PaintingWizard({
                   type="button"
                   role="radio"
                   aria-checked={form.category === c.value}
-                  onClick={() => setForm({ ...form, category: c.value })}
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      category: c.value,
+                      // Technique inconnue dans la nouvelle galerie → le
+                      // premier choix de sa liste (ex. « Fusain » en dessin).
+                      technique: TECHNIQUES_BY_CATEGORY[c.value].includes(form.technique)
+                        ? form.technique
+                        : TECHNIQUES_BY_CATEGORY[c.value][0],
+                    })
+                  }
                   className={`px-4 py-4 min-h-[56px] border rounded font-body text-base text-center transition-colors duration-200 ${
                     form.category === c.value
                       ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--ink)] font-medium'

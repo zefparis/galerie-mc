@@ -4,8 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { usePathname, useRouter } from '@/i18n/navigation'
-import { Painting } from '@/lib/types'
-import { CATEGORIES, isCategory } from '@/lib/catalog'
+import { Painting, PaintingCategory } from '@/lib/types'
+import {
+  CATEGORIES,
+  GALLERY_CATEGORIES,
+  filterGalleryPaintings,
+  isGalleryCategory,
+} from '@/lib/catalog'
 import { useTechniqueLabel } from '@/lib/i18n'
 import GalleryGrid from './GalleryGrid'
 
@@ -20,7 +25,15 @@ const isAvailable = (p: Painting) =>
 // un panneau — popover sur desktop, tiroir bas sur mobile — et les filtres
 // actifs apparaissent en pastilles retirables. L'état est dans l'URL
 // (?categorie=…&dispo=…&technique=…) : partageable et navigable.
-export default function GalleryClient({ paintings }: { paintings: Painting[] }) {
+export default function GalleryClient({
+  paintings,
+  fixedCategory,
+}: {
+  paintings: Painting[]
+  // Page dédiée à une seule galerie (/dessins) : la rangée de pilules est
+  // masquée et la catégorie est fixe — les filtres secondaires restent.
+  fixedCategory?: PaintingCategory
+}) {
   const t = useTranslations()
   const techLabel = useTechniqueLabel()
   const router = useRouter()
@@ -28,8 +41,11 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
   const searchParams = useSearchParams()
 
   const rawCat = searchParams.get('categorie') || 'toutes'
-  const category =
-    rawCat === 'toutes' || isCategory(rawCat) ? rawCat : ('toutes' as const)
+  const category = fixedCategory
+    ? fixedCategory
+    : rawCat === 'toutes' || isGalleryCategory(rawCat)
+      ? rawCat
+      : ('toutes' as const)
   // 'dispo' est le nom courant ; 'filtre' (anciens liens partagés) est lu aussi.
   const rawFilter = searchParams.get('dispo') || searchParams.get('filtre') || 'toutes'
   const filter: StatusValue = STATUS_VALUES.some((v) => v === rawFilter)
@@ -43,7 +59,7 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
       const c = next.categorie ?? category
       const f = next.dispo ?? filter
       const tech = next.technique ?? technique
-      if (c === 'toutes') params.delete('categorie')
+      if (fixedCategory || c === 'toutes') params.delete('categorie')
       else params.set('categorie', c)
       if (f === 'toutes') params.delete('dispo')
       else params.set('dispo', f)
@@ -53,12 +69,16 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
       const qs = params.toString()
       router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
     },
-    [category, filter, technique, pathname, router, searchParams]
+    [category, filter, technique, pathname, router, searchParams, fixedCategory]
   )
 
+  // Pilules de la galerie : jamais « dessins » (page dédiée /dessins).
   const categoryOptions = [
     { value: 'toutes', label: t('categories.toutes') },
-    ...CATEGORIES.map((c) => ({ value: c.value, label: t(`categories.${c.value}`) })),
+    ...CATEGORIES.filter((c) => GALLERY_CATEGORIES.includes(c.value)).map((c) => ({
+      value: c.value,
+      label: t(`categories.${c.value}`),
+    })),
   ]
   const FILTER_KEYS = { toutes: 'all', disponibles: 'available', vendues: 'sold' } as const
   const statusOptions = STATUS_VALUES.map((v) => ({
@@ -66,9 +86,10 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
     label: t(`filters.${FILTER_KEYS[v]}`),
   }))
 
-  // Les techniques proposées correspondent à la galerie affichée.
+  // Les techniques proposées correspondent à la galerie affichée —
+  // 'toutes' = peintures + collages, jamais les dessins.
   const inCategory = useMemo(
-    () => paintings.filter((p) => category === 'toutes' || p.category === category),
+    () => filterGalleryPaintings(paintings, category),
     [paintings, category]
   )
   const techniques = useMemo(
@@ -178,7 +199,13 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
     })
 
   const emptyKey =
-    category === 'collages' ? 'emptyCollages' : category === 'peintures' ? 'emptyPeintures' : 'emptyAll'
+    category === 'dessins'
+      ? 'emptyDessins'
+      : category === 'collages'
+        ? 'emptyCollages'
+        : category === 'peintures'
+          ? 'emptyPeintures'
+          : 'emptyAll'
 
   const nActive = (filter !== 'toutes' ? 1 : 0) + (technique ? 1 : 0)
 
@@ -188,30 +215,32 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
           une seule ligne sur desktop. Le compteur n'est JAMAIS dans la
           rangée qui défile. */}
       <div className="relative flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-        <nav
-          aria-label={t('filters.aria')}
-          onKeyDown={onPillKeys}
-          className={`pill-row md:flex-1 md:min-w-0 ${canLeft ? 'can-left' : ''} ${canRight ? 'can-right' : ''}`}
-        >
-          <ul
-            ref={rowRef}
-            className="flex items-center gap-2 md:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+        {!fixedCategory && (
+          <nav
+            aria-label={t('filters.aria')}
+            onKeyDown={onPillKeys}
+            className={`pill-row md:flex-1 md:min-w-0 ${canLeft ? 'can-left' : ''} ${canRight ? 'can-right' : ''}`}
           >
-            {categoryOptions.map((o) => (
-              <li key={o.value} className="shrink-0 snap-start">
-                <button
-                  type="button"
-                  ref={category === o.value ? activePillRef : undefined}
-                  className={`filter-pill ${category === o.value ? 'is-active' : ''}`}
-                  aria-pressed={category === o.value}
-                  onClick={() => setParams({ categorie: o.value, technique: '' })}
-                >
-                  {o.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
+            <ul
+              ref={rowRef}
+              className="flex items-center gap-2 md:gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+            >
+              {categoryOptions.map((o) => (
+                <li key={o.value} className="shrink-0 snap-start">
+                  <button
+                    type="button"
+                    ref={category === o.value ? activePillRef : undefined}
+                    className={`filter-pill ${category === o.value ? 'is-active' : ''}`}
+                    aria-pressed={category === o.value}
+                    onClick={() => setParams({ categorie: o.value, technique: '' })}
+                  >
+                    {o.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
 
         <div className="flex items-center justify-between gap-3 md:justify-end md:shrink-0">
           <p
@@ -351,7 +380,10 @@ export default function GalleryClient({ paintings }: { paintings: Painting[] }) 
             {t(`galerie.${emptyKey}`)}
           </p>
         ) : (
-          <GalleryGrid paintings={visible} category={category} />
+          <GalleryGrid
+            paintings={visible}
+            category={category === 'toutes' ? undefined : category}
+          />
         )}
       </div>
     </>

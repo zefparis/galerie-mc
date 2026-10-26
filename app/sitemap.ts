@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { getPaintings, getPublishedEvents } from '@/lib/data'
+import { getPaintings, getPublishedEvents, hasDrawings } from '@/lib/data'
 import { routing, type Locale } from '@/i18n/routing'
 
 const BASE = process.env.NEXT_PUBLIC_SITE_URL || 'https://scandellart.fr'
@@ -26,9 +26,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Contenus dynamiques — repli sur les seules pages fixes si la base
   // est injoignable pendant le build.
   try {
-    const [paintings, events] = await Promise.all([getPaintings(), getPublishedEvents()])
+    const [paintings, events, drawings] = await Promise.all([
+      getPaintings(),
+      getPublishedEvents(),
+      hasDrawings(),
+    ])
     return [
       ...staticEntries,
+      // /dessins répond 404 sans dessin — jamais dans le sitemap alors.
+      ...(drawings ? [entry('/dessins')] : []),
       ...paintings.map((p) => entry(`/oeuvre/${p.id}`)),
       ...events.map((e) => entry(`/expositions/${e.id}`)),
     ]

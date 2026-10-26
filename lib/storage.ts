@@ -157,10 +157,15 @@ export async function reorderPainting(id: string, direction: 'up' | 'down'): Pro
   await throwIfNotOk(res)
 }
 
-export async function getNextOrder(): Promise<number> {
+// Prochain rang dans la catégorie visée (ordres indépendants par galerie) :
+// une nouvelle œuvre arrive en fin de sa liste, pas en fin globale.
+export async function getNextOrder(category?: Painting['category']): Promise<number> {
   const paintings = await getPaintings()
-  if (paintings.length === 0) return 1
-  return Math.max(...paintings.map((p) => p.order)) + 1
+  const siblings = category
+    ? paintings.filter((p) => (p.category || 'peintures') === category)
+    : paintings
+  if (siblings.length === 0) return 1
+  return Math.max(...siblings.map((p) => p.order)) + 1
 }
 
 export async function isDemo(): Promise<boolean> {

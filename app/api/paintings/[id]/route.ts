@@ -133,8 +133,14 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
     let rows
     try {
       ;({ rows } = await pool.query(
+        // Changement de galerie : l'œuvre rejoint la FIN de sa nouvelle
+        // liste (ordre = max+1 de la catégorie cible) ; sinon l'ordre
+        // envoyé par le formulaire est conservé tel quel.
         `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
-         image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10, "order"=$11,
+         image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10,
+         "order"=CASE WHEN category IS DISTINCT FROM $14
+           THEN (SELECT COALESCE(MAX("order"), 0) + 1 FROM paintings WHERE category = $14)
+           ELSE $11 END,
          image_width=$12, image_height=$13, category=$14, translations=$15, signature=$16,
          notice=$17::jsonb, analysis=$18::jsonb,
          analysed_at=CASE WHEN $19::boolean THEN now() ELSE analysed_at END

@@ -2,7 +2,7 @@ import { getLocale, getTranslations } from 'next-intl/server'
 import NotFoundContent from '@/components/ui/NotFoundContent'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
-import { getGallerySettings } from '@/lib/data'
+import { getGallerySettings, hasDrawings } from '@/lib/data'
 import { localizeSettings } from '@/lib/i18n'
 import { routing, type Locale } from '@/i18n/routing'
 
@@ -16,9 +16,10 @@ export default async function NotFound() {
   const locale: Locale = routing.locales.includes(requestLocale as Locale)
     ? (requestLocale as Locale)
     : routing.defaultLocale
-  const [settings, td] = await Promise.all([
+  const [settings, td, drawings] = await Promise.all([
     getGallerySettings(),
     getTranslations({ locale, namespace: 'defaults' }),
+    hasDrawings(),
   ])
   const localized = localizeSettings(settings, locale, {
     bio: td('bio'),
@@ -26,11 +27,11 @@ export default async function NotFound() {
   })
   return (
     <>
-      <Navbar artistName={localized.artistName} locale={locale} />
+      <Navbar artistName={localized.artistName} locale={locale} hasDrawings={drawings} />
       <main className="flex-1">
         <NotFoundContent />
       </main>
-      <Footer settings={localized} locale={locale} />
+      <Footer settings={localized} locale={locale} hasDrawings={drawings} />
     </>
   )
 }

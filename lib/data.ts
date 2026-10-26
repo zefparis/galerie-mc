@@ -69,6 +69,23 @@ async function getPaintingByIdLegacy(id: string): Promise<Painting | null> {
   }
 }
 
+// Y a-t-il au moins un dessin ? Pilote l'onglet « Dessins » de la
+// navigation (masqué sinon) et la 404 de /dessins. Requête minimale —
+// appelée par le layout à chaque page.
+export async function hasDrawings(): Promise<boolean> {
+  try {
+    const { rows } = await pool.query(
+      `SELECT 1 FROM paintings WHERE category = 'dessins' LIMIT 1`
+    )
+    return rows.length > 0
+  } catch (err) {
+    // Colonne category absente (migration en retard) : pas de dessins.
+    if ((err as { code?: string })?.code === '42703') return false
+    console.error('[data] hasDrawings', err)
+    return false
+  }
+}
+
 export async function getPublishedEvents(): Promise<GalleryEvent[]> {
   try {
     const { rows } = await pool.query(

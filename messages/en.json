@@ -1,6 +1,7 @@
 {
   "nav": {
     "galerie": "Gallery",
+    "dessins": "Drawings",
     "expositions": "Exhibitions",
     "contact": "Contact",
     "homeAria": "Marie-Claire Scandella, home",
@@ -61,7 +62,14 @@
     "count": "{count, plural, =0 {No works} one {# work} other {# works}}",
     "emptyAll": "No works match this selection for now.",
     "emptyPeintures": "No paintings match this selection for now.",
-    "emptyCollages": "Collages are coming soon."
+    "emptyCollages": "Collages are coming soon.",
+    "emptyDessins": "No drawings match this selection for now."
+  },
+  "dessins": {
+    "eyebrow": "Works on paper",
+    "title": "Drawings",
+    "intro": "Original drawings — every work is one of a kind.",
+    "metaDesc": "Original drawings by Marie-Claire Scandella — works on paper."
   },
   "filters": {
     "aria": "Filter artworks",
@@ -80,6 +88,7 @@
   "categories": {
     "peintures": "Contemporary paintings",
     "collages": "Collages on paper",
+    "dessins": "Drawings",
     "toutes": "All"
   },
   "status": {
@@ -96,6 +105,7 @@
   },
   "detail": {
     "back": "← Gallery",
+    "backDessins": "← Drawings",
     "zoomHint": "Click to enlarge",
     "interest": "Register your interest",
     "interestSubject": "Interest in “{title}”",

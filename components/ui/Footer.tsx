@@ -7,14 +7,17 @@ import Logo from '@/components/ui/Logo'
 import InstallLink from '@/components/pwa/InstallLink'
 import InstagramLink from '@/components/ui/InstagramLink'
 import { GallerySettings } from '@/lib/types'
+import { navItems } from '@/lib/catalog'
 import type { Locale } from '@/i18n/routing'
 
 export default async function Footer({
   settings,
   locale,
+  hasDrawings = false,
 }: {
   settings: GallerySettings
   locale?: Locale
+  hasDrawings?: boolean
 }) {
   const t = await getTranslations('footer')
   const tn = await getTranslations('nav')
@@ -41,19 +44,19 @@ export default async function Footer({
             </p>
           </div>
 
-          {/* Navigation */}
+          {/* Navigation — même ordre et même visibilité que le header */}
           <nav aria-label={t('navigation')}>
             <p className="eyebrow mb-4">{t('navigation')}</p>
             <div className="flex flex-col gap-2">
-              <Link href="/galerie" className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors">
-                {tn('galerie')}
-              </Link>
-              <Link href="/expositions" className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors">
-                {tn('expositions')}
-              </Link>
-              <Link href="/contact" className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors">
-                {tn('contact')}
-              </Link>
+              {navItems(hasDrawings).map(({ href, key }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="font-body text-sm text-[var(--ink-soft)] hover:text-[var(--ink)] transition-colors"
+                >
+                  {tn(key)}
+                </Link>
+              ))}
             </div>
           </nav>
 
