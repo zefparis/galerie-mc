@@ -1,5 +1,5 @@
 import { normalizeInstagramUrl } from './instagram'
-import { isFrameId, DEFAULT_FRAME } from './frames'
+import { mapHeroFrameId, DEFAULT_FRAME } from './frames'
 import { GallerySettings, Painting, PaintingAnalysis, PaintingNotice, Translations } from './types'
 
 const SETTINGS_KEY = 'mc-gallery-settings-v1'
@@ -59,8 +59,8 @@ export function mergeSettings(
   if (merged.instagramUrl == null) {
     merged.instagramUrl = normalizeInstagramUrl(legacyInstagram)
   }
-  // Cadre inconnu en base (ancienne valeur, saisie manuelle) → défaut.
-  if (!isFrameId(merged.heroFrame)) merged.heroFrame = DEFAULT_FRAME
+  // Cadre inconnu ou de l'ancienne gamme en base → équivalent ou défaut.
+  merged.heroFrame = mapHeroFrameId(merged.heroFrame)
   if (translations !== undefined) merged.translations = translations
   return merged
 }

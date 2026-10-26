@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { savePainting, updatePainting, getNextOrder, isSessionExpired, redirectToLogin, type PaintingWritePayload } from '@/lib/storage'
 import { Painting, PaintingAnalysis, PaintingNotice, Technique, PriceStatus, PaintingCategory, Translations } from '@/lib/types'
 import { CATEGORIES, CATEGORY_LABEL, TECHNIQUES_BY_CATEGORY } from '@/lib/catalog'
-import { FRAME_IDS, FRAME_LABEL_FR, DEFAULT_FRAME, isFrameId, type FrameId } from '@/lib/frames'
+import { FRAME_ROWS, FRAME_LABEL_FR, DEFAULT_FRAME, isFrameId, type FrameId } from '@/lib/frames'
 import { FramePreview } from '@/components/frames/FramedArt'
 import CloudinaryUpload from './CloudinaryUpload'
 import { CLOUDINARY_DRAWINGS_FOLDER, CLOUDINARY_PAINTINGS_FOLDER } from '@/lib/cloudinary'
@@ -659,38 +659,40 @@ export default function PaintingWizard({
               >
                 Cadre général du site (actuellement : {FRAME_LABEL_FR[generalFrame]})
               </button>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {FRAME_IDS.map((id) => (
-                  <button
-                    key={id}
-                    type="button"
-                    role="radio"
-                    aria-checked={form.frame === id}
-                    onClick={() => setForm({ ...form, frame: id })}
-                    className={`p-3 border text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
-                      form.frame === id
-                        ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
-                        : 'border-[var(--line)] bg-[var(--surface)] hover:border-[var(--ink-soft)]'
-                    }`}
-                  >
-                    <FramePreview
-                      frame={id}
-                      imageUrl={localImage || form.imageUrl || undefined}
-                      alt={form.title || ''}
-                      w={form.imageWidth || 4}
-                      h={form.imageHeight || 5}
-                      height={80}
-                    />
-                    <span
-                      className={`block mt-2 font-body text-xs ${
-                        form.frame === id ? 'text-[var(--ink)] font-medium' : 'text-[var(--ink-soft)]'
+              {FRAME_ROWS.map((row, ri) => (
+                <div key={ri} className="grid grid-cols-3 gap-3">
+                  {row.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      role="radio"
+                      aria-checked={form.frame === id}
+                      onClick={() => setForm({ ...form, frame: id })}
+                      className={`p-3 border text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                        form.frame === id
+                          ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                          : 'border-[var(--line)] bg-[var(--surface)] hover:border-[var(--ink-soft)]'
                       }`}
                     >
-                      {FRAME_LABEL_FR[id]}
-                    </span>
-                  </button>
-                ))}
-              </div>
+                      <FramePreview
+                        frame={id}
+                        imageUrl={localImage || form.imageUrl || undefined}
+                        alt={form.title || ''}
+                        w={form.imageWidth || 4}
+                        h={form.imageHeight || 5}
+                        height={80}
+                      />
+                      <span
+                        className={`block mt-2 font-body text-xs ${
+                          form.frame === id ? 'text-[var(--ink)] font-medium' : 'text-[var(--ink-soft)]'
+                        }`}
+                      >
+                        {FRAME_LABEL_FR[id]}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ))}
             </div>
           </div>
         </div>

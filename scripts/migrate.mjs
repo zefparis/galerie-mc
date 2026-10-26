@@ -104,12 +104,47 @@ const statements = [
   // général des réglages. Identifiants de lib/frames.ts — ne jamais
   // retirer une valeur sans migration de données préalable.
   `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS frame TEXT`,
+  // Nouvelle gamme de cadres : l'ancienne contrainte est levée, les
+  // identifiants enregistrés sont convertis AVANT le nouveau CHECK.
+  `ALTER TABLE paintings DROP CONSTRAINT IF EXISTS paintings_frame_check`,
+  `UPDATE paintings SET frame = CASE frame
+      WHEN 'mat-black' THEN 'black-thin' WHEN 'floater' THEN 'black-medium'
+      WHEN 'oak' THEN 'wood-medium' WHEN 'walnut' THEN 'wood-wide'
+      WHEN 'white-gallery' THEN 'white-medium'
+      WHEN 'gold-baroque' THEN 'gold-classic' WHEN 'silver' THEN 'gold-classic'
+      WHEN 'none' THEN NULL
+      WHEN 'gold-classic' THEN 'gold-classic'
+      WHEN 'black-thin' THEN 'black-thin' WHEN 'black-medium' THEN 'black-medium'
+      WHEN 'black-wide' THEN 'black-wide'
+      WHEN 'wood-thin' THEN 'wood-thin' WHEN 'wood-medium' THEN 'wood-medium'
+      WHEN 'wood-wide' THEN 'wood-wide'
+      WHEN 'white-thin' THEN 'white-thin' WHEN 'white-medium' THEN 'white-medium'
+      WHEN 'white-wide' THEN 'white-wide'
+      ELSE NULL END
+    WHERE frame IS NOT NULL`,
+  `UPDATE settings SET data = jsonb_set(data, '{heroFrame}', to_jsonb(
+      CASE data->>'heroFrame'
+      WHEN 'mat-black' THEN 'black-thin' WHEN 'floater' THEN 'black-medium'
+      WHEN 'oak' THEN 'wood-medium' WHEN 'walnut' THEN 'wood-wide'
+      WHEN 'white-gallery' THEN 'white-medium'
+      WHEN 'gold-baroque' THEN 'gold-classic' WHEN 'silver' THEN 'gold-classic'
+      WHEN 'none' THEN 'gold-classic'
+      WHEN 'gold-classic' THEN 'gold-classic'
+      WHEN 'black-thin' THEN 'black-thin' WHEN 'black-medium' THEN 'black-medium'
+      WHEN 'black-wide' THEN 'black-wide'
+      WHEN 'wood-thin' THEN 'wood-thin' WHEN 'wood-medium' THEN 'wood-medium'
+      WHEN 'wood-wide' THEN 'wood-wide'
+      WHEN 'white-thin' THEN 'white-thin' WHEN 'white-medium' THEN 'white-medium'
+      WHEN 'white-wide' THEN 'white-wide'
+      ELSE 'gold-classic' END))
+    WHERE id = 1 AND data ? 'heroFrame'`,
   `DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'paintings_frame_check') THEN
       ALTER TABLE paintings ADD CONSTRAINT paintings_frame_check
         CHECK (frame IS NULL OR frame IN (
-          'gold-classic','gold-baroque','silver','black-thin','white-gallery',
-          'oak','walnut','floater','mat-black','none'
+          'gold-classic','black-thin','black-medium','black-wide',
+          'wood-thin','wood-medium','wood-wide',
+          'white-thin','white-medium','white-wide'
         ));
     END IF;
   END $$`,

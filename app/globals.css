@@ -808,144 +808,72 @@ html.dark,
   display: none;
 }
 
-/* Doré baroque : moulures larges, liseré intérieur et reflets marqués. */
-.fx-gold-baroque {
-  --fx-t: clamp(22px, calc(var(--art-mh) * 0.085), 48px);
+/* Épaisseurs partagées par les trois couleurs : ~2 %, ~4 %, ~7 % de la
+   largeur affichée de la toile (≈ largeur = hauteur × ratio courant),
+   bornées pour rester lisibles en mobile sans devenir énormes. */
+.fx-black-thin,
+.fx-wood-thin,
+.fx-white-thin {
+  --fx-t: clamp(4px, calc(var(--art-mh) * 0.016), 14px);
+}
+.fx-black-medium,
+.fx-wood-medium,
+.fx-white-medium {
+  --fx-t: clamp(9px, calc(var(--art-mh) * 0.032), 28px);
+}
+.fx-black-wide,
+.fx-wood-wide,
+.fx-white-wide {
+  --fx-t: clamp(16px, calc(var(--art-mh) * 0.056), 48px);
+}
+
+/* Noir mat : baguette plate sans brillance ; en thème sombre, un liseré
+   très fin sur l'arête extérieure détache le cadre du fond noir. */
+.fx-black-thin,
+.fx-black-medium,
+.fx-black-wide {
+  background: linear-gradient(180deg, #1b1c1e, #121315);
+  box-shadow:
+    var(--art-shadow),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(0, 0, 0, 0.55);
+}
+html.dark .fx-black-thin,
+html.dark .fx-black-medium,
+html.dark .fx-black-wide {
+  box-shadow:
+    var(--art-shadow),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+/* Bois naturel clair mat : teinte chaude douce, veinage très discret,
+   pas d'effet laqué ni de reflet marqué. */
+.fx-wood-thin,
+.fx-wood-medium,
+.fx-wood-wide {
   background:
     repeating-linear-gradient(
-      45deg,
-      rgba(255, 235, 180, 0.07) 0 6px,
-      rgba(0, 0, 0, 0) 6px 13px
+      90deg,
+      rgba(110, 72, 34, 0.07) 0 2px,
+      rgba(110, 72, 34, 0) 2px 9px
     ),
-    linear-gradient(135deg, #5f4217, #a8813d 26%, #e0bd70 44%, #8a6428 60%, #cfa95e 78%, #4e3610);
+    linear-gradient(180deg, #c9a877, #b89461);
   box-shadow:
     var(--art-shadow),
-    inset 0 0 0 calc(var(--fx-t) * 0.09) rgba(52, 35, 8, 0.6),
-    inset 0 0 calc(var(--fx-t) * 0.5) rgba(30, 20, 5, 0.45),
-    0 0 0 1px var(--art-hairline);
-}
-.fx-gold-baroque::before {
-  display: block;
-  inset: calc(var(--fx-t) * 0.58);
-  border: calc(var(--fx-t) * 0.15) solid #ecd28e;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.45),
-    inset 0 1px 2px rgba(255, 244, 210, 0.6);
+    inset 0 0 0 1px rgba(90, 60, 26, 0.35),
+    0 0 0 1px rgba(80, 52, 20, 0.35);
 }
 
-/* Argent patiné : dégradés froids et filet sombre intérieur. */
-.fx-silver {
-  --fx-t: clamp(15px, calc(var(--art-mh) * 0.055), 32px);
-  background: linear-gradient(140deg, #5f6268, #9ba0a8 30%, #dfe3e9 48%, #767b84 64%, #b0b6be 82%, #4c4f55);
+/* Blanc mat : blanc cassé posé, arête légèrement grisée. */
+.fx-white-thin,
+.fx-white-medium,
+.fx-white-wide {
+  background: linear-gradient(180deg, #f4f1ea, #e6e1d5);
   box-shadow:
     var(--art-shadow),
-    inset 0 0 0 calc(var(--fx-t) * 0.08) rgba(30, 32, 36, 0.5),
-    inset 0 0 calc(var(--fx-t) * 0.4) rgba(40, 43, 48, 0.3),
-    0 0 0 1px var(--art-hairline);
-}
-.fx-silver::before {
-  display: block;
-  inset: calc(var(--fx-t) * 0.6);
-  border: 1px solid rgba(240, 243, 248, 0.75);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-}
-
-/* Noir fin moderne : baguette minimale, liseré discret. */
-.fx-black-thin {
-  --fx-t: clamp(6px, calc(var(--art-mh) * 0.014), 10px);
-  background: linear-gradient(180deg, #1c1c1e, #0e0e10);
-  box-shadow:
-    var(--art-shadow),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
-    0 0 0 1px var(--art-hairline);
-}
-
-/* Blanc galerie : baguette claire mate, filet discret. */
-.fx-white-gallery {
-  --fx-t: clamp(16px, calc(var(--art-mh) * 0.06), 34px);
-  background: linear-gradient(180deg, #f7f5f0, #e7e4da);
-  box-shadow:
-    var(--art-shadow),
-    inset 0 0 0 1px rgba(0, 0, 0, 0.1),
-    inset 0 0 calc(var(--fx-t) * 0.6) rgba(0, 0, 0, 0.05),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
-}
-
-/* Chêne naturel : bois clair chaud, veinage léger. */
-.fx-oak {
-  --fx-t: clamp(15px, calc(var(--art-mh) * 0.055), 32px);
-  background:
-    repeating-linear-gradient(
-      92deg,
-      rgba(96, 58, 22, 0.12) 0 2px,
-      rgba(96, 58, 22, 0) 2px 8px
-    ),
-    linear-gradient(135deg, #9c6f3d, #c2935a 42%, #835a2e 68%, #b3874e);
-  box-shadow:
-    var(--art-shadow),
-    inset 0 0 0 1px rgba(70, 44, 16, 0.45),
-    inset 0 0 calc(var(--fx-t) * 0.45) rgba(80, 50, 18, 0.3),
-    0 0 0 1px var(--art-hairline);
-}
-
-/* Noyer foncé : bois sombre profond, veinage dense. */
-.fx-walnut {
-  --fx-t: clamp(15px, calc(var(--art-mh) * 0.055), 32px);
-  background:
-    repeating-linear-gradient(
-      88deg,
-      rgba(18, 9, 4, 0.22) 0 3px,
-      rgba(18, 9, 4, 0) 3px 10px
-    ),
-    linear-gradient(140deg, #33200f, #54351f 44%, #26150a 72%, #452b18);
-  box-shadow:
-    var(--art-shadow),
-    inset 0 0 0 1px rgba(12, 6, 2, 0.7),
-    inset 0 0 calc(var(--fx-t) * 0.5) rgba(0, 0, 0, 0.5),
-    0 0 0 1px var(--art-hairline);
-}
-
-/* Caisse américaine : baguette fine sombre, espace d'ombre entre la
-   toile et le cadre — la toile « flotte » dans le caisson. */
-.fx-floater {
-  --fx-t: clamp(5px, calc(var(--art-mh) * 0.012), 9px);
-  --fx-gap: clamp(12px, calc(var(--art-mh) * 0.045), 30px);
-  background: linear-gradient(180deg, #23272e, #14171c);
-  box-shadow: var(--art-shadow), 0 0 0 1px var(--art-hairline);
-}
-.fx-floater .fx-art {
-  box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(0, 0, 0, 0.4);
-}
-.fx-floater .fx-art::after {
-  box-shadow: none;
-}
-
-/* Passe-partout blanc + baguette fine noire. */
-.fx-mat-black {
-  --fx-t: clamp(5px, calc(var(--art-mh) * 0.012), 9px);
-  --fx-m: clamp(24px, calc(var(--art-mh) * 0.13), 76px);
-  background: linear-gradient(180deg, #191b1f, #0d0f12);
-  box-shadow: var(--art-shadow), 0 0 0 1px var(--art-hairline);
-}
-.fx-mat-black .fx-mat {
-  background: #faf8f3;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
-}
-
-/* Sans cadre : toile nue, simple ombre portée (le look .wall-art). */
-.fx-none {
-  --fx-t: 0px;
-  padding: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.fx-none .fx-art {
-  box-shadow: var(--art-shadow), 0 0 0 1px var(--art-hairline);
-}
-.fx-none .fx-art::after {
-  box-shadow: none;
+    inset 0 0 0 1px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.18);
 }
 
 /* Vignettes de choix de cadre (admin) : le cadre tient dans une boîte

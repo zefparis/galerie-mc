@@ -5,7 +5,7 @@ import { getPaintings, getSettings, DEFAULT_SETTINGS, isSessionExpired, readSave
 import { instagramInputValue, normalizeInstagramUrl } from '@/lib/instagram'
 import { GallerySettings, Painting } from '@/lib/types'
 import { photoCaptionKey } from '@/lib/translations-core'
-import { FRAME_IDS, FRAME_LABEL_FR, DEFAULT_FRAME, isFrameId } from '@/lib/frames'
+import { FRAME_ROWS, FRAME_LABEL_FR, DEFAULT_FRAME, isFrameId } from '@/lib/frames'
 import { FramePreview } from '@/components/frames/FramedArt'
 import CloudinaryUpload from './CloudinaryUpload'
 import HelpTip from './HelpTip'
@@ -433,44 +433,44 @@ export default function AdminSettings() {
               : 'Aperçu sur fond neutre — ajoutez une toile pour voir vos cadres sur une vraie œuvre.'}
           </p>
 
-          <div
-            role="radiogroup"
-            aria-label="Cadre du carrousel d'accueil"
-            className="grid grid-cols-2 sm:grid-cols-3 gap-3"
-          >
-            {FRAME_IDS.map((id) => {
-              const active = heroFrame === id
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  onClick={() => setSettings({ ...settings, heroFrame: id })}
-                  className={`p-3 border text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
-                    active
-                      ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
-                      : 'border-[var(--line)] bg-[var(--surface)] hover:border-[var(--ink-soft)]'
-                  }`}
-                >
-                  <FramePreview
-                    frame={id}
-                    imageUrl={samplePainting?.imageUrl}
-                    alt={samplePainting ? samplePainting.title : ''}
-                    w={samplePainting?.imageWidth || 4}
-                    h={samplePainting?.imageHeight || 5}
-                    height={96}
-                  />
-                  <span
-                    className={`block mt-2 font-body text-sm ${
-                      active ? 'text-[var(--ink)] font-medium' : 'text-[var(--ink-soft)]'
-                    }`}
-                  >
-                    {FRAME_LABEL_FR[id]}
-                  </span>
-                </button>
-              )
-            })}
+          <div role="radiogroup" aria-label="Cadre du carrousel d'accueil" className="space-y-3">
+            {FRAME_ROWS.map((row, ri) => (
+              <div key={ri} className="grid grid-cols-3 gap-3">
+                {row.map((id) => {
+                  const active = heroFrame === id
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => setSettings({ ...settings, heroFrame: id })}
+                      className={`p-3 border text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                        active
+                          ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                          : 'border-[var(--line)] bg-[var(--surface)] hover:border-[var(--ink-soft)]'
+                      }`}
+                    >
+                      <FramePreview
+                        frame={id}
+                        imageUrl={samplePainting?.imageUrl}
+                        alt={samplePainting ? samplePainting.title : ''}
+                        w={samplePainting?.imageWidth || 4}
+                        h={samplePainting?.imageHeight || 5}
+                        height={96}
+                      />
+                      <span
+                        className={`block mt-2 font-body text-sm ${
+                          active ? 'text-[var(--ink)] font-medium' : 'text-[var(--ink-soft)]'
+                        }`}
+                      >
+                        {FRAME_LABEL_FR[id]}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            ))}
           </div>
 
           {/* Aperçu agrandi du cadre choisi */}

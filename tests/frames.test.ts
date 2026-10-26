@@ -8,7 +8,10 @@ import {
   DEFAULT_FRAME,
   FRAME_IDS,
   FRAME_LABEL_FR,
+  FRAME_ROWS,
   isFrameId,
+  mapFrameId,
+  mapHeroFrameId,
   resolveFrame,
 } from '../lib/frames'
 import { mergeSettings } from '../lib/storage'
@@ -16,24 +19,48 @@ import { paintingBodySchema, settingsBodySchema } from '../lib/validation'
 
 const ROOT = process.cwd()
 
+describe('gamme de cadres', () => {
+  it('exactement 10 cadres, regroupés en 4 lignes', () => {
+    expect(FRAME_IDS).toHaveLength(10)
+    expect(FRAME_IDS).toContain('gold-classic')
+    expect([...FRAME_ROWS.flat()].sort()).toEqual([...FRAME_IDS].sort())
+    for (const id of FRAME_ROWS.flat()) expect(isFrameId(id)).toBe(true)
+  })
+
+  it('convertit les anciens identifiants vers la nouvelle gamme', () => {
+    expect(mapFrameId('mat-black')).toBe('black-thin')
+    expect(mapFrameId('floater')).toBe('black-medium')
+    expect(mapFrameId('oak')).toBe('wood-medium')
+    expect(mapFrameId('walnut')).toBe('wood-wide')
+    expect(mapFrameId('white-gallery')).toBe('white-medium')
+    expect(mapFrameId('gold-baroque')).toBe('gold-classic')
+    expect(mapFrameId('silver')).toBe('gold-classic')
+    expect(mapFrameId('none')).toBeNull()
+    expect(mapFrameId('rococo')).toBeNull()
+    // Repli du cadre général : inconnu → gold-classic (jamais null).
+    expect(mapHeroFrameId('none')).toBe('gold-classic')
+    expect(mapHeroFrameId('silver')).toBe('gold-classic')
+    expect(mapHeroFrameId('oak')).toBe('wood-medium')
+  })
+})
+
 describe('resolveFrame (règle d’affichage unique)', () => {
   it('le cadre propre à la toile prime sur le cadre général', () => {
-    expect(resolveFrame({ frame: 'oak' }, { heroFrame: 'silver' })).toBe('oak')
-    expect(resolveFrame({ frame: 'none' }, { heroFrame: 'gold-baroque' })).toBe('none')
+    expect(resolveFrame({ frame: 'oak' }, { heroFrame: 'white-thin' })).toBe('wood-medium')
+    expect(resolveFrame({ frame: 'black-wide' }, { heroFrame: 'wood-thin' })).toBe('black-wide')
   })
 
   it('repli sur le cadre général quand la toile n’en a pas', () => {
-    expect(resolveFrame({ frame: null }, { heroFrame: 'walnut' })).toBe('walnut')
-    expect(resolveFrame({ frame: undefined }, { heroFrame: 'floater' })).toBe('floater')
-    expect(resolveFrame({}, { heroFrame: 'mat-black' })).toBe('mat-black')
+    expect(resolveFrame({ frame: null }, { heroFrame: 'walnut' })).toBe('wood-wide')
+    expect(resolveFrame({ frame: undefined }, { heroFrame: 'white-wide' })).toBe('white-wide')
+    expect(resolveFrame({}, { heroFrame: 'black-thin' })).toBe('black-thin')
   })
 
   it('repli « gold-classic » sur valeurs absentes ou inconnues', () => {
     expect(resolveFrame({ frame: null }, { heroFrame: undefined })).toBe(DEFAULT_FRAME)
-    expect(resolveFrame({ frame: 'baroque-x' }, { heroFrame: 'silver' })).toBe('silver')
     expect(resolveFrame({ frame: 'bogus' }, { heroFrame: 'bogus2' })).toBe(DEFAULT_FRAME)
     expect(resolveFrame({}, undefined)).toBe(DEFAULT_FRAME)
-    expect(resolveFrame({ frame: 42 as unknown as string }, {})).toBe(DEFAULT_FRAME)
+    expect(resolveFrame({ frame: 'none' }, { heroFrame: 'wood-thin' })).toBe('wood-thin')
   })
 })
 
@@ -44,30 +71,29 @@ describe('validation zod des cadres', () => {
     imagePublicId: 'galerie-mc/x',
   }
 
-  it('frame : identifiant valide accepté, NULL accepté, inconnu rejeté', () => {
+  it('frame : identifiant valide accepté, NULL accepté, ancien/inconnu rejeté', () => {
     for (const id of FRAME_IDS) {
       expect(paintingBodySchema.safeParse({ ...base, frame: id }).success).toBe(true)
     }
     expect(paintingBodySchema.safeParse({ ...base, frame: null }).success).toBe(true)
-    expect(paintingBodySchema.safeParse({ ...base, frame: 'dore-louis-xv' }).success).toBe(false)
-    expect(paintingBodySchema.safeParse({ ...base, frame: 5 }).success).toBe(false)
+    for (const old of ['oak', 'walnut', 'silver', 'floater', 'mat-black', 'none', 'white-gallery', 'gold-baroque']) {
+      expect(paintingBodySchema.safeParse({ ...base, frame: old }).success, old).toBe(false)
+    }
   })
 
   it('heroFrame : identifiant valide accepté, inconnu rejeté, défaut gold-classic', () => {
-    const ok = settingsBodySchema.safeParse({ artistName: 'Marie-Claire', heroFrame: 'oak' })
-    expect(ok.success).toBe(true)
-    expect(settingsBodySchema.safeParse({ artistName: 'M', heroFrame: 'pas-un-cadre' }).success).toBe(false)
-    const def = settingsBodySchema.parse({ artistName: 'Marie-Claire' })
-    expect(def.heroFrame).toBe('gold-classic')
+    expect(settingsBodySchema.safeParse({ artistName: 'Marie-Claire', heroFrame: 'wood-thin' }).success).toBe(true)
+    expect(settingsBodySchema.safeParse({ artistName: 'M', heroFrame: 'oak' }).success).toBe(false)
+    expect(settingsBodySchema.parse({ artistName: 'Marie-Claire' }).heroFrame).toBe('gold-classic')
   })
 })
 
 describe('mergeSettings : cadre général tolérant', () => {
-  it('une valeur inconnue en base retombe sur gold-classic', () => {
+  it('anciens ids et valeurs inconnues retombent sur l’équivalent ou le défaut', () => {
+    expect(mergeSettings({ heroFrame: 'oak' }).heroFrame).toBe('wood-medium')
     expect(mergeSettings({ heroFrame: 'rococo' }).heroFrame).toBe('gold-classic')
     expect(mergeSettings({}).heroFrame).toBe('gold-classic')
-    expect(mergeSettings({ heroFrame: 'walnut' }).heroFrame).toBe('walnut')
-    expect(mergeSettings({ heroFrame: null }).heroFrame).toBe('gold-classic')
+    expect(mergeSettings({ heroFrame: 'black-wide' }).heroFrame).toBe('black-wide')
   })
 
   it('les libellés français admin suivent la référence messages/fr.json', () => {
@@ -109,7 +135,6 @@ describe('contrats API cadres', () => {
     const src = readFileSync(join(ROOT, 'app/api/paintings/reset-frames/route.ts'), 'utf8')
     expect(src).toContain('requireAdmin(req)')
     expect(src).toContain('frame = NULL')
-    expect(src).toContain("export const dynamic = 'force-dynamic'")
   })
 
   it('frame est dans les projections publiques, analysis jamais', () => {

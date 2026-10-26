@@ -2,7 +2,7 @@
 
 // Mappe une ligne snake_case PostgreSQL vers l'objet camelCase attendu par le frontend.
 import type { EventImage, PaintingNotice } from './types'
-import { isFrameId } from './frames'
+import { mapFrameId } from './frames'
 
 /** La notice publiée ne contient que 4 clés — tout le reste (notes
  *  privées, repère de prix) reste dans `analysis`, jamais sélectionné
@@ -47,8 +47,8 @@ export function mapPaintingRow(r: any) {
     createdAt: r.created_at,
     translations: r.translations || {},
     signature: typeof r.signature === 'string' && r.signature.trim() ? r.signature.trim() : undefined,
-    // NULL ou valeur inconnue → pas de cadre propre (le cadre général s'applique).
-    frame: isFrameId(r.frame) ? r.frame : null,
+    // NULL, ancien id ou valeur inconnue → équivalent actuel ou cadre général.
+    frame: mapFrameId(r.frame),
     notice: cleanNotice(r.notice),
   }
 }
