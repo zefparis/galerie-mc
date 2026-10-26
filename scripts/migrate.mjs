@@ -100,6 +100,19 @@ const statements = [
   END $$`,
   // Ordre d'affichage indépendant par galerie (même tri que le site).
   `CREATE INDEX IF NOT EXISTS idx_paintings_category_order ON paintings (category, featured DESC, "order")`,
+  // Cadre propre à la toile dans le carrousel d'accueil : NULL = le cadre
+  // général des réglages. Identifiants de lib/frames.ts — ne jamais
+  // retirer une valeur sans migration de données préalable.
+  `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS frame TEXT`,
+  `DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'paintings_frame_check') THEN
+      ALTER TABLE paintings ADD CONSTRAINT paintings_frame_check
+        CHECK (frame IS NULL OR frame IN (
+          'gold-classic','gold-baroque','silver','black-thin','white-gallery',
+          'oak','walnut','floater','mat-black','none'
+        ));
+    END IF;
+  END $$`,
   // Traductions automatiques (en/es/de) : { en: {champ: texte}, ...,
   // _meta: { champ: { langue: { sourceHash, statut } } } }. Jamais de
   // contenu existant modifié — colonne vide au départ.

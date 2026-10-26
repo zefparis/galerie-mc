@@ -1,4 +1,5 @@
 import { normalizeInstagramUrl } from './instagram'
+import { isFrameId, DEFAULT_FRAME } from './frames'
 import { GallerySettings, Painting, PaintingAnalysis, PaintingNotice, Translations } from './types'
 
 const SETTINGS_KEY = 'mc-gallery-settings-v1'
@@ -20,6 +21,7 @@ export const DEFAULT_SETTINGS: GallerySettings = {
   cloudinaryCloudName: '',
   cloudinaryUploadPreset: '',
   accentColor: '#B8935A',
+  heroFrame: DEFAULT_FRAME,
 }
 
 export function getSettings(): GallerySettings {
@@ -57,6 +59,8 @@ export function mergeSettings(
   if (merged.instagramUrl == null) {
     merged.instagramUrl = normalizeInstagramUrl(legacyInstagram)
   }
+  // Cadre inconnu en base (ancienne valeur, saisie manuelle) → défaut.
+  if (!isFrameId(merged.heroFrame)) merged.heroFrame = DEFAULT_FRAME
   if (translations !== undefined) merged.translations = translations
   return merged
 }

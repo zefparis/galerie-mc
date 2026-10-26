@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { savePainting, updatePainting, getNextOrder, isSessionExpired, redirectToLogin, type PaintingWritePayload } from '@/lib/storage'
 import { Painting, PaintingAnalysis, PaintingNotice, Technique, PriceStatus, PaintingCategory, Translations } from '@/lib/types'
 import { CATEGORIES, CATEGORY_LABEL, TECHNIQUES_BY_CATEGORY } from '@/lib/catalog'
+import { FRAME_IDS, FRAME_LABEL_FR, DEFAULT_FRAME, isFrameId, type FrameId } from '@/lib/frames'
+import { FramePreview } from '@/components/frames/FramedArt'
 import CloudinaryUpload from './CloudinaryUpload'
 import { CLOUDINARY_DRAWINGS_FOLDER, CLOUDINARY_PAINTINGS_FOLDER } from '@/lib/cloudinary'
 import HelpTip from './HelpTip'
@@ -78,6 +80,7 @@ interface Draft {
     priceStatus: PriceStatus
     featured: boolean
     signature: string
+    frame?: FrameId | null
   }
   analyse?: AnalyseFormState
 }
@@ -111,7 +114,18 @@ export default function PaintingWizard({
     priceStatus: painting?.priceStatus || ('sur_demande' as PriceStatus),
     featured: painting?.featured || false,
     signature: painting?.signature || '',
+    frame: painting?.frame ?? null,
   })
+  // Libellé du cadre général actuel — lu une fois côté réglages publics.
+  const [generalFrame, setGeneralFrame] = useState<FrameId>(DEFAULT_FRAME)
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => {
+        if (s && isFrameId(s.heroFrame)) setGeneralFrame(s.heroFrame)
+      })
+      .catch(() => {})
+  }, [])
   const [analyseState, setAnalyseState] = useState<AnalyseFormState>(() =>
     noticeToAnalyseState(painting?.notice, null)
   )
@@ -232,6 +246,7 @@ export default function PaintingWizard({
       priceStatus: 'sur_demande',
       featured: false,
       signature: '',
+      frame: null,
     })
     setAnalyseState(EMPTY_ANALYSE_STATE)
     setStep(1)
@@ -267,6 +282,7 @@ export default function PaintingWizard({
         priceStatus: form.priceStatus,
         featured: form.featured,
         signature: form.signature.trim() || undefined,
+        frame: form.frame ?? null,
         order,
         createdAt: painting?.createdAt || new Date().toISOString(),
         notice: noticePayload,
@@ -621,6 +637,62 @@ export default function PaintingWizard({
                 )}
               </ul>
             )}
+
+          {/* Cadre dans le carrousel : général du site par défaut, ou un
+              cadre propre à cette toile (toutes catégories confondues). */}
+          <div>
+            <p className="label-field">
+              Cadre dans le carrousel <span className="label-optional">— facultatif</span>
+              <HelpTip text="Si cette toile passe en grand sur la page d'accueil, vous pouvez lui donner un cadre différent du cadre général choisi dans « Ma présentation »." />
+            </p>
+            <div role="radiogroup" aria-label="Cadre dans le carrousel" className="space-y-3">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={form.frame == null}
+                onClick={() => setForm({ ...form, frame: null })}
+                className={`w-full px-4 py-3.5 min-h-[52px] border font-body text-base text-left transition-colors duration-200 ${
+                  form.frame == null
+                    ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--ink)] font-medium'
+                    : 'border-[var(--line)] bg-[var(--surface)] text-[var(--ink-soft)] hover:border-[var(--ink-soft)]'
+                }`}
+              >
+                Cadre général du site (actuellement : {FRAME_LABEL_FR[generalFrame]})
+              </button>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {FRAME_IDS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    role="radio"
+                    aria-checked={form.frame === id}
+                    onClick={() => setForm({ ...form, frame: id })}
+                    className={`p-3 border text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                      form.frame === id
+                        ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                        : 'border-[var(--line)] bg-[var(--surface)] hover:border-[var(--ink-soft)]'
+                    }`}
+                  >
+                    <FramePreview
+                      frame={id}
+                      imageUrl={localImage || form.imageUrl || undefined}
+                      alt={form.title || ''}
+                      w={form.imageWidth || 4}
+                      h={form.imageHeight || 5}
+                      height={80}
+                    />
+                    <span
+                      className={`block mt-2 font-body text-xs ${
+                        form.frame === id ? 'text-[var(--ink)] font-medium' : 'text-[var(--ink-soft)]'
+                      }`}
+                    >
+                      {FRAME_LABEL_FR[id]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

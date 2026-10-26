@@ -91,6 +91,24 @@
     "dessins": "Drawings",
     "toutes": "All"
   },
+  "frames": {
+    "gold-classic": "Classic gold",
+    "gold-baroque": "Baroque gold",
+    "silver": "Aged silver",
+    "black-thin": "Slim modern black",
+    "white-gallery": "Gallery white",
+    "oak": "Natural oak",
+    "walnut": "Dark walnut",
+    "floater": "Floater frame",
+    "mat-black": "White mat and slim black frame",
+    "none": "No frame",
+    "sectionTitle": "Homepage carousel frame",
+    "fieldLabel": "Carousel frame",
+    "generalOption": "Site-wide frame (currently: {label})",
+    "customCount": "{count, plural, =0 {No artwork uses a custom frame} one {# artwork uses a custom frame} other {# artworks use a custom frame}}",
+    "resetAll": "Reset all artworks to the site-wide frame",
+    "badge": "Custom frame"
+  },
   "status": {
     "visible": "Price shown",
     "sur_demande": "Price on request",

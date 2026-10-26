@@ -109,7 +109,11 @@ export default async function Home(props: Props) {
           {/* Œuvre mise en avant, « accrochée au mur » */}
           {featuredList.length > 0 && (
             <div className="hero-fade" style={{ animationDelay: '0.25s' }}>
-              <HeroArtwork paintings={featuredList} artistName={settings.artistName} />
+              <HeroArtwork
+                paintings={featuredList}
+                artistName={settings.artistName}
+                heroFrame={settings.heroFrame}
+              />
             </div>
           )}
         </div>

@@ -91,6 +91,24 @@
     "dessins": "Dessins",
     "toutes": "Tout"
   },
+  "frames": {
+    "gold-classic": "Doré classique",
+    "gold-baroque": "Doré baroque",
+    "silver": "Argent patiné",
+    "black-thin": "Noir fin moderne",
+    "white-gallery": "Blanc galerie",
+    "oak": "Chêne naturel",
+    "walnut": "Noyer foncé",
+    "floater": "Caisse américaine",
+    "mat-black": "Passe-partout blanc et baguette noire",
+    "none": "Sans cadre",
+    "sectionTitle": "Cadre du carrousel d'accueil",
+    "fieldLabel": "Cadre dans le carrousel",
+    "generalOption": "Cadre général du site (actuellement : {label})",
+    "customCount": "{count, plural, =0 {Aucune toile n'utilise de cadre personnalisé} one {# toile utilise un cadre personnalisé} other {# toiles utilisent un cadre personnalisé}}",
+    "resetAll": "Réinitialiser toutes les toiles au cadre général",
+    "badge": "Cadre personnalisé"
+  },
   "status": {
     "visible": "Prix affiché",
     "sur_demande": "Prix sur demande",

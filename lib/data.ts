@@ -11,7 +11,7 @@ import { DEFAULT_SETTINGS, mergeSettings } from './storage'
 // JAMAIS être lue ici, ni sérialisée vers les composants clients.
 const PAINTING_PUBLIC_COLS = `id, title, year, technique, dimensions, description, image_url,
   image_public_id, price, price_status, featured, "order", created_at,
-  image_width, image_height, category, signature, notice, translations`
+  image_width, image_height, category, signature, notice, translations, frame`
 
 export async function getPaintings(): Promise<Painting[]> {
   try {

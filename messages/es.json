@@ -91,6 +91,24 @@
     "dessins": "Dibujos",
     "toutes": "Todas"
   },
+  "frames": {
+    "gold-classic": "Dorado clásico",
+    "gold-baroque": "Dorado barroco",
+    "silver": "Plata envejecida",
+    "black-thin": "Negro fino moderno",
+    "white-gallery": "Blanco galería",
+    "oak": "Roble natural",
+    "walnut": "Nogal oscuro",
+    "floater": "Marco flotante",
+    "mat-black": "Passe-partout blanco y moldura negra",
+    "none": "Sin marco",
+    "sectionTitle": "Marco del carrusel de inicio",
+    "fieldLabel": "Marco en el carrusel",
+    "generalOption": "Marco general del sitio (actualmente: {label})",
+    "customCount": "{count, plural, =0 {Ninguna obra usa un marco personalizado} one {# obra usa un marco personalizado} other {# obras usan un marco personalizado}}",
+    "resetAll": "Restablecer todas las obras al marco general",
+    "badge": "Marco personalizado"
+  },
   "status": {
     "visible": "Precio indicado",
     "sur_demande": "Precio a consultar",

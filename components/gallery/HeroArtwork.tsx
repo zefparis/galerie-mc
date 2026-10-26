@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useTechniqueLabel } from '@/lib/i18n'
 import { Painting } from '@/lib/types'
+import { resolveFrame, type FrameId } from '@/lib/frames'
 import Lightbox from './Lightbox'
 import WallArtwork from './WallArtwork'
 
@@ -13,6 +14,8 @@ const SWIPE_MIN_PX = 45
 interface Props {
   paintings: Painting[]
   artistName: string
+  /** Cadre général des réglages — le cadre propre à la toile prime. */
+  heroFrame?: FrameId
 }
 
 // Carrousel du tableau en vedette : chaque œuvre est « accrochée au mur »
@@ -20,7 +23,7 @@ interface Props {
 // commune), cartel centré dessous, points de navigation centrés sous le
 // cartel. Fondu enchaîné 350 ms, pause au survol/focus, balayage tactile,
 // flèches du clavier, aria-live, clic/Entrée → lightbox existante.
-export default function HeroArtwork({ paintings, artistName }: Props) {
+export default function HeroArtwork({ paintings, artistName, heroFrame }: Props) {
   const t = useTranslations('hero')
   const techLabel = useTechniqueLabel()
   const [active, setActive] = useState(0)
@@ -149,6 +152,7 @@ export default function HeroArtwork({ paintings, artistName }: Props) {
                 loading={i === active || near ? 'eager' : 'lazy'}
                 cartel
                 framed
+                frame={resolveFrame(p, { heroFrame })}
                 onOpen={i === active ? () => setLightbox(true) : undefined}
                 openLabel={t('zoomAria', { title: p.title })}
                 focusable={i === active}

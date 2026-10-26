@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { getPaintings, deletePainting, reorderPainting, updatePainting, isSessionExpired, redirectToLogin } from '@/lib/storage'
 import { Painting, PaintingCategory } from '@/lib/types'
 import { CATEGORIES, CATEGORY_SHORT } from '@/lib/catalog'
+import { FRAME_LABEL_FR } from '@/lib/frames'
 
 interface Props {
   // La galerie de l'onglet actif est présélectionnée dans le formulaire.
@@ -384,6 +385,11 @@ export default function PaintingList({ onAdd, onEdit }: Props) {
                     <span className="inline-block mt-1 ml-1.5 font-body text-xs px-2 py-0.5 bg-[var(--bg)] border border-[var(--line)] text-[var(--ink-soft)]">
                       {CATEGORY_SHORT[painting.category || 'peintures']}
                     </span>
+                    {painting.frame && (
+                      <span className="inline-block mt-1 ml-1.5 font-body text-xs px-2 py-0.5 bg-[var(--accent-soft)] border border-[var(--accent)]/40 text-[var(--ink-soft)]">
+                        Cadre : {FRAME_LABEL_FR[painting.frame] || 'personnalisé'}
+                      </span>
+                    )}
                   </div>
 
                   {/* Actions */}

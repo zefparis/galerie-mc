@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 
 const PUBLIC_COLS = `id, title, year, technique, dimensions, description, image_url,
   image_public_id, price, price_status, featured, "order", created_at,
-  image_width, image_height, category, signature, notice, translations`
+  image_width, image_height, category, signature, notice, translations, frame`
 
 function sanitizeNoticeInput(n: PaintingNotice | null | undefined): PaintingNotice | null {
   if (!n) return null
@@ -128,6 +128,7 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       nextNotice ? JSON.stringify(nextNotice) : null,
       nextAnalysis ? JSON.stringify(nextAnalysis) : null,
       analysisUpdated,
+      b.frame ?? null,
       parsedId.data,
     ]
     let rows
@@ -143,8 +144,9 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
            ELSE $11 END,
          image_width=$12, image_height=$13, category=$14, translations=$15, signature=$16,
          notice=$17::jsonb, analysis=$18::jsonb,
-         analysed_at=CASE WHEN $19::boolean THEN now() ELSE analysed_at END
-         WHERE id=$20 RETURNING ${PUBLIC_COLS}`,
+         analysed_at=CASE WHEN $19::boolean THEN now() ELSE analysed_at END,
+         frame=$20
+         WHERE id=$21 RETURNING ${PUBLIC_COLS}`,
         valuesT
       ))
     } catch (err) {

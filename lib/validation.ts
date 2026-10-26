@@ -1,5 +1,9 @@
 import { z } from 'zod'
 import { normalizeInstagramUrl } from './instagram'
+import { FRAME_IDS } from './frames'
+
+// Identifiants de cadre du carrousel — liste unique de lib/frames.ts.
+const frameIdSchema = z.enum(FRAME_IDS)
 
 export const uuidSchema = z.string().uuid('Identifiant invalide')
 
@@ -162,6 +166,8 @@ export const paintingBodySchema = z
     featured: z.boolean().optional().default(false),
     order: z.number().int().optional().default(0),
     signature: z.string().max(200).optional().default(''),
+    // Cadre propre à la toile dans le carrousel — NULL = cadre général.
+    frame: frameIdSchema.nullable().optional(),
     createdAt: z.string().max(100).optional(),
     translations: translationsSchema,
     notice: noticeBodySchema.nullable().optional(),
@@ -290,6 +296,8 @@ export const settingsBodySchema = z.object({
     .optional()
     .default(''),
   photos: z.array(artistPhotoSchema).max(10, 'Dix photos maximum').optional().default([]),
+  // Cadre général du carrousel d'accueil — identifiant strict.
+  heroFrame: frameIdSchema.optional().default('gold-classic'),
   translations: translationsSchema,
 })
 

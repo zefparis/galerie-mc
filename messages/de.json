@@ -91,6 +91,24 @@
     "dessins": "Zeichnungen",
     "toutes": "Alle"
   },
+  "frames": {
+    "gold-classic": "Klassisch vergoldet",
+    "gold-baroque": "Barock vergoldet",
+    "silver": "Patiniertes Silber",
+    "black-thin": "Schmal modern schwarz",
+    "white-gallery": "Galerieweiß",
+    "oak": "Natur-Eiche",
+    "walnut": "Dunkler Nussbaum",
+    "floater": "Schattenfugenrahmen",
+    "mat-black": "Weißes Passepartout mit schmaler schwarzer Leiste",
+    "none": "Rahmenlos",
+    "sectionTitle": "Rahmen des Startseiten-Karussells",
+    "fieldLabel": "Rahmen im Karussell",
+    "generalOption": "Allgemeiner Rahmen der Website (aktuell: {label})",
+    "customCount": "{count, plural, =0 {Kein Werk verwendet einen eigenen Rahmen} one {# Werk verwendet einen eigenen Rahmen} other {# Werke verwenden einen eigenen Rahmen}}",
+    "resetAll": "Alle Werke auf den allgemeinen Rahmen zurücksetzen",
+    "badge": "Eigener Rahmen"
+  },
   "status": {
     "visible": "Preis angegeben",
     "sur_demande": "Preis auf Anfrage",

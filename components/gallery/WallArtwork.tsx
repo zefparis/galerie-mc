@@ -6,6 +6,8 @@ import { useLocale } from 'next-intl'
 import { Painting } from '@/lib/types'
 import { blurDataUrl, cloudinaryUrl } from '@/lib/images'
 import { formatDimensions, useTechniqueLabel, type Locale } from '@/lib/i18n'
+import FramedArt from '@/components/frames/FramedArt'
+import type { FrameId } from '@/lib/frames'
 
 interface Props {
   painting: Painting
@@ -21,8 +23,11 @@ interface Props {
   cartel?: boolean
   /** 'hero' : hauteur max min(68vh,560px) ; 'detail' : 80vh (fiche œuvre). */
   variant?: 'hero' | 'detail'
-  /** Entoure la toile du cadre doré (hero de l'accueil uniquement). */
+  /** Entoure la toile d'un cadre (hero de l'accueil uniquement). */
   framed?: boolean
+  /** Cadre appliqué quand framed — resolveFrame côté appelant,
+   *  'gold-classic' par défaut. */
+  frame?: FrameId
   /** Stratégie de chargement de l'image (carrousel : voisines en eager,
    *  les autres en lazy). */
   loading?: 'eager' | 'lazy'
@@ -47,6 +52,7 @@ export default function WallArtwork({
   cartel = false,
   variant = 'hero',
   framed = false,
+  frame = 'gold-classic',
   loading,
   unoptimized,
   titlePlaceholder,
@@ -60,9 +66,9 @@ export default function WallArtwork({
     p.imageWidth && p.imageHeight ? [p.imageWidth, p.imageHeight] : null
   )
 
-  // Cadre doré : la boîte extérieure (.gf) emporte l'ombre portée et
-  // l'épaisseur du cadre ; la toile interne (.gf-art) garde le ratio.
-  // Sans dimensions en base : repli 4/5, corrigé à la mesure de l'image.
+  // Cadre : la boîte extérieure (.gf / .fx) emporte l'ombre portée et
+  // l'épaisseur du cadre ; la toile interne garde le ratio. Sans
+  // dimensions en base : repli 4/5, corrigé à la mesure de l'image.
   if (framed) {
     const [w, h] = size ?? [4, 5]
     const measure = size
@@ -72,37 +78,21 @@ export default function WallArtwork({
           if (im.naturalWidth > 0) setSize([im.naturalWidth, im.naturalHeight])
         }
     const framedImg = (
-      <span
-        className="gf"
-        style={{
-          width: `min(100%, calc((var(--art-mh) - var(--gf-py)) * ${w} / ${h} + var(--gf-px)))`,
-        }}
-      >
-        <span className="wall-art gf-art" style={{ aspectRatio: `${w} / ${h}` }}>
-          <Image
-            src={cloudinaryUrl(p.imageUrl, 'f_auto,q_auto')}
-            alt={alt}
-            fill
-            sizes={sizes}
-            priority={priority}
-            unoptimized={unoptimized}
-            placeholder="blur"
-            blurDataURL={blurDataUrl(p.imageUrl)}
-            onLoad={measure}
-            loading={priority ? undefined : loading}
-            className="wall-art-img"
-          />
-        </span>
-        {/* Pièces du cadre : purement décoratives (maquette cadre-dore). */}
-        <i className="gf-i gf-et" aria-hidden="true" />
-        <i className="gf-i gf-eb" aria-hidden="true" />
-        <i className="gf-i gf-el" aria-hidden="true" />
-        <i className="gf-i gf-er" aria-hidden="true" />
-        <i className="gf-c gf-ctl" aria-hidden="true" />
-        <i className="gf-c gf-ctr" aria-hidden="true" />
-        <i className="gf-c gf-cbl" aria-hidden="true" />
-        <i className="gf-c gf-cbr" aria-hidden="true" />
-      </span>
+      <FramedArt frame={frame} w={w} h={h}>
+        <Image
+          src={cloudinaryUrl(p.imageUrl, 'f_auto,q_auto')}
+          alt={alt}
+          fill
+          sizes={sizes}
+          priority={priority}
+          unoptimized={unoptimized}
+          placeholder="blur"
+          blurDataURL={blurDataUrl(p.imageUrl)}
+          onLoad={measure}
+          loading={priority ? undefined : loading}
+          className="wall-art-img"
+        />
+      </FramedArt>
     )
     const framedArtwork = onOpen ? (
       <button

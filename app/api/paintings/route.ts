@@ -49,7 +49,7 @@ function sanitizeAnalysisInput(a: PaintingAnalysis | null | undefined): Painting
 // `analysis` n'est JAMAIS lue ni renvoyée par l'API.
 const PUBLIC_COLS = `id, title, year, technique, dimensions, description, image_url,
   image_public_id, price, price_status, featured, "order", created_at,
-  image_width, image_height, category, signature, notice, translations`
+  image_width, image_height, category, signature, notice, translations, frame`
 
 export async function GET() {
   try {
@@ -102,6 +102,7 @@ export async function POST(req: NextRequest) {
       b.signature,
       cleanNotice ? JSON.stringify(cleanNotice) : null,
       cleanAnalysis ? JSON.stringify(cleanAnalysis) : null,
+      b.frame ?? null,
     ]
     try {
       // Une seule requête atomique : la toile, la notice (si cochée) et
@@ -112,12 +113,12 @@ export async function POST(req: NextRequest) {
           id, title, year, technique, dimensions, description, image_url,
           image_public_id, price, price_status, featured, "order",
           image_width, image_height, category, translations, signature,
-          notice, analysis, analysed_at
+          notice, analysis, analysed_at, frame
         )
          VALUES (
           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,
           $18::jsonb, $19::jsonb,
-          CASE WHEN $19::jsonb IS NOT NULL THEN now() ELSE NULL END
+          CASE WHEN $19::jsonb IS NOT NULL THEN now() ELSE NULL END, $20
          )
          RETURNING ${PUBLIC_COLS}`,
         values

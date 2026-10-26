@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { getSettings, DEFAULT_SETTINGS, isSessionExpired, readSaveError } from '@/lib/storage'
+import { getPaintings, getSettings, DEFAULT_SETTINGS, isSessionExpired, readSaveError, redirectToLogin } from '@/lib/storage'
 import { instagramInputValue, normalizeInstagramUrl } from '@/lib/instagram'
-import { GallerySettings } from '@/lib/types'
+import { GallerySettings, Painting } from '@/lib/types'
 import { photoCaptionKey } from '@/lib/translations-core'
+import { FRAME_IDS, FRAME_LABEL_FR, DEFAULT_FRAME, isFrameId } from '@/lib/frames'
+import { FramePreview } from '@/components/frames/FramedArt'
 import CloudinaryUpload from './CloudinaryUpload'
 import HelpTip from './HelpTip'
 import TranslationPanel from './TranslationPanel'
@@ -29,7 +31,16 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false)
   const [draftFound, setDraftFound] = useState(false)
   const [deletePhotoIndex, setDeletePhotoIndex] = useState<number | null>(null)
+  // Toiles en ligne : la première toile du carrousel sert de modèle aux
+  // vignettes de cadre ; le compteur sert à la réinitialisation globale.
+  const [catalogue, setCatalogue] = useState<Painting[]>([])
+  const [resetConfirm, setResetConfirm] = useState(false)
+  const [resetBusy, setResetBusy] = useState(false)
   const restored = useRef(false)
+
+  useEffect(() => {
+    getPaintings().then(setCatalogue).catch(() => {})
+  }, [])
 
   // Chargement : API (source de vérité), complétée par les anciennes valeurs
   // locales si elles n'ont jamais été envoyées en base — rien n'est perdu.
@@ -105,6 +116,38 @@ export default function AdminSettings() {
   }
 
   const photos = settings.photos || []
+
+  // Vignette de référence : la première toile du carrousel (featured en
+  // tête d'ordre), sinon fond neutre quand le catalogue est vide.
+  const samplePainting =
+    catalogue.find((p) => p.featured) || catalogue[0] || null
+  const heroFrame = isFrameId(settings.heroFrame) ? settings.heroFrame : DEFAULT_FRAME
+  const customFrameCount = catalogue.filter((p) => !!p.frame).length
+
+  const handleResetFrames = async () => {
+    if (resetBusy) return
+    setResetBusy(true)
+    setError('')
+    try {
+      const res = await fetch('/api/paintings/reset-frames', { method: 'POST' })
+      if (!res.ok) {
+        setError(await readSaveError(res))
+        return
+      }
+      setCatalogue((prev) => prev.map((p) => ({ ...p, frame: null })))
+      setResetConfirm(false)
+      setMessage('Toutes vos toiles utilisent maintenant le cadre général ✓')
+      setTimeout(() => setMessage(''), 5000)
+    } catch (err) {
+      if (isSessionExpired(err)) {
+        redirectToLogin()
+        return
+      }
+      setError('La réinitialisation a échoué — rien n\u2019a été perdu, réessayez.')
+    } finally {
+      setResetBusy(false)
+    }
+  }
 
   const handleSave = async () => {
     setError('')
@@ -376,6 +419,126 @@ export default function AdminSettings() {
             className="input-field"
             placeholder="@votre_compte"
           />
+        </div>
+
+        {/* ── Cadre du carrousel d'accueil ── */}
+        <div className="border-t border-[var(--line)] pt-6">
+          <h3 className="font-body text-lg font-medium text-[var(--ink)] mb-1">
+            Cadre du carrousel d&apos;accueil
+            <HelpTip text="L'encadrement des toiles affichées en grand sur votre page d'accueil. Vous pouvez aussi choisir un cadre différent pour une toile précise, dans sa fiche." />
+          </h3>
+          <p className="font-body text-sm text-[var(--ink-soft)] mb-5">
+            {samplePainting
+              ? `Aperçu sur « ${samplePainting.title} » — la première toile de votre carrousel.`
+              : 'Aperçu sur fond neutre — ajoutez une toile pour voir vos cadres sur une vraie œuvre.'}
+          </p>
+
+          <div
+            role="radiogroup"
+            aria-label="Cadre du carrousel d'accueil"
+            className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+          >
+            {FRAME_IDS.map((id) => {
+              const active = heroFrame === id
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setSettings({ ...settings, heroFrame: id })}
+                  className={`p-3 border text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                    active
+                      ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                      : 'border-[var(--line)] bg-[var(--surface)] hover:border-[var(--ink-soft)]'
+                  }`}
+                >
+                  <FramePreview
+                    frame={id}
+                    imageUrl={samplePainting?.imageUrl}
+                    alt={samplePainting ? samplePainting.title : ''}
+                    w={samplePainting?.imageWidth || 4}
+                    h={samplePainting?.imageHeight || 5}
+                    height={96}
+                  />
+                  <span
+                    className={`block mt-2 font-body text-sm ${
+                      active ? 'text-[var(--ink)] font-medium' : 'text-[var(--ink-soft)]'
+                    }`}
+                  >
+                    {FRAME_LABEL_FR[id]}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Aperçu agrandi du cadre choisi */}
+          <div className="mt-5 border border-[var(--line)] bg-[var(--surface)] p-4">
+            <FramePreview
+              frame={heroFrame}
+              imageUrl={samplePainting?.imageUrl}
+              alt={samplePainting ? samplePainting.title : ''}
+              w={samplePainting?.imageWidth || 4}
+              h={samplePainting?.imageHeight || 5}
+              height={220}
+            />
+            <p className="mt-3 text-center font-body text-sm text-[var(--ink-soft)]">
+              {FRAME_LABEL_FR[heroFrame]}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || loadError}
+            className="btn-primary w-full mt-4 text-base disabled:opacity-50"
+          >
+            {saving ? 'Enregistrement...' : '✓ Enregistrer'}
+          </button>
+
+          {/* Cadres personnalisés par toile */}
+          <div className="mt-5 pt-4 border-t border-[var(--line)]">
+            <p className="font-body text-sm text-[var(--ink-soft)]">
+              {customFrameCount === 0
+                ? "Aucune toile n'utilise de cadre personnalisé."
+                : `${customFrameCount} toile${customFrameCount > 1 ? 's' : ''} utilise${customFrameCount > 1 ? 'nt' : ''} un cadre personnalisé.`}
+            </p>
+            {customFrameCount > 0 && !resetConfirm && (
+              <button
+                type="button"
+                onClick={() => setResetConfirm(true)}
+                className="btn-secondary w-full mt-3 text-sm"
+              >
+                Réinitialiser toutes les toiles au cadre général
+              </button>
+            )}
+            {resetConfirm && (
+              <div className="mt-3 p-4 border border-[var(--accent)] bg-[var(--accent-soft)]" role="alertdialog" aria-label="Confirmer la réinitialisation des cadres">
+                <p className="font-body text-base text-[var(--ink)]">
+                  Les {customFrameCount} toile{customFrameCount > 1 ? 's' : ''} avec
+                  cadre personnalisé repasseront au cadre général ?
+                </p>
+                <div className="flex flex-col gap-2 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => setResetConfirm(false)}
+                    autoFocus
+                    className="btn-secondary w-full text-sm"
+                  >
+                    Annuler — garder les cadres personnalisés
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResetFrames}
+                    disabled={resetBusy}
+                    className="btn-accent w-full text-sm disabled:opacity-50"
+                  >
+                    {resetBusy ? 'Réinitialisation...' : '✓ Oui, tout réinitialiser'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── Traductions ── */}

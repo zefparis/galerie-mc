@@ -1,3 +1,5 @@
+import type { FrameId } from './frames'
+
 export type Technique =
   | 'Huile sur toile'
   | 'Acrylique'
@@ -73,6 +75,9 @@ export interface Painting {
   featured: boolean
   order: number
   createdAt: string
+  // Cadre propre à la toile dans le carrousel d'accueil — NULL/absent =
+  // le cadre général des réglages (resolveFrame dans lib/frames.ts).
+  frame?: FrameId | null
   translations?: Translations
   // Renseigné côté public quand le titre affiché est traduit (pour montrer
   // l'original français en petit sur la fiche œuvre).
@@ -112,6 +117,8 @@ export interface GallerySettings {
   cloudinaryCloudName?: string
   cloudinaryUploadPreset?: string
   accentColor?: string
+  // Cadre général du carrousel d'accueil — 'gold-classic' par défaut.
+  heroFrame?: FrameId
 }
 
 export interface GalleryData {
