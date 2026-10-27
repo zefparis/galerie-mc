@@ -102,6 +102,7 @@
     "white-thin": "Weiß — schmal",
     "white-medium": "Weiß — mittel",
     "white-wide": "Weiß — breit",
+    "none": "Rahmenlos",
     "sectionTitle": "Rahmen des Startseiten-Karussells",
     "fieldLabel": "Rahmen im Karussell",
     "generalOption": "Allgemeiner Rahmen der Website (aktuell: {label})",

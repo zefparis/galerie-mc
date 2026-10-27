@@ -102,6 +102,7 @@
     "white-thin": "Blanc — fin",
     "white-medium": "Blanc — moyen",
     "white-wide": "Blanc — large",
+    "none": "Sans cadre",
     "sectionTitle": "Cadre du carrousel d'accueil",
     "fieldLabel": "Cadre dans le carrousel",
     "generalOption": "Cadre général du site (actuellement : {label})",

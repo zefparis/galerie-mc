@@ -14,6 +14,7 @@ export const FRAME_IDS = [
   'white-thin',
   'white-medium',
   'white-wide',
+  'none',
 ] as const
 
 export type FrameId = (typeof FRAME_IDS)[number]
@@ -25,9 +26,9 @@ export function isFrameId(v: unknown): v is FrameId {
 }
 
 // Cadres de la première gamme, retirés : conversion vers la nouvelle —
-// identique à la migration SQL de scripts/migrate.mjs. 'none' et toute
-// valeur inconnue → null (une toile revient au cadre général ; le cadre
-// général retombe lui-même sur 'gold-classic').
+// identique à la migration SQL de scripts/migrate.mjs. Toute valeur
+// inconnue → null (une toile revient au cadre général ; le cadre général
+// retombe lui-même sur 'gold-classic').
 export const LEGACY_FRAME_MAP: Record<string, FrameId | null> = {
   'mat-black': 'black-thin',
   floater: 'black-medium',
@@ -36,7 +37,6 @@ export const LEGACY_FRAME_MAP: Record<string, FrameId | null> = {
   'white-gallery': 'white-medium',
   'gold-baroque': 'gold-classic',
   silver: 'gold-classic',
-  none: null,
 }
 
 /** Ramène un identifiant enregistré (nouvelle ou ancienne gamme) vers un
@@ -52,12 +52,14 @@ export function mapHeroFrameId(v: unknown): FrameId {
   return mapFrameId(v) ?? DEFAULT_FRAME
 }
 
-// Vignettes admin organisées en lignes : Noir · Bois naturel · Blanc · Doré.
+// Vignettes admin organisées en lignes : Noir · Bois naturel · Blanc ·
+// Doré · Sans cadre.
 export const FRAME_ROWS: FrameId[][] = [
   ['black-thin', 'black-medium', 'black-wide'],
   ['wood-thin', 'wood-medium', 'wood-wide'],
   ['white-thin', 'white-medium', 'white-wide'],
   ['gold-classic'],
+  ['none'],
 ]
 
 // Libellés français — utilisés par l'admin (l'admin n'est pas localisé ;
@@ -73,6 +75,7 @@ export const FRAME_LABEL_FR: Record<FrameId, string> = {
   'white-thin': 'Blanc — fin',
   'white-medium': 'Blanc — moyen',
   'white-wide': 'Blanc — large',
+  none: 'Sans cadre',
 }
 
 // Règle d'affichage unique : le cadre propre à la toile prime, sinon le

@@ -102,6 +102,7 @@
     "white-thin": "White — slim",
     "white-medium": "White — medium",
     "white-wide": "White — wide",
+    "none": "No frame",
     "sectionTitle": "Homepage carousel frame",
     "fieldLabel": "Carousel frame",
     "generalOption": "Site-wide frame (currently: {label})",

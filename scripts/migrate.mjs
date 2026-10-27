@@ -112,7 +112,7 @@ const statements = [
       WHEN 'oak' THEN 'wood-medium' WHEN 'walnut' THEN 'wood-wide'
       WHEN 'white-gallery' THEN 'white-medium'
       WHEN 'gold-baroque' THEN 'gold-classic' WHEN 'silver' THEN 'gold-classic'
-      WHEN 'none' THEN NULL
+      WHEN 'none' THEN 'none'
       WHEN 'gold-classic' THEN 'gold-classic'
       WHEN 'black-thin' THEN 'black-thin' WHEN 'black-medium' THEN 'black-medium'
       WHEN 'black-wide' THEN 'black-wide'
@@ -128,7 +128,7 @@ const statements = [
       WHEN 'oak' THEN 'wood-medium' WHEN 'walnut' THEN 'wood-wide'
       WHEN 'white-gallery' THEN 'white-medium'
       WHEN 'gold-baroque' THEN 'gold-classic' WHEN 'silver' THEN 'gold-classic'
-      WHEN 'none' THEN 'gold-classic'
+      WHEN 'none' THEN 'none'
       WHEN 'gold-classic' THEN 'gold-classic'
       WHEN 'black-thin' THEN 'black-thin' WHEN 'black-medium' THEN 'black-medium'
       WHEN 'black-wide' THEN 'black-wide'
@@ -144,7 +144,7 @@ const statements = [
         CHECK (frame IS NULL OR frame IN (
           'gold-classic','black-thin','black-medium','black-wide',
           'wood-thin','wood-medium','wood-wide',
-          'white-thin','white-medium','white-wide'
+          'white-thin','white-medium','white-wide','none'
         ));
     END IF;
   END $$`,

@@ -876,6 +876,21 @@ html.dark .fx-black-wide {
     0 0 0 1px rgba(0, 0, 0, 0.18);
 }
 
+/* Sans cadre : toile nue, simple ombre portée (identique aux cadres)
+   pour la détacher du fond — même zone d'affichage stable. */
+.fx-none {
+  --fx-t: 0px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.fx-none .fx-art {
+  box-shadow: var(--art-shadow), 0 0 0 1px var(--art-hairline);
+}
+.fx-none .fx-art::after {
+  box-shadow: none;
+}
+
 /* Vignettes de choix de cadre (admin) : le cadre tient dans une boîte
    dont la hauteur est fixée en ligne via --art-mh. */
 .frame-preview-box {

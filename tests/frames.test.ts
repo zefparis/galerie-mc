@@ -20,9 +20,12 @@ import { paintingBodySchema, settingsBodySchema } from '../lib/validation'
 const ROOT = process.cwd()
 
 describe('gamme de cadres', () => {
-  it('exactement 10 cadres, regroupés en 4 lignes', () => {
-    expect(FRAME_IDS).toHaveLength(10)
+  it('exactement 11 cadres, regroupés en 5 lignes', () => {
+    expect(FRAME_IDS).toHaveLength(11)
     expect(FRAME_IDS).toContain('gold-classic')
+    expect(FRAME_IDS).toContain('none')
+    expect(FRAME_ROWS).toHaveLength(5)
+    expect(FRAME_ROWS[4]).toEqual(['none'])
     expect([...FRAME_ROWS.flat()].sort()).toEqual([...FRAME_IDS].sort())
     for (const id of FRAME_ROWS.flat()) expect(isFrameId(id)).toBe(true)
   })
@@ -35,10 +38,11 @@ describe('gamme de cadres', () => {
     expect(mapFrameId('white-gallery')).toBe('white-medium')
     expect(mapFrameId('gold-baroque')).toBe('gold-classic')
     expect(mapFrameId('silver')).toBe('gold-classic')
-    expect(mapFrameId('none')).toBeNull()
     expect(mapFrameId('rococo')).toBeNull()
+    // 'none' est un cadre valide : conservé tel quel partout.
+    expect(mapFrameId('none')).toBe('none')
+    expect(mapHeroFrameId('none')).toBe('none')
     // Repli du cadre général : inconnu → gold-classic (jamais null).
-    expect(mapHeroFrameId('none')).toBe('gold-classic')
     expect(mapHeroFrameId('silver')).toBe('gold-classic')
     expect(mapHeroFrameId('oak')).toBe('wood-medium')
   })
@@ -60,7 +64,7 @@ describe('resolveFrame (règle d’affichage unique)', () => {
     expect(resolveFrame({ frame: null }, { heroFrame: undefined })).toBe(DEFAULT_FRAME)
     expect(resolveFrame({ frame: 'bogus' }, { heroFrame: 'bogus2' })).toBe(DEFAULT_FRAME)
     expect(resolveFrame({}, undefined)).toBe(DEFAULT_FRAME)
-    expect(resolveFrame({ frame: 'none' }, { heroFrame: 'wood-thin' })).toBe('wood-thin')
+    expect(resolveFrame({ frame: 'none' }, { heroFrame: 'wood-thin' })).toBe('none')
   })
 })
 
@@ -76,7 +80,7 @@ describe('validation zod des cadres', () => {
       expect(paintingBodySchema.safeParse({ ...base, frame: id }).success).toBe(true)
     }
     expect(paintingBodySchema.safeParse({ ...base, frame: null }).success).toBe(true)
-    for (const old of ['oak', 'walnut', 'silver', 'floater', 'mat-black', 'none', 'white-gallery', 'gold-baroque']) {
+    for (const old of ['oak', 'walnut', 'silver', 'floater', 'mat-black', 'white-gallery', 'gold-baroque']) {
       expect(paintingBodySchema.safeParse({ ...base, frame: old }).success, old).toBe(false)
     }
   })
@@ -116,6 +120,17 @@ describe('rendu des cadres (FramedArt)', () => {
     expect(html).toContain('gf-art')
     expect(html).toContain('gf-ctl')
     expect(html).toContain('gf-cbr')
+  })
+
+  it('« Sans cadre » rend la toile nue : pas de baguette, ombre conservée', () => {
+    const html = renderToStaticMarkup(
+      createElement(FramedArt, { frame: 'none', w: 4, h: 5, children: img })
+    )
+    expect(html).toContain('fx fx-none')
+    const css = readFileSync(join(ROOT, 'app/globals.css'), 'utf8')
+    expect(css).toContain('.fx-none')
+    expect(css).toMatch(/\.fx-none\s*\{[^}]*--fx-t:\s*0px/)
+    expect(css).toMatch(/\.fx-none \.fx-art\s*\{[^}]*box-shadow:\s*var\(--art-shadow\)/)
   })
 
   it('chaque cadre CSS rend sa variante .fx-* avec mat + art', () => {

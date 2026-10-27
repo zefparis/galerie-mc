@@ -102,6 +102,7 @@
     "white-thin": "Blanco — fino",
     "white-medium": "Blanco — medio",
     "white-wide": "Blanco — ancho",
+    "none": "Sin marco",
     "sectionTitle": "Marco del carrusel de inicio",
     "fieldLabel": "Marco en el carrusel",
     "generalOption": "Marco general del sitio (actualmente: {label})",
