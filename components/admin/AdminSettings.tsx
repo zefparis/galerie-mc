@@ -312,7 +312,7 @@ export default function AdminSettings() {
         <div>
           <label htmlFor="st-process" className="label-field">
             Ma démarche picturale <span className="label-optional">(facultatif)</span>
-            <HelpTip text="Parlez de votre façon de peindre, de ce qui vous inspire, de ce que vous cherchez sur la toile. Passez à la ligne pour commencer un nouveau paragraphe. La première phrase s'affichera en italique sur votre site." />
+            <HelpTip text="Passez à la ligne pour commencer un nouveau paragraphe." />
           </label>
           <textarea
             id="st-process"

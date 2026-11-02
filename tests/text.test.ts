@@ -3,7 +3,6 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import ProcessText from '../components/gallery/ProcessText'
 import {
-  NARROW_NBSP,
   displayParagraphs,
   frenchTypography,
   toParagraphs,
@@ -106,9 +105,11 @@ describe('rendu « Ma démarche picturale » (ProcessText)', () => {
     expect(html).toContain('&lt;fin&gt;')
   })
 
-  it('premier paragraphe en italique seulement s’il y en a plusieurs', () => {
+  it('aucun paragraphe en italique — tous en romain, même taille', () => {
     const multi = render('Ouverture.\nCorps du texte.')
-    expect(multi).toMatch(/<p[^>]*class="[^"]*italic[^"]*"[^>]*>Ouverture\./)
+    expect(multi).not.toContain('italic')
+    // Aucun <p> ne porte de classe particulière : tous rendus à l'identique.
+    expect(multi).not.toMatch(/<p class=/)
     const single = render('Un seul paragraphe.')
     expect(single.match(/<p[\s>]/g)).toHaveLength(1)
     expect(single).not.toContain('italic')
