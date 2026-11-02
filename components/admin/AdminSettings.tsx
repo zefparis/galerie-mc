@@ -143,7 +143,7 @@ export default function AdminSettings() {
         redirectToLogin()
         return
       }
-      setError('La réinitialisation a échoué — rien n\u2019a été perdu, réessayez.')
+      setError('La réinitialisation a échoué. Rien n\u2019a été perdu, réessayez.')
     } finally {
       setResetBusy(false)
     }
@@ -158,7 +158,7 @@ export default function AdminSettings() {
     }
     const insta = settings.instagramUrl?.trim()
     if (insta && !normalizeInstagramUrl(insta)) {
-      setError("Le lien Instagram ne semble pas valide — ex : @votre_compte ou https://www.instagram.com/votre_compte")
+      setError("Le lien Instagram ne semble pas valide (ex : @votre_compte ou https://www.instagram.com/votre_compte)")
       return
     }
     setSaving(true)
@@ -180,7 +180,7 @@ export default function AdminSettings() {
       localStorage.setItem(MIGRATED_KEY, '1')
       setDraftFound(false)
       translateInBackground()
-      setMessage('Votre présentation est enregistrée ✓ — elle est maintenant visible sur votre site. Les traductions arrivent dans quelques secondes.')
+      setMessage('Votre présentation est enregistrée ✓. Elle est maintenant visible sur votre site. Les traductions arrivent dans quelques secondes.')
       setTimeout(() => setMessage(''), 8000)
     } catch (err) {
       try {
@@ -190,7 +190,7 @@ export default function AdminSettings() {
         setError("Je n'ai pas pu enregistrer : session expirée, reconnectez-vous.")
         return
       }
-      setError("Je n'ai pas pu enregistrer : vérifiez votre connexion internet — vos modifications sont gardées en brouillon.")
+      setError("Je n'ai pas pu enregistrer : vérifiez votre connexion internet. Vos modifications sont gardées en brouillon.")
     } finally {
       setSaving(false)
     }
@@ -228,7 +228,7 @@ export default function AdminSettings() {
     <div className="w-full max-w-2xl">
       <p className="font-body text-base text-[var(--ink-soft)] mb-8">
         Ce que les visiteurs lisent à votre sujet sur la page d&apos;accueil et le
-        pied de page. Remplissez ce que vous voulez — tout est facultatif sauf
+        pied de page. Remplissez ce que vous voulez : tout est facultatif sauf
         votre nom.
       </p>
 
@@ -255,7 +255,7 @@ export default function AdminSettings() {
         <div className="mb-6 p-4 bg-[var(--warning-bg)] border border-[var(--warning-line)]" role="alert">
           <p className="font-body text-base text-[var(--warning-ink)]">
             ⚠️ Je n&apos;ai pas pu charger vos informations enregistrées. Vérifiez
-            votre connexion et rechargez la page avant de modifier — sinon vous
+            votre connexion et rechargez la page avant de modifier. Sinon vous
             risquez d&apos;écraser ce qui est en ligne.
           </p>
         </div>
@@ -282,7 +282,7 @@ export default function AdminSettings() {
 
         <div>
           <label htmlFor="st-bio-short" className="label-field">
-            Petite phrase d&apos;accroche <span className="label-optional">— facultatif</span>
+            Petite phrase d&apos;accroche <span className="label-optional">(facultatif)</span>
             <HelpTip text="Une ligne affichée juste sous votre nom sur la page d'accueil, par exemple « Artiste peintre à Montreuil-aux-Lions »." />
           </label>
           <input
@@ -297,8 +297,8 @@ export default function AdminSettings() {
 
         <div>
           <label htmlFor="st-bio" className="label-field">
-            Votre présentation <span className="label-optional">— facultatif</span>
-            <HelpTip text="Quelques phrases sur vous et votre peinture. C'est le texte « Qui suis-je » de votre site." />
+            Votre présentation <span className="label-optional">(facultatif)</span>
+            <HelpTip text="Quelques phrases sur vous et votre peinture. C'est le texte « Qui suis-je » de votre site. Passez à la ligne pour commencer un nouveau paragraphe." />
           </label>
           <textarea
             id="st-bio"
@@ -311,8 +311,8 @@ export default function AdminSettings() {
 
         <div>
           <label htmlFor="st-process" className="label-field">
-            Ma démarche picturale <span className="label-optional">— facultatif</span>
-            <HelpTip text="Parlez de votre façon de peindre, de ce qui vous inspire, de ce que vous cherchez sur la toile. Vous pouvez écrire plusieurs paragraphes — ils s'afficheront en belles grandes lettres sur votre site." />
+            Ma démarche picturale <span className="label-optional">(facultatif)</span>
+            <HelpTip text="Parlez de votre façon de peindre, de ce qui vous inspire, de ce que vous cherchez sur la toile. Passez à la ligne pour commencer un nouveau paragraphe. La première phrase s'affichera en italique sur votre site." />
           </label>
           <textarea
             id="st-process"
@@ -327,14 +327,14 @@ export default function AdminSettings() {
         {/* ── Mes photos ── */}
         <div className="border-t border-[var(--line)] pt-6">
           <h3 className="font-body text-lg font-medium text-[var(--ink)] mb-1">
-            Mes photos <span className="label-optional">— 3 maximum</span>
+            Mes photos <span className="label-optional">(3 maximum)</span>
             <HelpTip text="Des photos de vous, dans votre atelier ou avec vos toiles. Elles s'affichent à côté de votre présentation sur le site." />
           </h3>
           <p className="font-body text-sm text-[var(--ink-soft)] mb-5">
             {photos.length === 0
               ? 'Ajoutez une photo de vous pour donner un visage à votre galerie.'
               : photos.length >= MAX_PHOTOS
-                ? 'Vous avez atteint la limite de 3 photos — supprimez-en une pour en changer.'
+                ? 'Vous avez atteint la limite de 3 photos. Supprimez-en une pour en changer.'
                 : `Encore ${MAX_PHOTOS - photos.length} emplacement${MAX_PHOTOS - photos.length > 1 ? 's' : ''} disponible${MAX_PHOTOS - photos.length > 1 ? 's' : ''}.`}
           </p>
 
@@ -357,7 +357,7 @@ export default function AdminSettings() {
                         autoFocus
                         className="btn-secondary flex-1 text-sm"
                       >
-                        Annuler — garder la photo
+                        Annuler et garder la photo
                       </button>
                       <button
                         type="button"
@@ -393,8 +393,8 @@ export default function AdminSettings() {
 
         <div>
           <label htmlFor="st-email" className="label-field">
-            Votre adresse email <span className="label-optional">— facultatif</span>
-            <HelpTip text="Affichée sur la page Contact — c'est aussi l'adresse qui reçoit les messages des visiteurs." />
+            Votre adresse email <span className="label-optional">(facultatif)</span>
+            <HelpTip text="Affichée sur la page Contact, c'est aussi l'adresse qui reçoit les messages des visiteurs." />
           </label>
           <input
             id="st-email"
@@ -408,7 +408,7 @@ export default function AdminSettings() {
 
         <div>
           <label htmlFor="st-insta" className="label-field">
-            Lien Instagram <span className="label-optional">— facultatif</span>
+            Lien Instagram <span className="label-optional">(facultatif)</span>
             <HelpTip text="Votre compte Instagram, affiché dans le pied de page et sur la page Contact. Vous pouvez coller l'adresse complète ou juste votre identifiant. Laissez vide pour ne pas l'afficher." />
           </label>
           <input
@@ -429,8 +429,8 @@ export default function AdminSettings() {
           </h3>
           <p className="font-body text-sm text-[var(--ink-soft)] mb-5">
             {samplePainting
-              ? `Aperçu sur « ${samplePainting.title} » — la première toile de votre carrousel.`
-              : 'Aperçu sur fond neutre — ajoutez une toile pour voir vos cadres sur une vraie œuvre.'}
+              ? `Aperçu sur « ${samplePainting.title} » : la première toile de votre carrousel.`
+              : 'Aperçu sur fond neutre : ajoutez une toile pour voir vos cadres sur une vraie œuvre.'}
           </p>
 
           <div role="radiogroup" aria-label="Cadre du carrousel d'accueil" className="space-y-3">
@@ -525,7 +525,7 @@ export default function AdminSettings() {
                     autoFocus
                     className="btn-secondary w-full text-sm"
                   >
-                    Annuler — garder les cadres personnalisés
+                    Annuler et garder les cadres personnalisés
                   </button>
                   <button
                     type="button"

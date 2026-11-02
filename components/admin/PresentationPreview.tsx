@@ -5,6 +5,7 @@ import type { Translations } from '@/lib/types'
 import type { Locale } from '@/lib/i18n'
 import HeroHeading from '@/components/gallery/HeroHeading'
 import PresentationParagraphs from '@/components/gallery/PresentationParagraphs'
+import { displayParagraphs } from '@/lib/text'
 import { useDebounced, NotTranslatedNote } from './PreviewShell'
 
 interface Props {
@@ -40,14 +41,8 @@ export default function PresentationPreview({
   const taglineUntranslated =
     locale !== 'fr' && !!tTagline && !rec?.tagline?.trim()
 
-  const frParas = (dPres || '')
-    .split(/\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean)
-  const trParas = (rec?.presentation || '')
-    .split(/\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean)
+  const frParas = displayParagraphs(dPres || '', locale)
+  const trParas = displayParagraphs(rec?.presentation || '', locale)
   const shownParas = locale !== 'fr' && trParas.length > 0 ? trParas : frParas
   const presUntranslated =
     locale !== 'fr' && frParas.length > 0 && trParas.length === 0

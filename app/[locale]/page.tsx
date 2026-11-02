@@ -11,7 +11,9 @@ import ArtistPhotos from '@/components/gallery/ArtistPhotos'
 import HeroArtwork from '@/components/gallery/HeroArtwork'
 import HeroHeading from '@/components/gallery/HeroHeading'
 import PresentationParagraphs from '@/components/gallery/PresentationParagraphs'
+import ProcessText from '@/components/gallery/ProcessText'
 import Reveal from '@/components/ui/Reveal'
+import { displayParagraphs } from '@/lib/text'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,12 +73,11 @@ export default async function Home(props: Props) {
   // localisé par le pipeline ; vide → rien n'est affiché.
   const accroche = (settings.tagline || '').trim().slice(0, 160)
 
-  // Présentation de l'accueil : texte brut, un saut de ligne = un
-  // paragraphe ; vide → la section garde seulement son contenu habituel.
-  const presentationParas = (settings.presentation || '')
-    .split(/\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean)
+  // Présentation de l'accueil et « Votre présentation » : texte brut, un
+  // saut de ligne = un paragraphe (typographie française au rendu en fr) ;
+  // vide → la section garde seulement son contenu habituel.
+  const presentationParas = displayParagraphs(settings.presentation, locale)
+  const bioParas = displayParagraphs(settings.bio, locale)
 
   const today = new Date().toISOString().slice(0, 10)
   const upcoming = events
@@ -225,9 +226,18 @@ export default async function Home(props: Props) {
                 {settings.artistName}
               </h2>
               <PresentationParagraphs paragraphs={presentationParas} />
-              <p className="font-body text-base md:text-lg text-[var(--ink-soft)] leading-relaxed mt-6 md:mt-8 whitespace-pre-line">
-                {settings.bio}
-              </p>
+              {bioParas.length > 0 && (
+                <div className="mt-6 md:mt-8 space-y-[1.1em]">
+                  {bioParas.map((para, i) => (
+                    <p
+                      key={i}
+                      className="font-body text-base md:text-lg text-[var(--ink-soft)] leading-relaxed"
+                    >
+                      {para}
+                    </p>
+                  ))}
+                </div>
+              )}
               <Link href="/contact" className="btn-outline mt-8 md:mt-10">
                 {t('contactMe')}
               </Link>
@@ -235,13 +245,11 @@ export default async function Home(props: Props) {
           </div>
 
           {/* Ma démarche picturale */}
-          {settings.processText && (
+          {(settings.processText || '').trim() && (
             <Reveal className="mt-14 md:mt-20">
-              <div className="border-t border-[var(--line)] pt-10 md:pt-14 max-w-3xl mx-auto text-center">
-                <p className="eyebrow mb-6">{t('process')}</p>
-                <p className="font-display text-2xl md:text-3xl text-[var(--ink-soft)] leading-relaxed italic whitespace-pre-line">
-                  {settings.processText}
-                </p>
+              <div className="border-t border-[var(--line)] pt-10 md:pt-14">
+                <p className="eyebrow mb-6 text-center">{t('process')}</p>
+                <ProcessText text={settings.processText || ''} locale={locale} />
               </div>
             </Reveal>
           )}

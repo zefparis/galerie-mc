@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { TargetLocale } from './types'
+import { toParagraphs } from './text'
 import type { TranslateFn, TranslateOutcome } from './translations-core'
 
 // Traduction automatique des contenus de l'artiste — serveur uniquement.
@@ -87,7 +88,7 @@ Voice and style:
 Rules:
 - Never translate proper nouns (Marie-Claire Scandella, Montreuil-aux-Lions, names of people and places).
 - Keep numbers, years, units, dimensions and prices unchanged.
-- Keep paragraphs and line breaks exactly as in the source.
+- Keep paragraphs and line breaks exactly as in the source — one source paragraph = one translated paragraph, never merge or drop line breaks.
 - Use this glossary, it is mandatory: ${GLOSSARY[locale]}.
 - Reply ONLY with strict JSON: {"text": "..."} — the translation, nothing else.`
 }
@@ -349,6 +350,18 @@ async function translateField(
 
   if (longForm) out = await reviewLongText(client, model, locale, source, out)
 
+  // Un paragraphe source = un paragraphe traduit : si le modèle a fusionné
+  // des lignes (par ex. un séparateur en bord de morceau), on reprend
+  // paragraphe par paragraphe — la structure est alors garantie.
+  const srcParas = toParagraphs(source)
+  if (srcParas.length > 1 && toParagraphs(out).length < srcParas.length) {
+    const perPara: string[] = []
+    for (const para of srcParas) {
+      perPara.push(await translateChunk(client, model, locale, para))
+    }
+    out = perPara.join('\n')
+  }
+
   const invalid = validateTranslation(source, out)
   if (invalid) {
     logFailure(locale, field, model, invalid, undefined, Date.now() - startedAt)
@@ -410,30 +423,53 @@ async function deeplTranslate(
 
   for (const [field, source] of Object.entries(texts)) {
     if (!source.trim()) continue
+    // Chaque paragraphe part comme entrée `text` séparée : l'API rend une
+    // traduction par entrée — deux paragraphes ne peuvent jamais fusionner.
+    // DeepL plafonne à 50 entrées et ~128 Kio par requête → groupage par
+    // taille (un seul aller-retour dans le cas courant).
+    const paragraphs = toParagraphs(source)
+    const batches: string[][] = []
+    let batch: string[] = []
+    let batchLen = 0
+    for (const para of paragraphs) {
+      if (batch.length === 50 || batchLen + para.length > 100_000) {
+        batches.push(batch)
+        batch = []
+        batchLen = 0
+      }
+      batch.push(para)
+      batchLen += para.length
+    }
+    if (batch.length) batches.push(batch)
+
     let lastError: unknown
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
-        const res = await fetch(`${base}/v2/translate`, {
-          method: 'POST',
-          headers: {
-            Authorization: `DeepL-Auth-Key ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            text: splitForTranslation(source),
-            source_lang: 'FR',
-            target_lang: target,
-          }),
-          signal: AbortSignal.timeout(TIMEOUT_MS),
-        })
-        if (!res.ok) {
-          const err = Object.assign(new Error(`deepl-${res.status}`), { status: res.status })
-          throw err
+        const parts: string[] = []
+        for (const b of batches) {
+          const res = await fetch(`${base}/v2/translate`, {
+            method: 'POST',
+            headers: {
+              Authorization: `DeepL-Auth-Key ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              text: b,
+              source_lang: 'FR',
+              target_lang: target,
+            }),
+            signal: AbortSignal.timeout(TIMEOUT_MS),
+          })
+          if (!res.ok) {
+            const err = Object.assign(new Error(`deepl-${res.status}`), { status: res.status })
+            throw err
+          }
+          const data = z
+            .object({ translations: z.array(z.object({ text: z.string() })) })
+            .parse(await res.json())
+          for (const t of data.translations) parts.push(t.text)
         }
-        const data = z
-          .object({ translations: z.array(z.object({ text: z.string() })) })
-          .parse(await res.json())
-        const out = data.translations.map((t) => t.text).join('')
+        const out = parts.join('\n')
         const invalid = validateTranslation(source, out)
         if (invalid) throw new Error(invalid)
         outcome.ok[field] = out
