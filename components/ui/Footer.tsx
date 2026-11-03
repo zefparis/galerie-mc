@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation'
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher'
 import { headers } from 'next/headers'
 import Logo from '@/components/ui/Logo'
+import FooterCredit from '@/components/ui/FooterCredit'
 import InstallLink from '@/components/pwa/InstallLink'
 import InstagramLink from '@/components/ui/InstagramLink'
 import { GallerySettings } from '@/lib/types'
@@ -112,9 +113,12 @@ export default async function Footer({
           >
             {t('legal')}
           </Link>
-          <p className="font-body text-xs text-[var(--muted)]">
-            {t('originals')}
-          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <p className="font-body text-xs text-[var(--muted)]">
+              {t('originals')}
+            </p>
+            <FooterCredit label={t('credit')} ariaLabel={t('creditAria')} />
+          </div>
         </div>
       </div>
     </footer>
