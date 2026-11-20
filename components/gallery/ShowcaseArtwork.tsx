@@ -6,7 +6,7 @@ import { useLocale } from 'next-intl'
 import type { Painting, PaintingShowcase } from '@/lib/types'
 import { blurDataUrl, cloudinaryUrl } from '@/lib/images'
 import { useTechniqueLabel, type Locale } from '@/lib/i18n'
-import { computeShowcase, effectiveShowcase } from '@/lib/showcase'
+import { computeShowcase, effectiveShowcase, resolveShowcaseFrame } from '@/lib/showcase'
 import FramedArt from '@/components/frames/FramedArt'
 import type { FrameId } from '@/lib/frames'
 import WallArtwork, { Cartel } from './WallArtwork'
@@ -131,6 +131,9 @@ export default function ShowcaseArtwork({
     )
   }
 
+  // Cadre des toiles : celui choisi pour la composition, sinon le cadre
+  // de l'œuvre (déjà résolu et passé en prop par l'appelant).
+  const compFrame = resolveShowcaseFrame(effective, frame)
   const photos = effective.photos
   const ratios = photos.map((ph, i) => {
     const dims = measured[i] || (ph.width && ph.height ? [ph.width, ph.height] : null)
@@ -150,7 +153,7 @@ export default function ShowcaseArtwork({
           availW,
           availH,
           gap: effective.gap,
-          frame,
+          frame: compFrame,
           mobile: isMobile,
         })
       : null
@@ -172,7 +175,7 @@ export default function ShowcaseArtwork({
     return (
       <FramedArt
         key={photos[i].publicId || photos[i].url || i}
-        frame={frame}
+        frame={compFrame}
         w={w}
         h={h}
         artMh={`${placement.artMh}px`}

@@ -297,6 +297,11 @@
     "pickThis": "Mostrar la foto {n}",
     "moveBefore": "Mover la foto {n} antes",
     "moveAfter": "Mover la foto {n} después",
-    "remove": "Quitar la foto {n}"
+    "remove": "Quitar la foto {n}",
+    "gapNone": "Borde con borde",
+    "frameLabel": "Marco de los lienzos en la vitrina",
+    "frameNone": "Sin marco",
+    "frameInherit": "Marco de la obra",
+    "firstAutoFeatured": "«Mostrar en grande en la portada» se marcó automáticamente para que la obra aparezca en el carrusel."
   }
 }

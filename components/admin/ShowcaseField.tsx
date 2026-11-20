@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import type { Painting, PaintingShowcase, ShowcaseGap, ShowcasePhoto } from '@/lib/types'
-import type { FrameId } from '@/lib/frames'
+import type { Painting, PaintingShowcase, ShowcaseFrame, ShowcaseGap, ShowcasePhoto } from '@/lib/types'
+import { FRAME_LABEL_FR, FRAME_ROWS, type FrameId } from '@/lib/frames'
 import { FramePreview } from '@/components/frames/FramedArt'
 import ShowcaseArtwork from '@/components/gallery/ShowcaseArtwork'
+import { defaultShowcaseFrame } from '@/lib/showcase'
 import PhotoPickerModal from './PhotoPickerModal'
 
 export type ShowcaseLayoutChoice = 'main' | 'single' | 'row' | 'column'
@@ -18,6 +19,9 @@ export interface ShowcaseFormValue {
   /** Index dans `photos` de la photo affichée quand layout = 'single'. */
   singleIndex: number
   gap: ShowcaseGap
+  /** Cadre des toiles — absent = défaut de la présentation ('none' pour
+   *  'row'/'column', 'inherit' pour 'single'). */
+  frame?: ShowcaseFrame
   first: boolean
 }
 
@@ -29,6 +33,10 @@ interface Props {
   mainPhoto: ShowcasePhoto | null
   /** Cadre appliqué dans la vitrine (resolveFrame côté formulaire). */
   frame: FrameId
+  /** « Afficher en grand sur la page d'accueil » — cochée
+   *  automatiquement quand l'œuvre passe en première place. */
+  featured: boolean
+  onFeaturedChange: (v: boolean) => void
   value: ShowcaseFormValue
   onChange: (patch: Partial<ShowcaseFormValue>) => void
 }
@@ -41,10 +49,23 @@ const samePhoto = (a: ShowcasePhoto, b: ShowcasePhoto) =>
 // la présentation (photo principale, une seule photo, côte à côte,
 // l'une au-dessus de l'autre), espacement, première place, aperçu en
 // direct de la composition avec le cadre réel.
-export default function ShowcaseField({ title, mainPhoto, frame, value, onChange }: Props) {
+export default function ShowcaseField({
+  title,
+  mainPhoto,
+  frame,
+  featured,
+  onFeaturedChange,
+  value,
+  onChange,
+}: Props) {
   const t = useTranslations('showcase')
   const [pickerOpen, setPickerOpen] = useState(false)
+  // « Première place » coche aussi « Afficher en grand sur la page
+  // d'accueil » — le message ne s'affiche que si c'est cette case qui
+  // l'a cochée (pas quand la case était déjà cochée).
+  const [autoFeatured, setAutoFeatured] = useState(false)
   const { layout, photos, singleIndex, gap, first } = value
+  const frameChoice: ShowcaseFrame = value.frame ?? defaultShowcaseFrame(layout)
 
   const isMain = (p: ShowcasePhoto) => !!mainPhoto?.url && samePhoto(p, mainPhoto)
   const mainInList = photos.some(isMain)
@@ -96,17 +117,37 @@ export default function ShowcaseField({ title, mainPhoto, frame, value, onChange
     { v: 'column', label: t('layoutColumn') },
   ]
   const GAPS: { v: ShowcaseGap; label: string }[] = [
+    { v: 'none', label: t('gapNone') },
     { v: 'small', label: t('gapSmall') },
     { v: 'medium', label: t('gapMedium') },
     { v: 'large', label: t('gapLarge') },
   ]
+  const FRAME_CHOICES: { v: ShowcaseFrame; label: string }[] = [
+    { v: 'none', label: t('frameNone') },
+    { v: 'inherit', label: t('frameInherit') },
+  ]
+
+  const onFirstChange = (checked: boolean) => {
+    onChange({ first: checked })
+    if (checked && !featured) {
+      onFeaturedChange(true)
+      setAutoFeatured(true)
+    } else {
+      setAutoFeatured(false)
+    }
+  }
 
   // Aperçu : la composition telle qu'elle sera enregistrée.
   const previewShowcase: PaintingShowcase | null =
     layout === 'single' && photos.length > 0
-      ? { layout: 'single', photos: [photos[Math.min(singleIndex, photos.length - 1)]], gap }
+      ? {
+          layout: 'single',
+          photos: [photos[Math.min(singleIndex, photos.length - 1)]],
+          gap,
+          frame: frameChoice,
+        }
       : (layout === 'row' || layout === 'column') && photos.length >= 2
-        ? { layout, photos, gap }
+        ? { layout, photos, gap, frame: frameChoice }
         : null
   const blob = photos.some((p) => p.url.startsWith('blob:')) || !!mainPhoto?.url.startsWith('blob:')
   const pseudo: Painting = {
@@ -261,7 +302,7 @@ export default function ShowcaseField({ title, mainPhoto, frame, value, onChange
       {(layout === 'row' || layout === 'column') && (
         <div className="mt-5">
           <p className="label-field">{t('gapLabel')}</p>
-          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label={t('gapLabel')}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" role="radiogroup" aria-label={t('gapLabel')}>
             {GAPS.map((opt) => (
               <button
                 key={opt.v}
@@ -282,12 +323,77 @@ export default function ShowcaseField({ title, mainPhoto, frame, value, onChange
         </div>
       )}
 
+      {/* Cadre des toiles de la composition — défaut : sans cadre pour
+          les compositions, cadre de l'œuvre pour « Une seule photo ». */}
+      {layout !== 'main' && (
+        <div className="mt-5">
+          <p className="label-field">{t('frameLabel')}</p>
+          <div role="radiogroup" aria-label={t('frameLabel')} className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {FRAME_CHOICES.map((opt) => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  role="radio"
+                  aria-checked={frameChoice === opt.v}
+                  onClick={() => onChange({ frame: opt.v })}
+                  className={`px-4 py-3 min-h-[48px] border font-body text-sm text-center transition-colors duration-200 ${
+                    frameChoice === opt.v
+                      ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--ink)] font-medium'
+                      : 'border-[var(--line)] bg-[var(--bg)] text-[var(--ink-soft)] hover:border-[var(--ink-soft)]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {/* Même grille de vignettes que le choix du cadre général,
+                en plus petit. */}
+            {FRAME_ROWS.map((row, ri) => (
+              <div key={ri} className="grid grid-cols-3 gap-2">
+                {/* 'none' est déjà proposé en tête (« Sans cadre »). */}
+                {row.filter((id) => id !== 'none').map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    role="radio"
+                    aria-checked={frameChoice === id}
+                    onClick={() => onChange({ frame: id })}
+                    className={`p-2 border text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                      frameChoice === id
+                        ? 'border-[var(--accent)] bg-[var(--accent-soft)]'
+                        : 'border-[var(--line)] bg-[var(--bg)] hover:border-[var(--ink-soft)]'
+                    }`}
+                  >
+                    <FramePreview
+                      frame={id}
+                      imageUrl={mainPhoto?.url || undefined}
+                      alt={title}
+                      w={mainPhoto?.width || 4}
+                      h={mainPhoto?.height || 5}
+                      height={52}
+                    />
+                    <span
+                      className={`block mt-1 font-body text-[11px] leading-tight ${
+                        frameChoice === id ? 'text-[var(--ink)] font-medium' : 'text-[var(--ink-soft)]'
+                      }`}
+                    >
+                      {FRAME_LABEL_FR[id]}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Première place */}
       <label className="mt-5 flex items-start gap-3 cursor-pointer p-4 border border-[var(--line)] bg-[var(--bg)]">
         <input
           type="checkbox"
           checked={first}
-          onChange={(e) => onChange({ first: e.target.checked })}
+          onChange={(e) => onFirstChange(e.target.checked)}
           className="w-6 h-6 mt-0.5 accent-[var(--accent)] flex-shrink-0"
         />
         <span>
@@ -297,6 +403,11 @@ export default function ShowcaseField({ title, mainPhoto, frame, value, onChange
           <span className="block font-body text-sm text-[var(--ink-soft)] mt-0.5">
             {t('firstPlaceHint')}
           </span>
+          {first && autoFeatured && (
+            <span className="block font-body text-sm text-[var(--accent)] mt-1">
+              {t('firstAutoFeatured')}
+            </span>
+          )}
         </span>
       </label>
 

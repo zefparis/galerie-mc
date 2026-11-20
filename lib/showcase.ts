@@ -4,19 +4,32 @@
 // parties, bascule mobile — partagée entre le rendu public, l'aperçu
 // admin et les tests.
 
-import type { FrameId } from './frames'
-import type { PaintingShowcase, ShowcaseGap, ShowcasePhoto } from './types'
+import { isFrameId, type FrameId } from './frames'
+import type { PaintingShowcase, ShowcaseFrame, ShowcaseGap, ShowcasePhoto } from './types'
 
 // Espacement entre les toiles, proportionnel à la hauteur d'affichage
-// (fraction de la hauteur maximale de la zone du carrousel).
+// (fraction de la hauteur maximale de la zone du carrousel). Avec un
+// cadre il se mesure entre les bords extérieurs des cadres, sans cadre
+// entre les bords des toiles — le calcul est identique : c'est la
+// distance entre les parties telles qu'elles sont placées.
 export const SHOWCASE_GAP_RATIO: Record<ShowcaseGap, number> = {
-  small: 0.025,
-  medium: 0.05,
-  large: 0.09,
+  none: 0,
+  small: 0.008,
+  medium: 0.02,
+  large: 0.04,
 }
 
 export const SHOWCASE_LAYOUTS = ['single', 'row', 'column'] as const
-export const SHOWCASE_GAPS = ['small', 'medium', 'large'] as const
+export const SHOWCASE_GAPS = ['none', 'small', 'medium', 'large'] as const
+
+// Cadre par défaut selon la présentation : les compositions en plusieurs
+// parties s'affichent sans cadre (simple ombre portée), « Une seule
+// photo » et « Photo principale » gardent le cadre de l'œuvre.
+export function defaultShowcaseFrame(
+  layout: 'main' | 'single' | 'row' | 'column'
+): ShowcaseFrame {
+  return layout === 'row' || layout === 'column' ? 'none' : 'inherit'
+}
 
 /** Nettoie une valeur `showcase` lue en base : forme stricte, chaque
  *  photo avec une URL non vide ; toute valeur inconnue → null (rendu
@@ -25,7 +38,7 @@ export function sanitizeShowcase(raw: unknown): PaintingShowcase | null {
   if (!raw || typeof raw !== 'object') return null
   const r = raw as Record<string, unknown>
   if (r.layout !== 'single' && r.layout !== 'row' && r.layout !== 'column') return null
-  if (r.gap !== 'small' && r.gap !== 'medium' && r.gap !== 'large') return null
+  if (r.gap !== 'none' && r.gap !== 'small' && r.gap !== 'medium' && r.gap !== 'large') return null
   if (!Array.isArray(r.photos)) return null
   const photos: ShowcasePhoto[] = []
   for (const p of r.photos) {
@@ -42,7 +55,11 @@ export function sanitizeShowcase(raw: unknown): PaintingShowcase | null {
   }
   const need = r.layout === 'single' ? 1 : 2
   if (photos.length < need || photos.length > 3) return null
-  return { layout: r.layout, photos, gap: r.gap }
+  // Cadre des toiles : absent ou inconnu → 'inherit' (les compositions
+  // enregistrées sans ce champ gardent le cadre de l'œuvre).
+  const frame: ShowcaseFrame =
+    r.frame === 'inherit' || isFrameId(r.frame) ? (r.frame as ShowcaseFrame) : 'inherit'
+  return { layout: r.layout, photos, gap: r.gap, frame }
 }
 
 /** Parts effectivement affichables : les photos sans URL (référence
@@ -58,8 +75,19 @@ export function effectiveShowcase(
   return {
     layout: s.layout,
     gap: s.gap,
+    frame: s.frame,
     photos: s.layout === 'single' ? photos.slice(0, 1) : photos.slice(0, 3),
   }
+}
+
+/** Cadre appliqué aux toiles de la composition : `frame` de la vitrine,
+ *  ou le cadre résolu de l'œuvre quand la valeur est 'inherit'/absente. */
+export function resolveShowcaseFrame(
+  showcase: PaintingShowcase | null | undefined,
+  artworkFrame: FrameId
+): FrameId {
+  const f = showcase?.frame
+  return f && f !== 'inherit' && isFrameId(f) ? f : artworkFrame
 }
 
 // ─── Géométrie ────────────────────────────────────────────────────────

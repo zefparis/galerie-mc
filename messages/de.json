@@ -297,6 +297,11 @@
     "pickThis": "Foto {n} anzeigen",
     "moveBefore": "Foto {n} nach vorne verschieben",
     "moveAfter": "Foto {n} nach hinten verschieben",
-    "remove": "Foto {n} entfernen"
+    "remove": "Foto {n} entfernen",
+    "gapNone": "Kante an Kante",
+    "frameLabel": "Rahmen der Bilder in der Vitrine",
+    "frameNone": "Ohne Rahmen",
+    "frameInherit": "Rahmen des Werks",
+    "firstAutoFeatured": "„Auf der Startseite groß zeigen“ wurde automatisch angehakt, damit das Werk im Karussell erscheint."
   }
 }

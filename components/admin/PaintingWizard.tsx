@@ -22,6 +22,7 @@ import AnalysePanel, {
   type AnalyseFormState,
 } from './AnalysePanel'
 import ShowcaseField, { type ShowcaseFormValue } from './ShowcaseField'
+import { defaultShowcaseFrame } from '@/lib/showcase'
 
 // La traduction part en arrière-plan : l'enregistrement n'attend jamais
 // le service de traduction, et un échec est silencieux (le texte est déjà
@@ -102,7 +103,19 @@ function initialShowcaseValue(painting: Painting | null): ShowcaseFormValue {
       ]
     : []
   const s = painting?.showcase
-  if (!s) return { layout: 'main', photos: main, singleIndex: 0, gap: 'medium', first: painting?.showcaseFirst === true }
+  if (!s) {
+    return {
+      layout: 'main',
+      photos: main,
+      singleIndex: 0,
+      gap: 'small',
+      frame: undefined,
+      first: painting?.showcaseFirst === true,
+    }
+  }
+  // Composition enregistrée : sans champ frame (données anciennes), les
+  // toiles gardent le cadre de l'œuvre ('inherit').
+  const frame = s.frame ?? 'inherit'
   if (s.layout === 'single') {
     const photos = [...main]
     if (!photos.some((p) => p.publicId === s.photos[0]?.publicId || p.url === s.photos[0]?.url)) {
@@ -116,6 +129,7 @@ function initialShowcaseValue(painting: Painting | null): ShowcaseFormValue {
       photos,
       singleIndex: Math.max(0, idx),
       gap: s.gap,
+      frame,
       first: painting?.showcaseFirst === true,
     }
   }
@@ -124,6 +138,7 @@ function initialShowcaseValue(painting: Painting | null): ShowcaseFormValue {
     photos: s.photos,
     singleIndex: 0,
     gap: s.gap,
+    frame,
     first: painting?.showcaseFirst === true,
   }
 }
@@ -300,7 +315,7 @@ export default function PaintingWizard({
       signature: '',
       frame: null,
     })
-    setShowcaseValue({ layout: 'main', photos: [], singleIndex: 0, gap: 'medium', first: false })
+    setShowcaseValue({ layout: 'main', photos: [], singleIndex: 0, gap: 'small', frame: undefined, first: false })
     setAnalyseState(EMPTY_ANALYSE_STATE)
     setStep(1)
   }
@@ -329,6 +344,7 @@ export default function PaintingWizard({
           layout: 'single',
           photos: [scPhotos[Math.min(sc.singleIndex, scPhotos.length - 1)]],
           gap: sc.gap,
+          frame: sc.frame ?? 'inherit',
         }
       } else if (
         (sc.layout === 'row' || sc.layout === 'column') &&
@@ -338,6 +354,7 @@ export default function PaintingWizard({
           layout: sc.layout,
           photos: scPhotos.slice(0, 3),
           gap: sc.gap,
+          frame: sc.frame ?? defaultShowcaseFrame(sc.layout),
         }
       }
 
@@ -788,6 +805,8 @@ export default function PaintingWizard({
                 : null
             }
             frame={resolveFrame({ frame: form.frame }, { heroFrame: generalFrame })}
+            featured={form.featured}
+            onFeaturedChange={(v) => setForm((f) => ({ ...f, featured: v }))}
             value={showcaseValue}
             onChange={(patch) => setShowcaseValue((v) => ({ ...v, ...patch }))}
           />

@@ -16,8 +16,10 @@ vi.mock('next/image', () => ({
 import ShowcaseArtwork from '../components/gallery/ShowcaseArtwork'
 import {
   computeShowcase,
+  defaultShowcaseFrame,
   effectiveShowcase,
   heroCarouselList,
+  resolveShowcaseFrame,
   sanitizeShowcase,
 } from '../lib/showcase'
 import { paintingBodySchema, showcaseSchema } from '../lib/validation'
@@ -124,6 +126,26 @@ describe('zod — showcaseSchema', () => {
     ).toBe(false)
   })
 
+  it("espacement 'none' (bord à bord) accepté, cadre 'inherit' ou de la gamme", () => {
+    const base = { layout: 'row' as const, photos: [photo('a'), photo('b')] }
+    expect(showcaseSchema.safeParse({ ...base, gap: 'none' }).success).toBe(true)
+    expect(
+      showcaseSchema.safeParse({ ...base, gap: 'none', frame: 'inherit' }).success
+    ).toBe(true)
+    expect(
+      showcaseSchema.safeParse({ ...base, gap: 'none', frame: 'none' }).success
+    ).toBe(true)
+    expect(
+      showcaseSchema.safeParse({ ...base, gap: 'none', frame: 'gold-classic' }).success
+    ).toBe(true)
+    // Cadre inconnu rejeté ; absent → 'inherit' par défaut.
+    expect(
+      showcaseSchema.safeParse({ ...base, gap: 'none', frame: 'rococo' }).success
+    ).toBe(false)
+    const parsed = showcaseSchema.parse({ ...base, gap: 'small' })
+    expect(parsed.frame).toBe('inherit')
+  })
+
   it('rejette un espacement ou une clé inconnue (strict)', () => {
     expect(
       showcaseSchema.safeParse({
@@ -197,9 +219,21 @@ describe('unicité de la première place', () => {
     )
     expect(many).toHaveLength(8)
     expect(many[0].id).toBe('x')
+    // Première place ⇒ visible dans le carrousel même sans « featured ».
+    const onlyFirst = heroCarouselList([p('x', false, true)], 8)
+    expect(onlyFirst.map((x) => x.id)).toEqual(['x'])
     // Aucun featured : repli sur la première œuvre (comportement actuel).
     const empty = heroCarouselList([p('a', false), p('b', false)], 8)
     expect(empty.map((x) => x.id)).toEqual(['a'])
+  })
+
+  it('« première place » coche aussi « Afficher en grand » dans le formulaire', () => {
+    const src = readFileSync(join(ROOT, 'components/admin/ShowcaseField.tsx'), 'utf8')
+    // Le changement de première place coche featured automatiquement.
+    expect(src).toMatch(/checked[\s\S]*onFeaturedChange\(true\)/)
+    const wiz = readFileSync(join(ROOT, 'components/admin/PaintingWizard.tsx'), 'utf8')
+    expect(wiz).toContain('onFeaturedChange')
+    expect(wiz).toMatch(/onFeaturedChange=\{[\s\S]*featured: v/)
   })
 })
 
@@ -223,8 +257,48 @@ describe('nettoyage et repli (effectiveShowcase / sanitizeShowcase)', () => {
     expect(sanitizeShowcase({ layout: 'row', photos: [], gap: 'small' })).toBeNull()
     expect(sanitizeShowcase({ layout: 'row', photos: [{ url: 'u' }, { url: 'v' }], gap: 'xl' })).toBeNull()
     expect(
-      sanitizeShowcase({ layout: 'row', photos: [{ url: 'u' }, { url: 'v' }], gap: 'small' })
-    ).toEqual({ layout: 'row', photos: [{ url: 'u' }, { url: 'v' }], gap: 'small' })
+      sanitizeShowcase({ layout: 'row', photos: [{ url: 'u' }, { url: 'v' }], gap: 'none' })
+    ).toEqual({
+      layout: 'row',
+      photos: [{ url: 'u' }, { url: 'v' }],
+      gap: 'none',
+      frame: 'inherit',
+    })
+  })
+
+  it("cadre de la composition : absent ou inconnu → 'inherit'", () => {
+    const base = { layout: 'row' as const, photos: [{ url: 'u' }, { url: 'v' }], gap: 'small' as const }
+    // Compositions enregistrées avant le champ frame → cadre de l'œuvre.
+    expect(sanitizeShowcase(base)?.frame).toBe('inherit')
+    expect(sanitizeShowcase({ ...base, frame: 'rococo' })?.frame).toBe('inherit')
+    expect(sanitizeShowcase({ ...base, frame: 'none' })?.frame).toBe('none')
+    expect(sanitizeShowcase({ ...base, frame: 'wood-medium' })?.frame).toBe('wood-medium')
+    // Le cadre survit au filtrage des photos mortes.
+    expect(
+      effectiveShowcase({ layout: 'row', photos: [photo('a'), photo('b')], gap: 'none', frame: 'none' })
+        ?.frame
+    ).toBe('none')
+  })
+
+  it('resolveShowcaseFrame : inherit/absent → cadre de l\u2019œuvre, sinon cadre choisi', () => {
+    const s = (frame?: 'inherit' | 'none' | 'gold-classic'): PaintingShowcase => ({
+      layout: 'row',
+      photos: [photo('a'), photo('b')],
+      gap: 'small',
+      frame,
+    })
+    expect(resolveShowcaseFrame(s('inherit'), 'gold-classic')).toBe('gold-classic')
+    expect(resolveShowcaseFrame(s(undefined), 'gold-classic')).toBe('gold-classic')
+    expect(resolveShowcaseFrame(null, 'gold-classic')).toBe('gold-classic')
+    expect(resolveShowcaseFrame(s('none'), 'gold-classic')).toBe('none')
+    expect(resolveShowcaseFrame(s('gold-classic'), 'black-thin')).toBe('gold-classic')
+  })
+
+  it("cadre par défaut : 'none' pour row/column, 'inherit' pour single/main", () => {
+    expect(defaultShowcaseFrame('row')).toBe('none')
+    expect(defaultShowcaseFrame('column')).toBe('none')
+    expect(defaultShowcaseFrame('single')).toBe('inherit')
+    expect(defaultShowcaseFrame('main')).toBe('inherit')
   })
 
   it('photos référencées disparues : ignorées, repli si insuffisantes', () => {
@@ -287,6 +361,23 @@ describe('computeShowcase — géométrie de la composition', () => {
     }
   })
 
+  it("espacement 'none' : gapPx = 0, les toiles se touchent", () => {
+    const plan = computeShowcase({
+      layout: 'row',
+      ratios: [1, 1],
+      availW: W,
+      availH: H,
+      gap: 'none',
+      frame: 'none',
+      mobile: false,
+    })!
+    expect(plan.gapPx).toBe(0)
+    const totalW = plan.parts.reduce((a, p) => a + p.width, 0)
+    expect(totalW).toBeLessThanOrEqual(W + 0.5)
+    // Sans cadre ni espace, deux toiles carrées remplissent la zone.
+    expect(totalW).toBeGreaterThan(W * 0.9)
+  })
+
   it("'column' : même largeur, hauteur totale bornée par la zone", () => {
     const plan = computeShowcase({
       layout: 'column',
@@ -305,14 +396,14 @@ describe('computeShowcase — géométrie de la composition', () => {
   })
 
   it('mobile : « row » bascule en « column » si chaque toile < 28 % de la largeur', () => {
-    // 3 toiles carrées + grand espacement sur téléphone → chaque
-    // part < 28 % de la largeur disponible → bascule en colonne.
+    // Triptyque avec panneau central étroit : la plus petite toile
+    // ferait < 28 % de la largeur disponible → bascule en colonne.
     const small = computeShowcase({
       layout: 'row',
-      ratios: [1, 1, 1],
+      ratios: [1.4, 0.6, 1.4],
       availW: 320,
       availH: 380,
-      gap: 'large',
+      gap: 'medium',
       frame: 'none',
       mobile: true,
     })!

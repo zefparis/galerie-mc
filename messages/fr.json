@@ -297,6 +297,11 @@
     "pickThis": "Afficher la photo {n}",
     "moveBefore": "Déplacer la photo {n} avant",
     "moveAfter": "Déplacer la photo {n} après",
-    "remove": "Retirer la photo {n}"
+    "remove": "Retirer la photo {n}",
+    "gapNone": "Bord à bord",
+    "frameLabel": "Cadre des toiles dans la vitrine",
+    "frameNone": "Sans cadre",
+    "frameInherit": "Cadre de l'œuvre",
+    "firstAutoFeatured": "« Afficher en grand sur la page d'accueil » a été cochée automatiquement pour que l'œuvre apparaisse dans le carrousel."
   }
 }

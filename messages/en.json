@@ -297,6 +297,11 @@
     "pickThis": "Show photo {n}",
     "moveBefore": "Move photo {n} earlier",
     "moveAfter": "Move photo {n} later",
-    "remove": "Remove photo {n}"
+    "remove": "Remove photo {n}",
+    "gapNone": "Edge to edge",
+    "frameLabel": "Frame of the canvases in the showcase",
+    "frameNone": "No frame",
+    "frameInherit": "Artwork frame",
+    "firstAutoFeatured": "\"Show large on the home page\" was checked automatically so the artwork appears in the carousel."
   }
 }

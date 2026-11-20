@@ -170,7 +170,10 @@ export const showcaseSchema = z
   .object({
     layout: z.enum(['single', 'row', 'column']),
     photos: z.array(showcasePhotoSchema).min(1, 'Au moins une photo').max(3, 'Trois photos maximum'),
-    gap: z.enum(['small', 'medium', 'large']),
+    gap: z.enum(['none', 'small', 'medium', 'large']),
+    // Cadre des toiles de la composition — 'inherit' = cadre de l'œuvre
+    // (resolveFrame). Absent dans les données anciennes → 'inherit'.
+    frame: z.union([frameIdSchema, z.literal('inherit')]).optional().default('inherit'),
   })
   .strict()
   .superRefine((s, ctx) => {

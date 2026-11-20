@@ -63,7 +63,12 @@ export interface PaintingAnalysis extends PaintingNotice {
 // seule photo choisie ; 'row'/'column' composent 2 ou 3 photos
 // (diptyque, triptyque) — chaque partie dans le même cadre.
 export type ShowcaseLayout = 'single' | 'row' | 'column'
-export type ShowcaseGap = 'small' | 'medium' | 'large'
+export type ShowcaseGap = 'none' | 'small' | 'medium' | 'large'
+// Cadre des toiles de la composition : un cadre de la gamme, ou
+// 'inherit' = le cadre résolu de l'œuvre (resolveFrame, cadre propre à
+// la toile sinon cadre général). Absent dans les données anciennes =
+// 'inherit' (rendu inchangé).
+export type ShowcaseFrame = FrameId | 'inherit'
 
 // Une partie de la composition : photo du cloud du site (photothèque),
 // avec ses dimensions réelles pour conserver le ratio sans saut.
@@ -78,6 +83,8 @@ export interface PaintingShowcase {
   layout: ShowcaseLayout
   photos: ShowcasePhoto[]
   gap: ShowcaseGap
+  /** Cadre des toiles de la composition — absent = 'inherit'. */
+  frame?: ShowcaseFrame
 }
 
 export interface Painting {
