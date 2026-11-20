@@ -270,5 +270,33 @@
     "s2Body": "The contact form collects your name, your e-mail address and your message, solely to reply to your request. This data is neither sold nor used for advertising. It is passed on to the artist by a message-delivery provider (EmailJS) and kept for no more than 12 months after the last exchange.\n\nYou may request access to, correction or deletion of your data via the contact form, and you may contact the CNIL (cnil.fr).\n\nThis site uses no tracking or advertising cookies: it only stores your display preferences (theme, language) on your device and may cache pages so it loads faster or works offline.",
     "s3Title": "Buying an artwork",
     "s3Body": "The artworks are original, one-of-a-kind pieces, sold directly by the artist on an occasional basis, as a private individual. The site offers no online payment: to purchase a work, write to the artist via the contact form.\n\nThe sale is concluded once you have confirmed your agreement in writing on the artwork, the price (in euros, net — the artist is not subject to VAT) and the delivery arrangements. Payment is made by bank transfer or cheque before the artwork is handed over.\n\nThe work is collected in Montreuil-aux-Lions or shipped by the artist, carefully packaged, at the buyer’s expense unless otherwise agreed. On receipt, check its condition and report any damage within 48 hours with photographs.\n\nThe purchase covers the physical object: the artist retains her copyright, and any reproduction or distribution of the artwork requires her written consent. Should any difficulty arise, we first seek an amicable solution; French law applies."
+  },
+  "showcase": {
+    "sectionTitle": "In the home showcase",
+    "help": "Compose this artwork in several parts (diptych, triptych) or place it as the first slide of the carousel.",
+    "photosLabel": "Photos of this artwork",
+    "mainBadge": "Main",
+    "addPhotos": "Add from my photos",
+    "addMain": "Add the main photo",
+    "needTwo": "Add at least one more photo to compose in several parts.",
+    "layoutLabel": "Showcase presentation",
+    "layoutMain": "Main photo",
+    "layoutSingle": "A single photo",
+    "layoutRow": "Side by side",
+    "layoutColumn": "Stacked",
+    "singlePick": "Choose the displayed photo with the round buttons.",
+    "rowHint": "All photos are shown side by side, in this order.",
+    "columnHint": "All photos are shown one above the other, in this order.",
+    "gapLabel": "Spacing between canvases",
+    "gapSmall": "Tight",
+    "gapMedium": "Medium",
+    "gapLarge": "Wide",
+    "firstPlace": "Place first in the showcase",
+    "firstPlaceHint": "This artwork will open the home carousel. Only one artwork at a time: checking this removes first place from the other artwork.",
+    "previewLabel": "Composition preview",
+    "pickThis": "Show photo {n}",
+    "moveBefore": "Move photo {n} earlier",
+    "moveAfter": "Move photo {n} later",
+    "remove": "Remove photo {n}"
   }
 }

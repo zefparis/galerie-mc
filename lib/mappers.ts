@@ -3,6 +3,7 @@
 // Mappe une ligne snake_case PostgreSQL vers l'objet camelCase attendu par le frontend.
 import type { EventImage, PaintingNotice } from './types'
 import { mapFrameId } from './frames'
+import { sanitizeShowcase } from './showcase'
 
 /** La notice publiée ne contient que 4 clés — tout le reste (notes
  *  privées, repère de prix) reste dans `analysis`, jamais sélectionné
@@ -49,6 +50,9 @@ export function mapPaintingRow(r: any) {
     signature: typeof r.signature === 'string' && r.signature.trim() ? r.signature.trim() : undefined,
     // NULL, ancien id ou valeur inconnue → équivalent actuel ou cadre général.
     frame: mapFrameId(r.frame),
+    // Composition de la vitrine : forme inconnue → NULL (photo seule).
+    showcase: sanitizeShowcase(r.showcase),
+    showcaseFirst: r.showcase_first === true,
     notice: cleanNotice(r.notice),
   }
 }

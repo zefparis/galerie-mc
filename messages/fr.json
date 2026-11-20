@@ -270,5 +270,33 @@
     "s2Body": "Le formulaire de contact recueille votre nom, votre adresse e-mail et votre message, uniquement pour répondre à votre demande. Ces données ne sont ni vendues, ni utilisées à des fins publicitaires. Elles sont transmises à l’artiste par un prestataire d’envoi de messages (EmailJS) et conservées au plus 12 mois après le dernier échange.\n\nVous pouvez demander leur consultation, rectification ou suppression via le formulaire de contact, et saisir la CNIL (cnil.fr).\n\nLe site n’utilise aucun cookie de suivi ni publicitaire : il garde seulement sur votre appareil vos préférences d’affichage (thème, langue) et peut mettre en cache des pages pour fonctionner plus vite ou hors connexion.",
     "s3Title": "Acheter une œuvre",
     "s3Body": "Les œuvres sont des pièces originales et uniques, vendues directement par l’artiste à titre occasionnel, en tant que particulière. Le site ne propose pas de paiement en ligne : pour acquérir une œuvre, écrivez à l’artiste via le formulaire de contact.\n\nLa vente est conclue lorsque vous avez confirmé votre accord par écrit sur l’œuvre, le prix (en euros, net, l’artiste n’étant pas assujettie à la TVA) et les modalités de remise. Le paiement se fait par virement ou chèque avant la remise de l’œuvre.\n\nL’œuvre est retirée à Montreuil-aux-Lions ou expédiée par l’artiste, soigneusement emballée, aux frais de l’acheteur sauf arrangement contraire. À réception, vérifiez son état et signalez tout dommage dans les 48 heures avec des photographies.\n\nL’achat porte sur l’objet : l’artiste conserve ses droits d’auteur, et toute reproduction ou diffusion de l’œuvre nécessite son accord écrit. En cas de difficulté, nous cherchons d’abord une solution amiable ; le droit français s’applique."
+  },
+  "showcase": {
+    "sectionTitle": "Dans la vitrine de l'accueil",
+    "help": "Composez cette œuvre en plusieurs parties (diptyque, triptyque) ou placez-la en première diapositive du carrousel.",
+    "photosLabel": "Les photos de cette œuvre",
+    "mainBadge": "Principale",
+    "addPhotos": "Ajouter depuis mes photos",
+    "addMain": "Ajouter la photo principale",
+    "needTwo": "Ajoutez au moins une autre photo pour composer en plusieurs parties.",
+    "layoutLabel": "Présentation dans la vitrine",
+    "layoutMain": "Photo principale",
+    "layoutSingle": "Une seule photo",
+    "layoutRow": "Côte à côte",
+    "layoutColumn": "L'une au-dessus de l'autre",
+    "singlePick": "Choisissez la photo affichée avec les boutons ronds.",
+    "rowHint": "Toutes les photos s'affichent côte à côte, dans cet ordre.",
+    "columnHint": "Toutes les photos s'affichent l'une au-dessus de l'autre, dans cet ordre.",
+    "gapLabel": "Espacement entre les toiles",
+    "gapSmall": "Serré",
+    "gapMedium": "Moyen",
+    "gapLarge": "Large",
+    "firstPlace": "Mettre en première place dans la vitrine",
+    "firstPlaceHint": "Cette œuvre ouvrira le carrousel de l'accueil. Une seule œuvre à la fois : cocher ici retire la première place de l'autre œuvre.",
+    "previewLabel": "Aperçu de la composition",
+    "pickThis": "Afficher la photo {n}",
+    "moveBefore": "Déplacer la photo {n} avant",
+    "moveAfter": "Déplacer la photo {n} après",
+    "remove": "Retirer la photo {n}"
   }
 }

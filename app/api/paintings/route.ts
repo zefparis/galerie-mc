@@ -49,6 +49,12 @@ function sanitizeAnalysisInput(a: PaintingAnalysis | null | undefined): Painting
 // `analysis` n'est JAMAIS lue ni renvoyée par l'API.
 const PUBLIC_COLS = `id, title, year, technique, dimensions, description, image_url,
   image_public_id, price, price_status, featured, "order", created_at,
+  image_width, image_height, category, signature, notice, translations, frame, showcase, showcase_first`
+
+// Palier intermédiaire : tout sauf `showcase`/`showcase_first`, pour les
+// bases pas encore migrées — cadre, notice et signature restent lus.
+const PUBLIC_COLS_NO_SHOWCASE = `id, title, year, technique, dimensions, description, image_url,
+  image_public_id, price, price_status, featured, "order", created_at,
   image_width, image_height, category, signature, notice, translations, frame`
 
 export async function GET() {
@@ -58,8 +64,16 @@ export async function GET() {
     )
     return NextResponse.json(rows.map(mapPaintingRow))
   } catch (err) {
-    // Colonnes signature/notice pas encore créées : repli sans elles.
+    // Colonnes showcase pas encore créées : repli sans elles.
     if ((err as { code?: string })?.code !== '42703') return handleRouteError(err)
+    try {
+      const { rows } = await pool.query(
+        `SELECT ${PUBLIC_COLS_NO_SHOWCASE} FROM paintings ORDER BY featured DESC, "order" ASC`
+      )
+      return NextResponse.json(rows.map(mapPaintingRow))
+    } catch (errMid) {
+      if ((errMid as { code?: string })?.code !== '42703') return handleRouteError(errMid)
+    }
     try {
       const { rows } = await pool.query(
         `SELECT id, title, year, technique, dimensions, description, image_url,
@@ -103,30 +117,77 @@ export async function POST(req: NextRequest) {
       cleanNotice ? JSON.stringify(cleanNotice) : null,
       cleanAnalysis ? JSON.stringify(cleanAnalysis) : null,
       b.frame ?? null,
+      b.showcase ? JSON.stringify(b.showcase) : null,
+      b.showcaseFirst === true,
     ]
-    try {
-      // Une seule requête atomique : la toile, la notice (si cochée) et
-      // l'analyse privée sont enregistrées ensemble (tout ou rien).
-      // RETURNING utilise PUBLIC_COLS : `analysis` ne quitte jamais le serveur.
-      const { rows } = await pool.query(
-        `INSERT INTO paintings (
-          id, title, year, technique, dimensions, description, image_url,
-          image_public_id, price, price_status, featured, "order",
-          image_width, image_height, category, translations, signature,
-          notice, analysis, analysed_at, frame
-        )
-         VALUES (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,
-          $18::jsonb, $19::jsonb,
-          CASE WHEN $19::jsonb IS NOT NULL THEN now() ELSE NULL END, $20
-         )
-         RETURNING ${PUBLIC_COLS}`,
-        values
+    // Une seule requête atomique : la toile, la notice (si cochée) et
+    // l'analyse privée sont enregistrées ensemble (tout ou rien).
+    // RETURNING utilise PUBLIC_COLS : `analysis` ne quitte jamais le serveur.
+    const INSERT_SQL = `INSERT INTO paintings (
+        id, title, year, technique, dimensions, description, image_url,
+        image_public_id, price, price_status, featured, "order",
+        image_width, image_height, category, translations, signature,
+        notice, analysis, analysed_at, frame, showcase, showcase_first
       )
+       VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,
+        $18::jsonb, $19::jsonb,
+        CASE WHEN $19::jsonb IS NOT NULL THEN now() ELSE NULL END,
+        $20, $21::jsonb, $22
+       )
+       RETURNING ${PUBLIC_COLS}`
+    try {
+      let rows
+      if (b.showcaseFirst === true) {
+        // « En première place » : une seule œuvre à la fois — le drapeau
+        // est retiré des autres dans la même transaction que l'insert
+        // (renforcé par l'index unique partiel en base).
+        const client = await pool.connect()
+        try {
+          await client.query('BEGIN')
+          await client.query(
+            'UPDATE paintings SET showcase_first = false WHERE showcase_first = true'
+          )
+          ;({ rows } = await client.query(INSERT_SQL, values))
+          await client.query('COMMIT')
+        } catch (err) {
+          try {
+            await client.query('ROLLBACK')
+          } catch {
+            // connexion perdue — rien à annuler
+          }
+          throw err
+        } finally {
+          client.release()
+        }
+      } else {
+        ;({ rows } = await pool.query(INSERT_SQL, values))
+      }
       return NextResponse.json(mapPaintingRow(rows[0]))
     } catch (err) {
-      // Colonnes récentes pas encore créées : repli sans elles.
+      // Colonnes showcase pas encore créées : repli sans elles (le cadre,
+      // la notice et la signature restent enregistrés).
       if ((err as { code?: string })?.code !== '42703') throw err
+      try {
+        const { rows } = await pool.query(
+          `INSERT INTO paintings (
+            id, title, year, technique, dimensions, description, image_url,
+            image_public_id, price, price_status, featured, "order",
+            image_width, image_height, category, translations, signature,
+            notice, analysis, analysed_at, frame
+          )
+           VALUES (
+            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,
+            $18::jsonb, $19::jsonb,
+            CASE WHEN $19::jsonb IS NOT NULL THEN now() ELSE NULL END, $20
+           )
+           RETURNING *`,
+          values.slice(0, 20)
+        )
+        return NextResponse.json(mapPaintingRow(rows[0]))
+      } catch (err2) {
+        if ((err2 as { code?: string })?.code !== '42703') throw err2
+      }
       const { rows } = await pool.query(
         `INSERT INTO paintings (id, title, year, technique, dimensions, description, image_url, image_public_id, price, price_status, featured, "order")
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,

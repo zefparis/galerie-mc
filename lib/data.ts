@@ -11,6 +11,12 @@ import { DEFAULT_SETTINGS, mergeSettings } from './storage'
 // JAMAIS être lue ici, ni sérialisée vers les composants clients.
 const PAINTING_PUBLIC_COLS = `id, title, year, technique, dimensions, description, image_url,
   image_public_id, price, price_status, featured, "order", created_at,
+  image_width, image_height, category, signature, notice, translations, frame, showcase, showcase_first`
+
+// Palier intermédiaire : tout sauf les colonnes `showcase`, pour les
+// bases pas encore migrées — cadre, notice et signature restent lus.
+const PAINTING_PUBLIC_COLS_NO_SHOWCASE = `id, title, year, technique, dimensions, description, image_url,
+  image_public_id, price, price_status, featured, "order", created_at,
   image_width, image_height, category, signature, notice, translations, frame`
 
 export async function getPaintings(): Promise<Painting[]> {
@@ -20,8 +26,21 @@ export async function getPaintings(): Promise<Painting[]> {
     )
     return rows.map(mapPaintingRow)
   } catch (err) {
-    if ((err as { code?: string })?.code === '42703') return getPaintingsLegacy()
+    if ((err as { code?: string })?.code === '42703') return getPaintingsNoShowcase()
     console.error('[data] getPaintings', err)
+    return []
+  }
+}
+
+async function getPaintingsNoShowcase(): Promise<Painting[]> {
+  try {
+    const { rows } = await pool.query(
+      `SELECT ${PAINTING_PUBLIC_COLS_NO_SHOWCASE} FROM paintings ORDER BY featured DESC, "order" ASC`
+    )
+    return rows.map(mapPaintingRow)
+  } catch (err) {
+    if ((err as { code?: string })?.code === '42703') return getPaintingsLegacy()
+    console.error('[data] getPaintingsNoShowcase', err)
     return []
   }
 }
@@ -47,9 +66,21 @@ export async function getPaintingById(id: string): Promise<Painting | null> {
     const { rows } = await pool.query(`SELECT ${PAINTING_PUBLIC_COLS} FROM paintings WHERE id=$1`, [id])
     return rows.length ? mapPaintingRow(rows[0]) : null
   } catch (err) {
-    if ((err as { code?: string })?.code === '42703') return getPaintingByIdLegacy(id)
-    console.error('[data] getPaintingById', err)
-    return null
+    if ((err as { code?: string })?.code !== '42703') {
+      console.error('[data] getPaintingById', err)
+      return null
+    }
+    try {
+      const { rows } = await pool.query(
+        `SELECT ${PAINTING_PUBLIC_COLS_NO_SHOWCASE} FROM paintings WHERE id=$1`,
+        [id]
+      )
+      return rows.length ? mapPaintingRow(rows[0]) : null
+    } catch (err2) {
+      if ((err2 as { code?: string })?.code === '42703') return getPaintingByIdLegacy(id)
+      console.error('[data] getPaintingById', err2)
+      return null
+    }
   }
 }
 

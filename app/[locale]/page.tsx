@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { getPaintings, getPublishedEvents, getGallerySettings } from '@/lib/data'
 import { localizeEvent, localizePainting, localizeSettings } from '@/lib/i18n'
+import { heroCarouselList } from '@/lib/showcase'
 import { alternatesFor, OG_LOCALE } from '@/lib/seo'
 import { routing, type Locale } from '@/i18n/routing'
 import MasonryGrid from '@/components/gallery/MasonryGrid'
@@ -61,9 +62,9 @@ export default async function Home(props: Props) {
   const localized = paintings.map((p) => localizePainting(p, locale))
 
   // Carrousel du hero : toutes les toiles cochées pour l'accueil,
-  // dans l'ordre habituel, plafonnées à 8.
-  const featuredList = localized.filter((p) => p.featured).slice(0, 8)
-  if (featuredList.length === 0 && localized.length > 0) featuredList.push(localized[0])
+  // dans l'ordre habituel, plafonnées à 8 — l'œuvre « en première
+  // place » ouvre le carrousel si elle existe.
+  const featuredList = heroCarouselList(localized, 8)
   const selection = localized.slice(0, 6)
 
   // Ligne d'accroche au-dessus du titre : séparateur « · ».

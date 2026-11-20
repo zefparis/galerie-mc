@@ -5,13 +5,14 @@ import { badRequest, handleRouteError, notFound } from '@/lib/api'
 import { mapPaintingRow } from '@/lib/mappers'
 import { paintingBodySchema, uuidSchema } from '@/lib/validation'
 import { paintingFrenchFields, withStaleMarks } from '@/lib/translations-core'
-import type { PaintingAnalysis, PaintingNotice, Translations } from '@/lib/types'
+import { sanitizeShowcase } from '@/lib/showcase'
+import type { PaintingAnalysis, PaintingNotice, PaintingShowcase, Translations } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
 const PUBLIC_COLS = `id, title, year, technique, dimensions, description, image_url,
   image_public_id, price, price_status, featured, "order", created_at,
-  image_width, image_height, category, signature, notice, translations, frame`
+  image_width, image_height, category, signature, notice, translations, frame, showcase, showcase_first`
 
 function sanitizeNoticeInput(n: PaintingNotice | null | undefined): PaintingNotice | null {
   if (!n) return null
@@ -96,6 +97,23 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       if ((err as { code?: string })?.code !== '42703') throw err
     }
 
+    // Composition de la vitrine : colonnes récentes — lecture protégée
+    // pour les bases en retard de migration.
+    let prevShowcase: PaintingShowcase | null = null
+    let prevShowcaseFirst = false
+    try {
+      const prev = await pool.query(
+        'SELECT showcase, showcase_first FROM paintings WHERE id=$1',
+        [parsedId.data]
+      )
+      if (prev.rows.length) {
+        prevShowcase = sanitizeShowcase(prev.rows[0].showcase)
+        prevShowcaseFirst = prev.rows[0].showcase_first === true
+      }
+    } catch (err) {
+      if ((err as { code?: string })?.code !== '42703') throw err
+    }
+
     const nextNotice =
       b.notice !== undefined ? sanitizeNoticeInput(b.notice) : prevNotice
     const nextAnalysis =
@@ -103,6 +121,10 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
         ? sanitizeAnalysisInput(b.analysis)
         : prevAnalysis
     const analysisUpdated = b.analysis !== undefined && sanitizeAnalysisInput(b.analysis) !== null
+    // Non renseigné par le client → la valeur en base est conservée.
+    const nextShowcase = b.showcase !== undefined ? (b.showcase ?? null) : prevShowcase
+    const nextShowcaseFirst =
+      b.showcaseFirst !== undefined ? b.showcaseFirst : prevShowcaseFirst
 
     const values = [
       b.title,
@@ -129,44 +151,94 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       nextAnalysis ? JSON.stringify(nextAnalysis) : null,
       analysisUpdated,
       b.frame ?? null,
+      nextShowcase ? JSON.stringify(nextShowcase) : null,
+      nextShowcaseFirst,
       parsedId.data,
     ]
-    let rows
-    try {
-      ;({ rows } = await pool.query(
-        // Changement de galerie : l'œuvre rejoint la FIN de sa nouvelle
-        // liste (ordre = max+1 de la catégorie cible) ; sinon l'ordre
-        // envoyé par le formulaire est conservé tel quel.
-        `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
-         image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10,
-         "order"=CASE WHEN category IS DISTINCT FROM $14
-           THEN (SELECT COALESCE(MAX("order"), 0) + 1 FROM paintings WHERE category = $14)
-           ELSE $11 END,
-         image_width=$12, image_height=$13, category=$14, translations=$15, signature=$16,
-         notice=$17::jsonb, analysis=$18::jsonb,
-         analysed_at=CASE WHEN $19::boolean THEN now() ELSE analysed_at END,
-         frame=$20
-         WHERE id=$21 RETURNING ${PUBLIC_COLS}`,
-        valuesT
-      ))
-    } catch (err) {
-      if ((err as { code?: string })?.code !== '42703') throw err
+    // Changement de galerie : l'œuvre rejoint la FIN de sa nouvelle
+    // liste (ordre = max+1 de la catégorie cible) ; sinon l'ordre
+    // envoyé par le formulaire est conservé tel quel.
+    const UPDATE_SQL = `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
+       image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10,
+       "order"=CASE WHEN category IS DISTINCT FROM $14
+         THEN (SELECT COALESCE(MAX("order"), 0) + 1 FROM paintings WHERE category = $14)
+         ELSE $11 END,
+       image_width=$12, image_height=$13, category=$14, translations=$15, signature=$16,
+       notice=$17::jsonb, analysis=$18::jsonb,
+       analysed_at=CASE WHEN $19::boolean THEN now() ELSE analysed_at END,
+       frame=$20, showcase=$21::jsonb, showcase_first=$22
+       WHERE id=$23 RETURNING ${PUBLIC_COLS}`
+    let rows: Record<string, unknown>[] = []
+    let updated = false
+    // « En première place » : une seule œuvre à la fois — le drapeau est
+    // retiré des autres dans la même transaction que la mise à jour
+    // (renforcé par l'index unique partiel en base).
+    if (nextShowcaseFirst) {
+      const client = await pool.connect()
       try {
-        ;({ rows } = await pool.query(
-          `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
-           image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10, "order"=$11,
-           image_width=$12, image_height=$13
-           WHERE id=$14 RETURNING *`,
-          values.slice(0, 14)
-        ))
-      } catch (err2) {
-        if ((err2 as { code?: string })?.code !== '42703') throw err2
-        ;({ rows } = await pool.query(
-          `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
-           image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10, "order"=$11
-           WHERE id=$12 RETURNING *`,
-          [...values.slice(0, 11), parsedId.data]
-        ))
+        await client.query('BEGIN')
+        await client.query(
+          'UPDATE paintings SET showcase_first = false WHERE showcase_first = true AND id <> $1',
+          [parsedId.data]
+        )
+        ;({ rows } = await client.query(UPDATE_SQL, valuesT))
+        await client.query('COMMIT')
+        updated = true
+      } catch (err) {
+        try {
+          await client.query('ROLLBACK')
+        } catch {
+          // connexion perdue — rien à annuler
+        }
+        // Colonne absente (migration en retard) : repli sur le chemin
+        // ordinaire, qui gère déjà le 42703.
+        if ((err as { code?: string })?.code !== '42703') throw err
+      } finally {
+        client.release()
+      }
+    }
+    if (!updated) {
+      try {
+        ;({ rows } = await pool.query(UPDATE_SQL, valuesT))
+      } catch (err) {
+        if ((err as { code?: string })?.code !== '42703') throw err
+        try {
+          // Colonnes showcase absentes : tout le reste reste enregistré.
+          ;({ rows } = await pool.query(
+            `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
+             image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10,
+             "order"=CASE WHEN category IS DISTINCT FROM $14
+               THEN (SELECT COALESCE(MAX("order"), 0) + 1 FROM paintings WHERE category = $14)
+               ELSE $11 END,
+             image_width=$12, image_height=$13, category=$14, translations=$15, signature=$16,
+             notice=$17::jsonb, analysis=$18::jsonb,
+             analysed_at=CASE WHEN $19::boolean THEN now() ELSE analysed_at END,
+             frame=$20
+             WHERE id=$21 RETURNING *`,
+            [...valuesT.slice(0, 20), parsedId.data]
+          ))
+        } catch (errMid) {
+          if ((errMid as { code?: string })?.code !== '42703') throw errMid
+        }
+      }
+      if (rows.length === 0) {
+        try {
+          ;({ rows } = await pool.query(
+            `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
+             image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10, "order"=$11,
+             image_width=$12, image_height=$13
+             WHERE id=$14 RETURNING *`,
+            [...values.slice(0, 13), parsedId.data]
+          ))
+        } catch (err2) {
+          if ((err2 as { code?: string })?.code !== '42703') throw err2
+          ;({ rows } = await pool.query(
+            `UPDATE paintings SET title=$1, year=$2, technique=$3, dimensions=$4, description=$5,
+             image_url=$6, image_public_id=$7, price=$8, price_status=$9, featured=$10, "order"=$11
+             WHERE id=$12 RETURNING *`,
+            [...values.slice(0, 11), parsedId.data]
+          ))
+        }
       }
     }
     if (rows.length === 0) return notFound('Tableau introuvable')

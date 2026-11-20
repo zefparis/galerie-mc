@@ -196,6 +196,16 @@ const statements = [
     attempted_at TIMESTAMPTZ NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_at ON login_attempts (ip, attempted_at)`,
+  // Vitrine de l'accueil : composition de l'œuvre en plusieurs parties
+  // (diptyque, triptyque). NULL = photo principale seule (comportement
+  // actuel). Format : { layout, photos: [{url,publicId,width,height}],
+  // gap } — validé par zod côté serveur.
+  `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS showcase JSONB`,
+  // « En première place dans la vitrine » : une seule œuvre à la fois,
+  // garanti par l'index unique partiel ; les mutations retirent le
+  // drapeau des autres œuvres dans une transaction.
+  `ALTER TABLE paintings ADD COLUMN IF NOT EXISTS showcase_first BOOLEAN NOT NULL DEFAULT false`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_paintings_showcase_first ON paintings (showcase_first) WHERE showcase_first`,
   // Lien Instagram : l'ancienne clé `instagram` (identifiant brut) devient
   // `instagramUrl` canonique si celle-ci n'existe pas déjà. L'identifiant
   // n'est repris que s'il est sain (lettres/chiffres/points/underscores,

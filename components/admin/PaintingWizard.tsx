@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { savePainting, updatePainting, getNextOrder, isSessionExpired, redirectToLogin, type PaintingWritePayload } from '@/lib/storage'
-import { Painting, PaintingAnalysis, PaintingNotice, Technique, PriceStatus, PaintingCategory, Translations } from '@/lib/types'
+import { Painting, PaintingAnalysis, PaintingNotice, PaintingShowcase, ShowcasePhoto, Technique, PriceStatus, PaintingCategory, Translations } from '@/lib/types'
 import { CATEGORIES, CATEGORY_LABEL, TECHNIQUES_BY_CATEGORY } from '@/lib/catalog'
-import { FRAME_ROWS, FRAME_LABEL_FR, DEFAULT_FRAME, isFrameId, type FrameId } from '@/lib/frames'
+import { FRAME_ROWS, FRAME_LABEL_FR, DEFAULT_FRAME, isFrameId, resolveFrame, type FrameId } from '@/lib/frames'
 import { FramePreview } from '@/components/frames/FramedArt'
 import CloudinaryUpload from './CloudinaryUpload'
 import { CLOUDINARY_DRAWINGS_FOLDER, CLOUDINARY_PAINTINGS_FOLDER } from '@/lib/cloudinary'
@@ -21,6 +21,7 @@ import AnalysePanel, {
   stateToAnalysis,
   type AnalyseFormState,
 } from './AnalysePanel'
+import ShowcaseField, { type ShowcaseFormValue } from './ShowcaseField'
 
 // La traduction part en arrière-plan : l'enregistrement n'attend jamais
 // le service de traduction, et un échec est silencieux (le texte est déjà
@@ -81,8 +82,50 @@ interface Draft {
     featured: boolean
     signature: string
     frame?: FrameId | null
+    showcase?: ShowcaseFormValue
   }
   analyse?: AnalyseFormState
+}
+
+// Liste initiale des photos de la vitrine pour une toile existante :
+// composition enregistrée (row/column : les photos telles quelles),
+// single : la principale puis la photo choisie, sinon la principale.
+function initialShowcaseValue(painting: Painting | null): ShowcaseFormValue {
+  const main: ShowcasePhoto[] = painting?.imageUrl
+    ? [
+        {
+          url: painting.imageUrl,
+          publicId: painting.imagePublicId,
+          width: painting.imageWidth,
+          height: painting.imageHeight,
+        },
+      ]
+    : []
+  const s = painting?.showcase
+  if (!s) return { layout: 'main', photos: main, singleIndex: 0, gap: 'medium', first: painting?.showcaseFirst === true }
+  if (s.layout === 'single') {
+    const photos = [...main]
+    if (!photos.some((p) => p.publicId === s.photos[0]?.publicId || p.url === s.photos[0]?.url)) {
+      photos.push(s.photos[0])
+    }
+    const idx = photos.findIndex(
+      (p) => p.publicId === s.photos[0]?.publicId || p.url === s.photos[0]?.url
+    )
+    return {
+      layout: 'single',
+      photos,
+      singleIndex: Math.max(0, idx),
+      gap: s.gap,
+      first: painting?.showcaseFirst === true,
+    }
+  }
+  return {
+    layout: s.layout,
+    photos: s.photos,
+    singleIndex: 0,
+    gap: s.gap,
+    first: painting?.showcaseFirst === true,
+  }
 }
 
 export default function PaintingWizard({
@@ -116,6 +159,10 @@ export default function PaintingWizard({
     signature: painting?.signature || '',
     frame: painting?.frame ?? null,
   })
+  // Présentation dans la vitrine de l'accueil (composition + première place).
+  const [showcaseValue, setShowcaseValue] = useState<ShowcaseFormValue>(() =>
+    initialShowcaseValue(painting)
+  )
   // Libellé du cadre général actuel — lu une fois côté réglages publics.
   const [generalFrame, setGeneralFrame] = useState<FrameId>(DEFAULT_FRAME)
   useEffect(() => {
@@ -153,7 +200,9 @@ export default function PaintingWizard({
       if (!raw) return
       const draft = JSON.parse(raw) as Draft
       if (draft?.form && (draft.form.title || draft.form.imageUrl || (draft.analyse && hasAnalyseDraft(draft.analyse)))) {
-        setForm((f) => ({ ...f, ...draft.form }))
+        const { showcase: draftShowcase, ...restForm } = draft.form
+        setForm((f) => ({ ...f, ...restForm }))
+        if (draftShowcase) setShowcaseValue(draftShowcase)
         if (draft.analyse) {
           setAnalyseState(draft.analyse)
         }
@@ -200,11 +249,14 @@ export default function PaintingWizard({
     if (isEditing) return // pas de brouillon en modification, seulement en création
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(draftKey, JSON.stringify({ step, form, analyse: analyseState }))
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({ step, form: { ...form, showcase: showcaseValue }, analyse: analyseState })
+        )
       } catch { /* stockage plein — non bloquant */ }
     }, 400)
     return () => clearTimeout(t)
-  }, [form, analyseState, step, draftKey, isEditing])
+  }, [form, showcaseValue, analyseState, step, draftKey, isEditing])
 
   // Garde-fou navigation navigateur : avertit si un texte généré n'est pas enregistré.
   const hasUnsavedGeneratedText =
@@ -248,6 +300,7 @@ export default function PaintingWizard({
       signature: '',
       frame: null,
     })
+    setShowcaseValue({ layout: 'main', photos: [], singleIndex: 0, gap: 'medium', first: false })
     setAnalyseState(EMPTY_ANALYSE_STATE)
     setStep(1)
   }
@@ -266,6 +319,28 @@ export default function PaintingWizard({
         : null
       const analysisPayload: PaintingAnalysis | null = stateToAnalysis(analyseState)
 
+      // Composition de la vitrine : 'main' ou liste insuffisante → NULL
+      // (photo principale seule, comportement habituel).
+      const sc = showcaseValue
+      const scPhotos = sc.photos.filter((p) => p.url)
+      let showcasePayload: PaintingShowcase | null = null
+      if (sc.layout === 'single' && scPhotos.length > 0) {
+        showcasePayload = {
+          layout: 'single',
+          photos: [scPhotos[Math.min(sc.singleIndex, scPhotos.length - 1)]],
+          gap: sc.gap,
+        }
+      } else if (
+        (sc.layout === 'row' || sc.layout === 'column') &&
+        scPhotos.length >= 2
+      ) {
+        showcasePayload = {
+          layout: sc.layout,
+          photos: scPhotos.slice(0, 3),
+          gap: sc.gap,
+        }
+      }
+
       const data: PaintingWritePayload = {
         id: painting?.id || uuidv4(),
         title: form.title.trim(),
@@ -283,6 +358,8 @@ export default function PaintingWizard({
         featured: form.featured,
         signature: form.signature.trim() || undefined,
         frame: form.frame ?? null,
+        showcase: showcasePayload,
+        showcaseFirst: sc.first,
         order,
         createdAt: painting?.createdAt || new Date().toISOString(),
         notice: noticePayload,
@@ -695,6 +772,25 @@ export default function PaintingWizard({
               ))}
             </div>
           </div>
+
+          {/* Vitrine de l'accueil : composition en plusieurs parties et
+              première place — indépendant du cadre choisi au-dessus. */}
+          <ShowcaseField
+            title={form.title || 'Votre toile'}
+            mainPhoto={
+              form.imageUrl
+                ? {
+                    url: localImage || form.imageUrl,
+                    publicId: form.imagePublicId,
+                    width: form.imageWidth,
+                    height: form.imageHeight,
+                  }
+                : null
+            }
+            frame={resolveFrame({ frame: form.frame }, { heroFrame: generalFrame })}
+            value={showcaseValue}
+            onChange={(patch) => setShowcaseValue((v) => ({ ...v, ...patch }))}
+          />
         </div>
       )}
 

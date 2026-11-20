@@ -10,6 +10,7 @@ export default function FramedArt({
   w,
   h,
   artMh,
+  widthPx,
   children,
 }: {
   frame: FrameId
@@ -17,6 +18,9 @@ export default function FramedArt({
   h: number
   /** Référence de hauteur pour l'épaisseur proportionnelle (vignettes). */
   artMh?: string
+  /** Largeur extérieure imposée en px (composition en colonne : même
+   *  largeur pour toutes les parties). Remplace le calcul par --art-mh. */
+  widthPx?: number
   children: ReactNode
 }) {
   const vars: CSSProperties = artMh
@@ -29,7 +33,10 @@ export default function FramedArt({
         className="gf"
         style={{
           ...vars,
-          width: `min(100%, calc((var(--art-mh) - var(--gf-py)) * ${w} / ${h} + var(--gf-px)))`,
+          width:
+            widthPx != null
+              ? `${Math.max(0, widthPx)}px`
+              : `min(100%, calc((var(--art-mh) - var(--gf-py)) * ${w} / ${h} + var(--gf-px)))`,
         }}
       >
         <span className="wall-art gf-art" style={{ aspectRatio: `${w} / ${h}` }}>
@@ -53,7 +60,10 @@ export default function FramedArt({
       className={`fx fx-${frame}`}
       style={{
         ...vars,
-        width: `min(100%, calc((var(--art-mh) - var(--fx-py)) * ${w} / ${h} + var(--fx-px)))`,
+        width:
+          widthPx != null
+            ? `${Math.max(0, widthPx)}px`
+            : `min(100%, calc((var(--art-mh) - var(--fx-py)) * ${w} / ${h} + var(--fx-px)))`,
       }}
     >
       <span className="fx-mat">

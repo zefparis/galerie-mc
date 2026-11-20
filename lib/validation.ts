@@ -148,6 +148,48 @@ export const analysisBodySchema = z
   })
   .strict()
 
+// Partie d'une composition de vitrine : photo du cloud du site (mêmes
+// règles que la photo principale), dimensions positives si fournies.
+export const showcasePhotoSchema = z
+  .object({
+    url: cloudinaryUrl,
+    publicId: cloudinaryPublicId.optional().default(''),
+    width: z.number().int().positive().optional(),
+    height: z.number().int().positive().optional(),
+  })
+  .strict()
+  .refine((p) => publicIdMatchesUrl(p.url, p.publicId), {
+    path: ['publicId'],
+    message: "L'identifiant de la photo ne correspond pas à l'adresse de notre espace photo",
+  })
+
+// Composition de la vitrine de l'accueil (colonne `showcase`, NULL =
+// photo principale seule) : 'single' exige exactement 1 photo,
+// 'row'/'column' 2 ou 3 — chaque photo doit venir de notre espace photo.
+export const showcaseSchema = z
+  .object({
+    layout: z.enum(['single', 'row', 'column']),
+    photos: z.array(showcasePhotoSchema).min(1, 'Au moins une photo').max(3, 'Trois photos maximum'),
+    gap: z.enum(['small', 'medium', 'large']),
+  })
+  .strict()
+  .superRefine((s, ctx) => {
+    if (s.layout === 'single' && s.photos.length !== 1) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['photos'],
+        message: '« Une seule photo » attend exactement une photo',
+      })
+    }
+    if (s.layout !== 'single' && s.photos.length < 2) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['photos'],
+        message: 'La composition en plusieurs parties attend 2 ou 3 photos',
+      })
+    }
+  })
+
 export const paintingBodySchema = z
   .object({
     id: uuidSchema.optional(),
@@ -168,6 +210,12 @@ export const paintingBodySchema = z
     signature: z.string().max(200).optional().default(''),
     // Cadre propre à la toile dans le carrousel — NULL = cadre général.
     frame: frameIdSchema.nullable().optional(),
+    // Composition de la vitrine — NULL/absent = photo principale seule.
+    showcase: showcaseSchema.nullable().optional(),
+    // « En première place dans la vitrine » — une seule œuvre à la fois
+    // (les autres sont décochées dans la même transaction). Absent du
+    // corps envoyé → la valeur en base est conservée.
+    showcaseFirst: z.boolean().optional(),
     createdAt: z.string().max(100).optional(),
     translations: translationsSchema,
     notice: noticeBodySchema.nullable().optional(),

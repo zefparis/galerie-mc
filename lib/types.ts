@@ -58,6 +58,28 @@ export interface PaintingAnalysis extends PaintingNotice {
   repere_prix?: string
 }
 
+// Composition de l'œuvre dans la vitrine de l'accueil (colonne
+// `showcase`, NULL = photo principale seule). 'single' affiche une
+// seule photo choisie ; 'row'/'column' composent 2 ou 3 photos
+// (diptyque, triptyque) — chaque partie dans le même cadre.
+export type ShowcaseLayout = 'single' | 'row' | 'column'
+export type ShowcaseGap = 'small' | 'medium' | 'large'
+
+// Une partie de la composition : photo du cloud du site (photothèque),
+// avec ses dimensions réelles pour conserver le ratio sans saut.
+export interface ShowcasePhoto {
+  url: string
+  publicId?: string
+  width?: number
+  height?: number
+}
+
+export interface PaintingShowcase {
+  layout: ShowcaseLayout
+  photos: ShowcasePhoto[]
+  gap: ShowcaseGap
+}
+
 export interface Painting {
   id: string
   title: string
@@ -75,6 +97,12 @@ export interface Painting {
   featured: boolean
   order: number
   createdAt: string
+  // Composition dans la vitrine de l'accueil — NULL/absent = photo
+  // principale seule (rendu actuel).
+  showcase?: PaintingShowcase | null
+  // « En première place dans la vitrine » — une seule œuvre à la fois
+  // (index unique partiel en base).
+  showcaseFirst?: boolean
   // Cadre propre à la toile dans le carrousel d'accueil — NULL/absent =
   // le cadre général des réglages (resolveFrame dans lib/frames.ts).
   frame?: FrameId | null

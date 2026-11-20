@@ -191,8 +191,9 @@ export default function WallArtwork({
 
 // Cartel centré sous le tableau (titre italique + métadonnées), hauteur
 // fixe : la ligne de base commune des tableaux ne bouge pas quand son
-// contenu change.
-function Cartel({
+// contenu change. Exporté pour la composition multi-toiles de la
+// vitrine (ShowcaseArtwork), qui garde le même cartel.
+export function Cartel({
   p,
   locale,
   techLabel,

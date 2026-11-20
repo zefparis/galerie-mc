@@ -5,7 +5,9 @@ import { useTranslations } from 'next-intl'
 import { useTechniqueLabel } from '@/lib/i18n'
 import { Painting } from '@/lib/types'
 import { resolveFrame, type FrameId } from '@/lib/frames'
+import { effectiveShowcase } from '@/lib/showcase'
 import Lightbox from './Lightbox'
+import ShowcaseArtwork from './ShowcaseArtwork'
 import WallArtwork from './WallArtwork'
 
 const INTERVAL_MS = 6000
@@ -136,6 +138,7 @@ export default function HeroArtwork({ paintings, artistName, heroFrame }: Props)
           const near =
             len > 1 &&
             (i === (active + 1) % len || i === (active - 1 + len) % len)
+          const composition = effectiveShowcase(p.showcase)
           return (
             <div
               key={p.id}
@@ -144,20 +147,39 @@ export default function HeroArtwork({ paintings, artistName, heroFrame }: Props)
                 i === active ? 'opacity-100' : 'opacity-0 pointer-events-none'
               }`}
             >
-              <WallArtwork
-                painting={p}
-                alt={altFor(p)}
-                sizes="(max-width: 768px) 92vw, 44vw"
-                priority={i === 0}
-                loading={i === active || near ? 'eager' : 'lazy'}
-                cartel
-                framed
-                frame={resolveFrame(p, { heroFrame })}
-                onOpen={i === active ? () => setLightbox(true) : undefined}
-                openLabel={t('zoomAria', { title: p.title })}
-                focusable={i === active}
-                className="w-full"
-              />
+              {composition ? (
+                // Composition en plusieurs parties (diptyque, triptyque) —
+                // même cadre pour toutes les toiles via resolveFrame.
+                <ShowcaseArtwork
+                  painting={p}
+                  showcase={composition}
+                  alt={altFor(p)}
+                  sizes="(max-width: 768px) 92vw, 44vw"
+                  priority={i === 0}
+                  loading={i === active || near ? 'eager' : 'lazy'}
+                  cartel
+                  frame={resolveFrame(p, { heroFrame })}
+                  onOpen={i === active ? () => setLightbox(true) : undefined}
+                  openLabel={t('zoomAria', { title: p.title })}
+                  focusable={i === active}
+                  className="w-full"
+                />
+              ) : (
+                <WallArtwork
+                  painting={p}
+                  alt={altFor(p)}
+                  sizes="(max-width: 768px) 92vw, 44vw"
+                  priority={i === 0}
+                  loading={i === active || near ? 'eager' : 'lazy'}
+                  cartel
+                  framed
+                  frame={resolveFrame(p, { heroFrame })}
+                  onOpen={i === active ? () => setLightbox(true) : undefined}
+                  openLabel={t('zoomAria', { title: p.title })}
+                  focusable={i === active}
+                  className="w-full"
+                />
+              )}
             </div>
           )
         })}

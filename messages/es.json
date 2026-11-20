@@ -270,5 +270,33 @@
     "s2Body": "El formulario de contacto recoge su nombre, su dirección de correo electrónico y su mensaje, únicamente para responder a su solicitud. Estos datos no se venden ni se utilizan con fines publicitarios. Se transmiten a la artista a través de un proveedor de envío de mensajes (EmailJS) y se conservan como máximo 12 meses después del último intercambio.\n\nPuede solicitar su consulta, rectificación o supresión a través del formulario de contacto, y presentar una reclamación ante la CNIL (cnil.fr).\n\nEl sitio no utiliza ninguna cookie de seguimiento ni publicitaria: solo guarda en su dispositivo sus preferencias de visualización (tema, idioma) y puede guardar páginas en caché para funcionar más rápido o sin conexión.",
     "s3Title": "Comprar una obra",
     "s3Body": "Las obras son piezas originales y únicas, vendidas directamente por la artista de forma ocasional, como particular. El sitio no ofrece pago en línea: para adquirir una obra, escriba a la artista a través del formulario de contacto.\n\nLa venta se concluye cuando usted ha confirmado por escrito su acuerdo sobre la obra, el precio (en euros, neto — la artista no está sujeta al IVA) y las modalidades de entrega. El pago se realiza por transferencia o cheque antes de la entrega de la obra.\n\nLa obra se retira en Montreuil-aux-Lions o la envía la artista, cuidadosamente embalada, a cargo del comprador salvo acuerdo en contrario. Al recibirla, compruebe su estado y notifique cualquier daño en un plazo de 48 horas con fotografías.\n\nLa compra se refiere al objeto: la artista conserva sus derechos de autor, y cualquier reproducción o difusión de la obra requiere su consentimiento por escrito. En caso de dificultad, buscamos primero una solución amistosa; se aplica el derecho francés."
+  },
+  "showcase": {
+    "sectionTitle": "En la vitrina de la portada",
+    "help": "Componga esta obra en varias partes (díptico, tríptico) o colóquela como primera diapositiva del carrusel.",
+    "photosLabel": "Las fotos de esta obra",
+    "mainBadge": "Principal",
+    "addPhotos": "Añadir desde mis fotos",
+    "addMain": "Añadir la foto principal",
+    "needTwo": "Añada al menos otra foto para componer en varias partes.",
+    "layoutLabel": "Presentación en la vitrina",
+    "layoutMain": "Foto principal",
+    "layoutSingle": "Una sola foto",
+    "layoutRow": "Una al lado de la otra",
+    "layoutColumn": "Una encima de la otra",
+    "singlePick": "Elija la foto mostrada con los botones redondos.",
+    "rowHint": "Todas las fotos se muestran una al lado de la otra, en este orden.",
+    "columnHint": "Todas las fotos se muestran una encima de la otra, en este orden.",
+    "gapLabel": "Espacio entre los lienzos",
+    "gapSmall": "Estrecho",
+    "gapMedium": "Medio",
+    "gapLarge": "Amplio",
+    "firstPlace": "Poner en primer lugar en la vitrina",
+    "firstPlaceHint": "Esta obra abrirá el carrusel de la portada. Solo una obra a la vez: marcar aquí quita el primer lugar de la otra obra.",
+    "previewLabel": "Vista previa de la composición",
+    "pickThis": "Mostrar la foto {n}",
+    "moveBefore": "Mover la foto {n} antes",
+    "moveAfter": "Mover la foto {n} después",
+    "remove": "Quitar la foto {n}"
   }
 }
