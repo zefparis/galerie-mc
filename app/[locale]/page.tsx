@@ -90,7 +90,11 @@ export default async function Home(props: Props) {
     <div>
       {/* ─── Hero : texte + toile encadrée ────────────────────────────── */}
       <section className="pt-16 md:pt-20">
-        <div className="max-w-7xl mx-auto gutter-x py-14 sm:py-16 md:py-24 lg:py-32 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 lg:gap-20 items-center">
+        {/* Hero élargi au-delà de la grille du site (92rem) et réparti
+            ~36/64 en desktop : les toiles des compositions côte à côte
+            restent lisibles ; sous 1024 px l'œuvre passe sous le texte
+            et prend toute la largeur disponible. */}
+        <div className="max-w-7xl lg:max-w-[92rem] mx-auto gutter-x py-14 sm:py-16 md:py-24 lg:py-32 grid grid-cols-1 lg:grid-cols-[36fr_64fr] gap-10 md:gap-14 lg:gap-20 items-center">
           {/* Texte */}
           <div className="hero-fade">
             <HeroHeading

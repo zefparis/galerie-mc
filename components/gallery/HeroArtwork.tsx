@@ -154,7 +154,7 @@ export default function HeroArtwork({ paintings, artistName, heroFrame }: Props)
                   painting={p}
                   showcase={composition}
                   alt={altFor(p)}
-                  sizes="(max-width: 768px) 92vw, 44vw"
+                  sizes="(max-width: 1024px) 92vw, (max-width: 1500px) 58vw, 850px"
                   priority={i === 0}
                   loading={i === active || near ? 'eager' : 'lazy'}
                   cartel
@@ -168,7 +168,7 @@ export default function HeroArtwork({ paintings, artistName, heroFrame }: Props)
                 <WallArtwork
                   painting={p}
                   alt={altFor(p)}
-                  sizes="(max-width: 768px) 92vw, 44vw"
+                  sizes="(max-width: 1024px) 92vw, (max-width: 1500px) 58vw, 850px"
                   priority={i === 0}
                   loading={i === active || near ? 'eager' : 'lazy'}
                   cartel

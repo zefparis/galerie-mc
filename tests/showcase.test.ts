@@ -235,6 +235,19 @@ describe('unicité de la première place', () => {
     expect(wiz).toContain('onFeaturedChange')
     expect(wiz).toMatch(/onFeaturedChange=\{[\s\S]*featured: v/)
   })
+
+  it('grille du hero : image majoritaire en desktop, empilée sous 1024 px', () => {
+    const src = readFileSync(join(ROOT, 'app/[locale]/page.tsx'), 'utf8')
+    // Plus de 50/50 dès la tablette : l'image a ~2/3 de la zone en
+    // desktop (≥1024 px), composition sous le texte en-dessous.
+    const heroGrid = src.split('\n').find((l) => l.includes('lg:grid-cols-['))!
+    expect(heroGrid).not.toContain('md:grid-cols-2')
+    expect(heroGrid).toMatch(/lg:grid-cols-\[\d+fr_\d+fr\]/)
+    const m = /lg:grid-cols-\[(\d+)fr_(\d+)fr\]/.exec(src)!
+    const [text, img] = [Number(m[1]), Number(m[2])]
+    expect(img / (text + img)).toBeGreaterThanOrEqual(0.6)
+    expect(text / (text + img)).toBeLessThanOrEqual(0.4)
+  })
 })
 
 describe('nettoyage et repli (effectiveShowcase / sanitizeShowcase)', () => {
@@ -359,6 +372,71 @@ describe('computeShowcase — géométrie de la composition', () => {
       expect(totalW).toBeLessThanOrEqual(W + 0.5)
       expect(heights[0]).toBeLessThanOrEqual(H)
     }
+  })
+
+  it("'row' remplit la hauteur de la zone quand la largeur le permet", () => {
+    // Zone large : les toiles atteignent la hauteur d'une toile seule.
+    const plan = computeShowcase({
+      layout: 'row',
+      ratios: [0.8, 0.8],
+      availW: 960,
+      availH: 560,
+      gap: 'small',
+      frame: 'none',
+      mobile: false,
+    })!
+    expect(plan.parts[0].height).toBe(560)
+    // Zone étroite : la hauteur n'est réduite que par le dépassement
+    // de largeur — jamais en deçà de ce qui est nécessaire.
+    const tight = computeShowcase({
+      layout: 'row',
+      ratios: [0.8, 0.8],
+      availW: 568,
+      availH: 560,
+      gap: 'small',
+      frame: 'none',
+      mobile: false,
+    })!
+    const totalW = tight.parts.reduce((a, p) => a + p.width, 0) + tight.gapPx
+    expect(totalW).toBeLessThanOrEqual(568.5)
+    expect(tight.parts[0].height).toBeGreaterThan(340)
+    expect(tight.parts[0].height).toBeLessThan(560)
+  })
+
+  it('objectifs vitrine : diptyque ≥ 85 % et triptyque ≥ 65 % de la toile seule', () => {
+    // Zone réelle du hero après élargissement (colonne image ≈ 830 px
+    // à 1440×900 dans le conteneur 92rem en répartition 36/64).
+    const zone = { availW: 830, availH: 560 }
+    const single = computeShowcase({
+      layout: 'single',
+      ratios: [0.8],
+      ...zone,
+      gap: 'small',
+      frame: 'none',
+      mobile: false,
+    })!
+    const singleH = single.parts[0].height
+    expect(singleH).toBe(560)
+
+    const diptych = computeShowcase({
+      layout: 'row',
+      ratios: [0.8, 0.75],
+      ...zone,
+      gap: 'small',
+      frame: 'none',
+      mobile: false,
+    })!
+    for (const p of diptych.parts) expect(p.height).toBeGreaterThanOrEqual(singleH * 0.85)
+
+    const triptych = computeShowcase({
+      layout: 'row',
+      ratios: [0.75, 0.75, 0.75],
+      ...zone,
+      gap: 'small',
+      frame: 'none',
+      mobile: false,
+    })!
+    for (const p of triptych.parts) expect(p.height).toBeGreaterThanOrEqual(singleH * 0.65)
   })
 
   it("espacement 'none' : gapPx = 0, les toiles se touchent", () => {
